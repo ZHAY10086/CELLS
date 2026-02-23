@@ -8,6 +8,14 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Semantic Versioning: https://semver.org/spec/v2.0.0.html
 
 
+## [0.4.3] - 2026-02-23
+### Added
+- Add stricter checks for upgrades being applied (instead of all custom cards).
+
+### Changed
+- Update textures from placeholders to proper assets.
+
+
 ## [0.4.2] - 2026-02-22
 ### Fixed
 - Fix empty Configurable Cell not displaying correctly in ME Chest/ME Drive, due to reporting the wrong status.

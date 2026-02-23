@@ -1,5 +1,6 @@
 package com.cells.cells.configurable;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -70,7 +71,7 @@ public class ConfigurableCellFluidInventory implements ICellInventory<IAEFluidSt
         this.physicalPerType = ComponentHelper.calculatePhysicalPerTypeCapacity(componentInfo, maxTypes);
         this.effectivePerType = Math.min(userMaxPerType, physicalPerType * 1000L);
 
-        IItemHandler upgrades = new CustomCellUpgrades(cellStack, 2);
+        IItemHandler upgrades = getUpgradesInventory();
         this.hasOverflowCard = CellUpgradeHelper.hasOverflowCard(upgrades);
 
         loadFromNBT();
@@ -268,7 +269,10 @@ public class ConfigurableCellFluidInventory implements ICellInventory<IAEFluidSt
 
     @Override
     public IItemHandler getUpgradesInventory() {
-        return new CustomCellUpgrades(cellStack, 2);
+        return new CustomCellUpgrades(cellStack, 2, Arrays.asList(
+            CustomCellUpgrades.CustomUpgrades.OVERFLOW,
+            CustomCellUpgrades.CustomUpgrades.EQUAL_DISTRIBUTION
+        ));
     }
 
     @Override

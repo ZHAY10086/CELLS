@@ -1,5 +1,6 @@
 package com.cells.cells.configurable;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -275,7 +276,10 @@ public class ItemConfigurableCell extends Item implements ICellWorkbenchItem, II
 
     @Override
     public IItemHandler getUpgradesInventory(ItemStack is) {
-        return new CustomCellUpgrades(is, 2);
+        return new CustomCellUpgrades(is, 2, Arrays.asList(
+            CustomCellUpgrades.CustomUpgrades.OVERFLOW,
+            CustomCellUpgrades.CustomUpgrades.EQUAL_DISTRIBUTION
+        ));
     }
 
     @Override
