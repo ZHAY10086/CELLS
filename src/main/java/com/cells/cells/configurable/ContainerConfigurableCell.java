@@ -135,7 +135,8 @@ public class ContainerConfigurableCell extends AEBaseContainer {
      * Custom handling for the component slot (slot 0) to support swap.
      */
     @Override
-    public ItemStack slotClick(int slotId, int dragType, ClickType clickTypeIn, EntityPlayer player) {
+    @Nonnull
+    public ItemStack slotClick(int slotId, int dragType, ClickType clickTypeIn, @Nonnull EntityPlayer player) {
         // Prevent interactions with the locked slot (the cell in hand) if the container is open
         if (lockedSlotIndex >= 0 && slotId >= 0 && slotId < this.inventorySlots.size()) {
             Slot slot = this.inventorySlots.get(slotId);
@@ -282,6 +283,7 @@ public class ContainerConfigurableCell extends AEBaseContainer {
      * For stacked cells: extraction is allowed, insertion is blocked.
      */
     @Override
+    @Nonnull
     public ItemStack transferStackInSlot(EntityPlayer player, int index) {
         boolean isStacked = cellStack.getCount() > 1;
 

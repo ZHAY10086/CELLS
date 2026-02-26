@@ -78,6 +78,7 @@ public abstract class ItemHyperDensityCellBase extends Item implements IItemHype
     }
 
     @Override
+    @Nonnull
     public String getTranslationKey(ItemStack stack) {
         int meta = stack.getMetadata();
         if (meta >= 0 && meta < tierNames.length) return getTranslationKey() + "." + tierNames[meta];
@@ -95,7 +96,8 @@ public abstract class ItemHyperDensityCellBase extends Item implements IItemHype
 
     @Override
     @SideOnly(Side.CLIENT)
-    public void addInformation(ItemStack stack, World world, List<String> tooltip, ITooltipFlag flag) {
+    public void addInformation(@Nonnull ItemStack stack, World world, @Nonnull List<String> tooltip,
+                               @Nonnull ITooltipFlag flag) {
         IItemStorageChannel channel = AEApi.instance().storage().getStorageChannel(IItemStorageChannel.class);
         ICellInventoryHandler<IAEItemStack> cellHandler = AEApi.instance().registries().cell().getCellInventory(stack, null, channel);
 
@@ -235,7 +237,8 @@ public abstract class ItemHyperDensityCellBase extends Item implements IItemHype
     // =====================
 
     @Override
-    public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand hand) {
+    @Nonnull
+    public ActionResult<ItemStack> onItemRightClick(@Nonnull World world, EntityPlayer player, @Nonnull EnumHand hand) {
         ItemStack stack = player.getHeldItem(hand);
         if (player.isSneaking() && disassembleDrive(stack, world, player)) {
             return new ActionResult<>(EnumActionResult.SUCCESS, player.getHeldItem(hand));
@@ -245,8 +248,10 @@ public abstract class ItemHyperDensityCellBase extends Item implements IItemHype
     }
 
     @Override
-    public EnumActionResult onItemUseFirst(EntityPlayer player, World world, BlockPos pos, EnumFacing side,
-                                           float hitX, float hitY, float hitZ, EnumHand hand) {
+    @Nonnull
+    public EnumActionResult onItemUseFirst(@Nonnull EntityPlayer player, @Nonnull World world,
+                                           @Nonnull BlockPos pos, @Nonnull EnumFacing side,
+                                           float hitX, float hitY, float hitZ, @Nonnull EnumHand hand) {
         return disassembleDrive(player.getHeldItem(hand), world, player) ? EnumActionResult.SUCCESS : EnumActionResult.PASS;
     }
 
@@ -267,7 +272,6 @@ public abstract class ItemHyperDensityCellBase extends Item implements IItemHype
         }
 
         InventoryAdaptor ia = InventoryAdaptor.getAdaptor(player);
-        if (ia == null) return false;
 
         // Remove one cell from the stack.
         // If the held stack has more than one item, shrink it by one.

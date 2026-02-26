@@ -11,6 +11,7 @@ import javax.annotation.Nullable;
 
 import io.netty.buffer.ByteBuf;
 
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
@@ -27,7 +28,6 @@ import appeng.api.networking.IGridNode;
 import appeng.api.networking.security.IActionSource;
 import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.networking.ticking.IGridTickable;
-import appeng.api.networking.ticking.ITickManager;
 import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.networking.ticking.TickingRequest;
 import appeng.api.storage.IMEInventory;
@@ -41,6 +41,7 @@ import appeng.me.GridAccessException;
 import appeng.me.helpers.MachineSource;
 import appeng.tile.grid.AENetworkInvTile;
 import appeng.tile.inventory.AppEngInternalInventory;
+import appeng.util.SettingsFrom;
 import appeng.util.inv.IAEAppEngInventory;
 import appeng.util.inv.InvOperation;
 import appeng.util.item.AEItemStack;
@@ -58,14 +59,13 @@ import com.cells.util.TickManagerHelper;
  * Only accepts items that match the filter in the corresponding slot.
  * Automatically imports stored items into the ME network.
  */
-public class TileImportInterface extends AENetworkInvTile implements IGridTickable, IAEAppEngInventory, IImportInterfaceHost {
+public class TileImportInterface extends AENetworkInvTile implements IGridTickable, IAEAppEngInventory, IImportInterfaceInventoryHost {
 
     public static final int FILTER_SLOTS = 36; // 36 filter slots (ghost items)
     public static final int STORAGE_SLOTS = 36; // 36 storage slots (actual items)
     public static final int UPGRADE_SLOTS = 4;  // 4 upgrade slots
     public static final int DEFAULT_MAX_SLOT_SIZE = 64;
     public static final int MIN_MAX_SLOT_SIZE = 1;
-    public static final int MAX_MAX_SLOT_SIZE = Integer.MAX_VALUE;
 
     // Polling rate constants (in ticks, 20 ticks = 1 second)
     public static final int DEFAULT_POLLING_RATE = 0; // 0 means adaptive (AE2 default)
@@ -296,6 +296,7 @@ public class TileImportInterface extends AENetworkInvTile implements IGridTickab
     }
 
     @Override
+    @Nonnull
     public NBTTagCompound writeToNBT(final NBTTagCompound data) {
         super.writeToNBT(data);
         this.filterInventory.writeToNBT(data, "filter");
@@ -305,6 +306,45 @@ public class TileImportInterface extends AENetworkInvTile implements IGridTickab
         data.setInteger("pollingRate", this.pollingRate);
 
         return data;
+    }
+
+    @Nonnull
+    @Override
+    public NBTTagCompound downloadSettings(SettingsFrom from) {
+        NBTTagCompound output = super.downloadSettings(from);
+        if (output == null) output = new NBTTagCompound();
+
+        // Save slot size and polling rate for both memory card and dismantle
+        output.setInteger("maxSlotSize", this.maxSlotSize);
+        output.setInteger("pollingRate", this.pollingRate);
+
+        // Save filter inventory only when dismantling (not for memory card)
+        if (from == SettingsFrom.DISMANTLE_ITEM) {
+            this.filterInventory.writeToNBT(output, "filter");
+        }
+
+        return output;
+    }
+
+    @Override
+    public void uploadSettings(SettingsFrom from, NBTTagCompound compound, EntityPlayer player) {
+        super.uploadSettings(from, compound, player);
+
+        if (compound == null) return;
+
+        // Load slot size and polling rate for both memory card and dismantle
+        if (compound.hasKey("maxSlotSize")) {
+            this.setMaxSlotSize(compound.getInteger("maxSlotSize"));
+        }
+        if (compound.hasKey("pollingRate")) {
+            this.setPollingRate(compound.getInteger("pollingRate"));
+        }
+
+        // Load filter inventory only when placing dismantled block (not for memory card)
+        if (from == SettingsFrom.DISMANTLE_ITEM && compound.hasKey("filter")) {
+            this.filterInventory.readFromNBT(compound, "filter");
+            this.refreshFilterMap();
+        }
     }
 
     @Override
@@ -401,6 +441,11 @@ public class TileImportInterface extends AENetworkInvTile implements IGridTickab
     }
 
     @Override
+    public BlockPos getHostPos() {
+        return this.getPos();
+    }
+
+    @Override
     public void onChangeInventory(IItemHandler inv, int slot, InvOperation mc, ItemStack removed, ItemStack added) {
         if (inv == this.filterInventory) {
             // Filter changed - rebuild the filter-to-slot mapping so external systems
@@ -441,7 +486,8 @@ public class TileImportInterface extends AENetworkInvTile implements IGridTickab
     }
 
     @Override
-    public AECableType getCableConnectionType(final AEPartLocation dir) {
+    @Nonnull
+    public AECableType getCableConnectionType(@Nonnull final AEPartLocation dir) {
         return AECableType.SMART;
     }
 
@@ -461,10 +507,16 @@ public class TileImportInterface extends AENetworkInvTile implements IGridTickab
         return "gui.cells.import_interface.title";
     }
 
+    @Override
+    public ItemStack getBackButtonStack() {
+        return new ItemStack(this.getBlockType());
+    }
+
     // IGridTickable implementation
 
     @Override
-    public TickingRequest getTickingRequest(final IGridNode node) {
+    @Nonnull
+    public TickingRequest getTickingRequest(@Nonnull final IGridNode node) {
         // If polling rate is set, use fixed interval; otherwise use adaptive AE2 rates
         if (this.pollingRate > 0) {
             // For fixed polling, never start sleeping - always tick at the fixed rate
@@ -486,7 +538,8 @@ public class TileImportInterface extends AENetworkInvTile implements IGridTickab
     }
 
     @Override
-    public TickRateModulation tickingRequest(final IGridNode node, final int ticksSinceLastCall) {
+    @Nonnull
+    public TickRateModulation tickingRequest(@Nonnull final IGridNode node, final int ticksSinceLastCall) {
         if (!this.getProxy().isActive()) return TickRateModulation.SLEEP;
 
         boolean didWork = importItems();
@@ -528,7 +581,6 @@ public class TileImportInterface extends AENetworkInvTile implements IGridTickab
 
                 // Try to insert into network
                 IAEItemStack remaining = itemStorage.injectItems(aeStack, Actionable.MODULATE, this.actionSource);
-
                 if (remaining == null) {
                     // All items inserted
                     this.storageInventory.setStackInSlot(i, ItemStack.EMPTY);

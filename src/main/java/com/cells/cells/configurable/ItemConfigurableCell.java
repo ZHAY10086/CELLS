@@ -92,7 +92,8 @@ public class ItemConfigurableCell extends Item implements ICellWorkbenchItem, II
 
     @Override
     @SideOnly(Side.CLIENT)
-    public void addInformation(ItemStack stack, World world, List<String> tooltip, ITooltipFlag flag) {
+    public void addInformation(@Nonnull ItemStack stack, World world, @Nonnull List<String> tooltip,
+                               @Nonnull ITooltipFlag flag) {
         ItemStack component = ComponentHelper.getInstalledComponent(stack);
         ComponentInfo info = ComponentHelper.getComponentInfo(component);
 
@@ -145,7 +146,8 @@ public class ItemConfigurableCell extends Item implements ICellWorkbenchItem, II
     // =====================
 
     @Override
-    public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand hand) {
+    @Nonnull
+    public ActionResult<ItemStack> onItemRightClick(@Nonnull World world, EntityPlayer player, @Nonnull EnumHand hand) {
         ItemStack stack = player.getHeldItem(hand);
 
         if (player.isSneaking()) {
@@ -165,8 +167,10 @@ public class ItemConfigurableCell extends Item implements ICellWorkbenchItem, II
     }
 
     @Override
-    public EnumActionResult onItemUseFirst(EntityPlayer player, World world, BlockPos pos, EnumFacing side,
-                                           float hitX, float hitY, float hitZ, EnumHand hand) {
+    @Nonnull
+    public EnumActionResult onItemUseFirst(EntityPlayer player, @Nonnull World world,
+                                           @Nonnull BlockPos pos, @Nonnull EnumFacing side,
+                                           float hitX, float hitY, float hitZ, @Nonnull EnumHand hand) {
         if (player.isSneaking()) {
             // Must return SUCCESS on both client and server so the client doesn't
             // fire a redundant onItemRightClick, which would disassemble a second time.

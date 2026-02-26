@@ -262,6 +262,7 @@ item.cells.singularity_processor.logic.name=Singularity Logic Processor
 
 # Import Interface
 tile.cells.import_interface.name=Import Interface
+item.cells.part.import_interface.name=Import Interface
 gui.cells.import_interface.title=Import Interface
 gui.cells.import_interface.max_slot_size=Max Slot Size
 gui.cells.polling_rate.title=Polling Rate
@@ -277,6 +278,7 @@ message.cells.configurable_cell.split_stack=Split the cell stack first, before i
 
 # Fluid Import Interface
 tile.cells.import_fluid_interface.name=Fluid Import Interface
+item.cells.part.import_fluid_interface.name=Fluid Import Interface
 gui.cells.import_fluid_interface.title=Fluid Import Interface
 tooltip.cells.import_fluid_interface.info=Import fluids into the ME network through filtered slots. Does not support stocking or crafting.
 tooltip.cells.type.import_fluid_interface=Fluid Import Interface
