@@ -1,6 +1,7 @@
 package com.cells.blocks.fluidimportinterface;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -55,8 +56,6 @@ import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.util.inv.IAEAppEngInventory;
 import appeng.util.inv.InvOperation;
 import appeng.util.SettingsFrom;
-
-import java.nio.charset.StandardCharsets;
 
 import com.cells.blocks.importinterface.IImportInterfaceHost;
 import com.cells.blocks.importinterface.TileImportInterface;

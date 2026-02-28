@@ -8,8 +8,13 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Semantic Versioning: https://semver.org/spec/v2.0.0.html
 
 
+## [0.4.8] - 2026-02-28
+### Fixed
+- Fix a weird crash with some versions of Cleanroom (Material.IRON not existing)
+
+
 ## [0.4.7] - 2026-02-28
-### Added
+### Fixed
 - Fix Import Interface's slots not being aligned with filtered slots (slots with no filter are still not exposed)
 
 
