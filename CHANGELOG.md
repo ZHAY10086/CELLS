@@ -8,6 +8,11 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Semantic Versioning: https://semver.org/spec/v2.0.0.html
 
 
+## [0.4.9] - 2026-02-29
+### Changed
+- Make MixinBooter optional. The storage cells will only stack to 1 if mixins are not enabled, preventing duplication exploits in ME Chest/Workbench.
+
+
 ## [0.4.8] - 2026-02-28
 ### Fixed
 - Fix a weird crash with some versions of Cleanroom (Material.IRON not existing)

@@ -44,6 +44,7 @@ import com.cells.core.CellsCreativeTab;
 import com.cells.gui.CellsGuiHandler;
 import com.cells.integration.thaumicenergistics.ThaumicEnergisticsIntegration;
 import com.cells.integration.mekanismenergistics.MekanismEnergisticsIntegration;
+import com.cells.mixin.MixinState;
 import com.cells.util.CellDisassemblyHelper;
 import com.cells.util.CellUpgradeHelper;
 import com.cells.util.CustomCellUpgrades;
@@ -65,7 +66,9 @@ import com.cells.util.CustomCellUpgrades;
 public class ItemConfigurableCell extends Item implements ICellWorkbenchItem, IItemGroup {
 
     public ItemConfigurableCell() {
-        setMaxStackSize(64);
+        // Cells stack to 64 only if mixins are active (fixing AE2 slot limits).
+        // Without mixins, stacking cells causes duplication exploits in ME Chest/Workbench.
+        setMaxStackSize(MixinState.areMixinsEnabled() ? 64 : 1);
         setHasSubtypes(false);
         setMaxDamage(0);
         setCreativeTab(CellsCreativeTab.instance);

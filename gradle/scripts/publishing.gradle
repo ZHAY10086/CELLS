@@ -85,6 +85,12 @@ if (propertyBool('publish_to_curseforge')) {
                 relations {
                     // Required: AE2-UEL
                     requiredDependency 'ae2-extended-life'
+                    // Required: MixinBooter
+                    optionalDependency 'mixin-booter'
+                    // Optional: Thaumic Energistics
+                    optionalDependency 'thaumic-energistics'
+                    // Optional: Mekanism Energistics
+                    optionalDependency 'mekanism-energistics'
                     // Optional: JEI
                     optionalDependency 'jei'
                 }
