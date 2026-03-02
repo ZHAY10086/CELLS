@@ -18,6 +18,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.Constants;
@@ -325,6 +326,8 @@ public class TileFluidImportInterface extends AENetworkInvTile implements IGridT
         if (this.maxSlotSize < TileImportInterface.MIN_MAX_SLOT_SIZE) this.maxSlotSize = TileImportInterface.MIN_MAX_SLOT_SIZE;
         if (this.pollingRate < 0) this.pollingRate = 0;
 
+
+
         // Read fluid tanks
         if (data.hasKey("fluidTanks", Constants.NBT.TAG_LIST)) {
             NBTTagList tankList = data.getTagList("fluidTanks", Constants.NBT.TAG_COMPOUND);
@@ -396,11 +399,11 @@ public class TileFluidImportInterface extends AENetworkInvTile implements IGridT
             this.setMaxSlotSize(compound.getInteger("maxSlotSize"));
         }
         if (compound.hasKey("pollingRate")) {
-            this.setPollingRate(compound.getInteger("pollingRate"));
+            this.setPollingRate(compound.getInteger("pollingRate"), player);
         }
 
-        // Load filter inventory only when placing dismantled block (not for memory card)
-        if (from == SettingsFrom.DISMANTLE_ITEM && compound.hasKey("fluidFilters")) {
+        // Load filter inventory when memory card has filters
+        if (compound.hasKey("fluidFilters")) {
             this.filterInventory.readFromNBT(compound, "fluidFilters");
             this.refreshFilterMap();
         }
@@ -498,13 +501,26 @@ public class TileFluidImportInterface extends AENetworkInvTile implements IGridT
 
     @Override
     public void setPollingRate(int ticks) {
+        this.setPollingRate(ticks, null);
+    }
+
+    /**
+     * Set the polling rate with optional player notification on failure.
+     * @param ticks Polling rate in ticks (0 = adaptive)
+     * @param player Player to notify if re-registration fails, or null to skip notification
+     */
+    public void setPollingRate(int ticks, EntityPlayer player) {
         this.pollingRate = Math.max(0, ticks);
         this.markDirty();
 
         // Re-register with the tick manager to apply the new TickingRequest bounds.
         // Uses TickManagerHelper to purge stale TickTrackers from AE2's internal
         // PriorityQueue before re-registering (see TickManagerHelper for details).
-        TickManagerHelper.reRegisterTickable(this.getProxy().getNode(), this);
+        if (!TickManagerHelper.reRegisterTickable(this.getProxy().getNode(), this)) {
+            if (player != null) {
+                player.sendMessage(new TextComponentTranslation("chat.cells.polling_rate_delayed"));
+            }
+        }
     }
 
     @Override

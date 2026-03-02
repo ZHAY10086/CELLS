@@ -8,6 +8,14 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Semantic Versioning: https://semver.org/spec/v2.0.0.html
 
 
+## [0.4.11] - 2026-03-02
+### Added
+- Add additional Memory Card keybind to include filters when saving a card.
+- Add keybind to quickly add the hovered item to the first free filter slot in the Import Interfaces.
+- Add better explanations for how to best use the Import Interface in the buttons tooltip and the controls help widget.
+- Add a tooltip for components that are compatible with the Configurable Cell, to make it more clear which ones can be used in it.
+
+
 ## [0.4.10] - 2026-03-01
 ### Fixed
 - Fix gradle not including the API by default.

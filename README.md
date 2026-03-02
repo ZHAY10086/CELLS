@@ -9,7 +9,7 @@ This is a limitation of the ME Chest's implementation, which doesn't listen for 
 ### What mods does C.E.L.L.S. support?
 The mod requires AE2-UEL. It also has support for:
 - MixinBooter: Allows C.E.L.L.S.'s Storage Cells to stack to 64. Without it, allowing them to stack enables a duplication exploit with the ME Chest
-- JEI: Import Interface drag-and-drop
+- JEI: Import Interface drag-and-drop and quick-add features
 - Thaumic Energistics: Configurable Cell components
 - Mekanism Energistics: Configurable Cell components
 
