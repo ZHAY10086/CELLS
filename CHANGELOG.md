@@ -8,6 +8,11 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Semantic Versioning: https://semver.org/spec/v2.0.0.html
 
 
+## [0.5.5] - 2026-03-13
+### Added
+Add Creative Cell, a Cell that can only be configured in Creative mode, and exposes 4.6 quintillion of each set item.
+
+
 ## [0.5.4] - 2026-03-08
 ### Fixed
 - Fix Configurable Cells' weird behavior with max types (no max showing -1)
