@@ -8,6 +8,15 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Semantic Versioning: https://semver.org/spec/v2.0.0.html
 
 
+## [0.5.6] - 2026-03-13
+### Added
+- Add shift + right-click to set a Creative Cell filter from inventory.
+- Optimize the Creative Cell. Shouldn't make a huge difference in most cases, but who knows.
+
+### Fixed
+- Fixed Creative Cell not notifying the grid the items are not consumed. It's not that big of a deal as it has a ton of items, but could cause problem in some fringe cases.
+
+
 ## [0.5.5] - 2026-03-13
 ### Added
 Add Creative Cell, a Cell that can only be configured in Creative mode, and exposes 4.6 quintillion of each set item.
