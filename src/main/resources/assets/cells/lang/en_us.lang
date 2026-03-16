@@ -399,6 +399,7 @@ gui.cells.controls.use_cards=The §6Overflow Voiding Card§r and §6Trash Unsele
 gui.cells.controls.capacity_cards=Use §6Capacity Cards§r to add more filter pages.
 gui.cells.controls.memory_card_sneak=Sneak + right-click: Save settings.
 gui.cells.controls.memory_card_filter=Sneak + §b%s§r + right-click: Save with filters.
+gui.cells.controls.disassemble=Disassembling (with a wrench) will remember settings with filters.
 gui.cells.controls.key_not_set=(unset)
 gui.cells.controls.quick_add=§b%s§r: Add hovered item to first free filter slot.
 gui.cells.controls.jei_drag=Drag from JEI to add filter.
