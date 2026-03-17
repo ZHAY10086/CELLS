@@ -8,7 +8,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Semantic Versioning: https://semver.org/spec/v2.0.0.html
 
 
-## [0.5.9] - 2026-03-17
+## [0.5.9-rc] - 2026-03-17
 ### Fixed
 - Fix bug where the Import/Export Interface may never wake up in Adaptive mode (polling rate = 0) when there was nothing to import/export and the grid was cut (power loss or not enough channels) then reconnected.
 - Fix placing disassembled Import/Export Interfaces resetting them to default settings and filters.
