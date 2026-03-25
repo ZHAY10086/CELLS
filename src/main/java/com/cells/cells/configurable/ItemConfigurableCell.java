@@ -135,7 +135,6 @@ public class ItemConfigurableCell extends Item implements ICellWorkbenchItem, II
         // Show component itemStack name if present
         if (!component.isEmpty()) tooltip.add("§e" + component.getDisplayName());
 
-
         // Show AE2 cell info (bytes, types, stored items)
         ChannelType channelType = info.getChannelType();
         ICellInventory<?> cellInv = null;
