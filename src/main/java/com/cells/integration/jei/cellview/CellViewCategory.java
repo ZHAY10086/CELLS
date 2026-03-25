@@ -555,6 +555,7 @@ public class CellViewCategory implements IRecipeCategory<CellViewRecipe>, IRecip
     }
 
     // Used in the JEI overlay mixin to render stack sizes on top of the gas stacks
+    @SuppressWarnings("unused")
     private void drawStackSizes(Minecraft minecraft) {
         if (currentRecipe == null) return;
 

@@ -302,7 +302,7 @@ public class ContainerEssentiaInterface
         if (registryName == null) return false;
 
         int containerCapacity = ThEApi.instance().config().essentiaContainerCapacity()
-            .getOrDefault(registryName.toString() + ":" + held.getMetadata(), 0);
+            .getOrDefault(registryName + ":" + held.getMetadata(), 0);
         if (containerCapacity <= 0) {
             // Try without metadata
             containerCapacity = ThEApi.instance().config().essentiaContainerCapacity()

@@ -163,8 +163,6 @@ public final class CellUpgradeHelper {
     public static void addUpgradeTooltips(IItemHandler upgrades, List<String> tooltip) {
         if (upgrades == null) return;
 
-        List<String> upgradeInfo = new ArrayList<>();
-
         for (int i = 0; i < upgrades.getSlots(); i++) {
             ItemStack stack = upgrades.getStackInSlot(i);
             if (stack.isEmpty()) continue;

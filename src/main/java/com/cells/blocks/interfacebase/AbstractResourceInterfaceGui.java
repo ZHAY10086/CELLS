@@ -58,7 +58,7 @@ import com.cells.network.packets.PacketOpenGui;
  * <ul>
  *   <li>Provide filter slot factory via {@link #createFilterSlotForIndex(int, int, int)}</li>
  *   <li>Provide tank/storage slot factory via {@link #createTankSlotForIndex(int, int, int)}</li>
- *   <li>Handle JEI ghost ingredients in {@link #createJEITargets(Object)}</li>
+ *   <li>Handle JEI ghost ingredients in {@link #getPhantomTargets(Object)}</li>
  *   <li>Optionally override {@link #handleQuickAdd(Slot)} for quick-add keybind</li>
  * </ul>
  *
@@ -309,7 +309,7 @@ public abstract class AbstractResourceInterfaceGui<H extends IInterfaceHost, C e
             int availableWidth = maxTitleWidth - ellipsisWidth;
 
             // Trim characters until it fits
-            while (titleWidth > availableWidth && title.length() > 0) {
+            while (titleWidth > availableWidth && !title.isEmpty()) {
                 title = title.substring(0, title.length() - 1);
                 titleWidth = this.fontRenderer.getStringWidth(title);
             }

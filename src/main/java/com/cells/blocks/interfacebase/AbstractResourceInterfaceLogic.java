@@ -993,7 +993,7 @@ public abstract class AbstractResourceInterfaceLogic<R, AE extends IAEStack<AE>,
 
                 R filter = readResourceFromNBT(filterTag);
                 if (filter != null) this.filters[slot] = filter;
-            } catch (NumberFormatException e) {
+            } catch (NumberFormatException ignored) {
             }
         }
     }
@@ -1031,7 +1031,7 @@ public abstract class AbstractResourceInterfaceLogic<R, AE extends IAEStack<AE>,
                 if (slot >= 0 && slot < STORAGE_SLOTS) {
                     this.storage[slot] = readResourceFromNBT(storageMap.getCompoundTag(key));
                 }
-            } catch (NumberFormatException e) {
+            } catch (NumberFormatException ignored) {
             }
         }
     }
@@ -1280,7 +1280,7 @@ public abstract class AbstractResourceInterfaceLogic<R, AE extends IAEStack<AE>,
                 if (filterTag.isEmpty()) continue;
 
                 sourceFilters[slot] = readResourceFromNBT(filterTag);
-            } catch (NumberFormatException e) {
+            } catch (NumberFormatException ignored) {
             }
         }
 

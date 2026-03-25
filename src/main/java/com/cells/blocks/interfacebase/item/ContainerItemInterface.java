@@ -29,7 +29,7 @@ import com.cells.util.ItemStackKey;
  * <p>
  * Extends {@link AbstractContainerInterface} with item-specific implementations.
  * Filter slots are custom GUI slots ({@link com.cells.gui.slots.ItemFilterSlot}) with unified PacketResourceSlot sync.
- * Storage slots use {@link ItemStorageSlot} for actual item manipulation.
+ * Storage slots use {@link com.cells.gui.slots.ItemStorageSlot} for actual item manipulation.
  * <p>
  * Layout: 4 rows of slots (filter above storage), 4 upgrade slots on the right.
  */
@@ -349,7 +349,8 @@ public class ContainerItemInterface
      * that don't support AE2-UEL's extended encoding.
      */
     @Override
-    public ItemStack slotClick(int slotId, int dragType, ClickType clickTypeIn, EntityPlayer player) {
+    @Nonnull
+    public ItemStack slotClick(int slotId, int dragType, ClickType clickTypeIn, @Nonnull EntityPlayer player) {
         ItemStack result = super.slotClick(slotId, dragType, clickTypeIn, player);
 
         if (!result.isEmpty() && result.getCount() > result.getMaxStackSize()) {

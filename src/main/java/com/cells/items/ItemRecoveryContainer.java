@@ -137,7 +137,7 @@ public class ItemRecoveryContainer extends Item {
      * Get the type (TYPE_FLUID, TYPE_GAS, or TYPE_ESSENTIA).
      */
     public static int getType(ItemStack stack) {
-        if (stack.isEmpty() || !stack.hasTagCompound()) return TYPE_FLUID;
+        if (!stack.hasTagCompound()) return TYPE_FLUID;
 
         return stack.getTagCompound().getInteger(NBT_TYPE);
     }
@@ -159,7 +159,7 @@ public class ItemRecoveryContainer extends Item {
      * Get the stored amount.
      */
     public static int getAmount(ItemStack stack) {
-        if (stack.isEmpty() || !stack.hasTagCompound()) return 0;
+        if (!stack.hasTagCompound()) return 0;
 
         return stack.getTagCompound().getInteger(NBT_AMOUNT);
     }
@@ -168,7 +168,7 @@ public class ItemRecoveryContainer extends Item {
      * Set the stored amount. If amount <= 0, the stack should be discarded.
      */
     public static void setAmount(ItemStack stack, int amount) {
-        if (stack.isEmpty() || !stack.hasTagCompound()) return;
+        if (!stack.hasTagCompound()) return;
 
         stack.getTagCompound().setInteger(NBT_AMOUNT, amount);
     }
@@ -178,7 +178,7 @@ public class ItemRecoveryContainer extends Item {
      */
     @Nullable
     public static String getFluidName(ItemStack stack) {
-        if (stack.isEmpty() || !stack.hasTagCompound()) return null;
+        if (!stack.hasTagCompound()) return null;
         if (getType(stack) != TYPE_FLUID) return null;
 
         return stack.getTagCompound().getString(NBT_FLUID_NAME);
@@ -203,7 +203,7 @@ public class ItemRecoveryContainer extends Item {
      */
     @Nullable
     public static String getGasName(ItemStack stack) {
-        if (stack.isEmpty() || !stack.hasTagCompound()) return null;
+        if (!stack.hasTagCompound()) return null;
         if (getType(stack) != TYPE_GAS) return null;
 
         return stack.getTagCompound().getString(NBT_GAS_NAME);
@@ -214,7 +214,7 @@ public class ItemRecoveryContainer extends Item {
      */
     @Nullable
     public static String getEssentiaTag(ItemStack stack) {
-        if (stack.isEmpty() || !stack.hasTagCompound()) return null;
+        if (!stack.hasTagCompound()) return null;
         if (getType(stack) != TYPE_ESSENTIA) return null;
 
         return stack.getTagCompound().getString(NBT_ESSENTIA_TAG);
@@ -383,7 +383,7 @@ public class ItemRecoveryContainer extends Item {
             TextureAtlasSprite sprite = Minecraft.getMinecraft().getTextureMapBlocks()
                 .getAtlasSprite(fluid.getStill(fluidStack).toString());
 
-            if (sprite == null || sprite.getFrameCount() == 0) return cacheColor(key, 0xFFFFFF);
+            if (sprite.getFrameCount() == 0) return cacheColor(key, 0xFFFFFF);
 
             // Sample the center pixel of the first frame
             int width = sprite.getIconWidth();
@@ -393,7 +393,7 @@ public class ItemRecoveryContainer extends Item {
 
             // getFrameTextureData returns [frame][pixel data as ARGB]
             int[][] frameData = sprite.getFrameTextureData(0);
-            if (frameData == null || frameData.length == 0 || frameData[0] == null) {
+            if (frameData.length == 0 || frameData[0] == null) {
                 return cacheColor(key, 0xFFFFFF);
             }
 

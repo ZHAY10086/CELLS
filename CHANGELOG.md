@@ -15,12 +15,13 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Fix inconsistencies with the Memory Card (now tested on all Full-block vs Part).
 
 ### Added
+- Optimize the Storage Bus on Item Interface interaction (only ITEM) to be at the same performance level as a drawer wall (without the drawer wall sync overhead).
 - Add Creative Fluid Cell, the fluid counterpart of the Creative Cell, with the same behavior but for fluids.
 - Add quick-add keybind handling for the Creative Cell, like is done for Import/Export interfaces.
 - Add Gas Creative Cell.
 - Add Gas Import/Export interface.
 - Add Essentia Creative Cell.
-- Add Essentia Import/Export interface.
+- Add Essentia Import/Export interface. It can be used directly on Thaumatorium, Infusion, and probably also with Essentia hatches.
 - Add Recovery Orb item, an item that is dropped when a non-item interface is broken/shrunk and cannot send its contents back to the network.
 
 ### Changed
@@ -31,6 +32,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Unify Import/Export Interfaces (tiles and parts) even more, to allow for less tedious addition of Gas/Essentia types.
 - Unify Creative Cells for the same purpose.
 - Unify all slot behaviors (Sneak-click, left-click, right-click, quick-add, JEI add, rendering, etc.)
+- Allow Item Interface to provide IItemRepository instead of only IItemHandler, for less capabilities overhead.
 
 
 ## [0.5.9-rc] - 2026-03-17

@@ -238,8 +238,6 @@ public abstract class AbstractResourceFilterSlot<R> extends GuiCustomSlot implem
      * The GUI can call this method on each filter slot instead of manually
      * creating targets with duplicated code.
      *
-     * @param guiLeft The GUI's left offset (to calculate absolute position)
-     * @param guiTop The GUI's top offset (to calculate absolute position)
      * @return A JEI Target that can accept ingredients for this slot
      */
     public Target<Object> createJEITarget(IntSupplier guiLeftSupplier, IntSupplier guiTopSupplier) {
