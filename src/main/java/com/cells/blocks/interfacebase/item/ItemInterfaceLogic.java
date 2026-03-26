@@ -511,6 +511,7 @@ public class ItemInterfaceLogic extends AbstractResourceInterfaceLogic<ItemStack
                 existing.grow(toInsert);
                 this.host.markDirtyAndSave();
                 this.host.markForNetworkUpdate();
+                this.wakeUpIfAdaptive();
             }
 
             if (toInsert >= stack.getCount()) return ItemStack.EMPTY;
@@ -527,6 +528,7 @@ public class ItemInterfaceLogic extends AbstractResourceInterfaceLogic<ItemStack
                 this.storage[targetSlot] = newStack;
                 this.host.markDirtyAndSave();
                 this.host.markForNetworkUpdate();
+                this.wakeUpIfAdaptive();
             }
 
             if (toInsert >= stack.getCount()) return ItemStack.EMPTY;
@@ -765,6 +767,7 @@ public class ItemInterfaceLogic extends AbstractResourceInterfaceLogic<ItemStack
                 if (stack.getCount() <= 0) logic.storage[storageSlot] = null;
                 logic.host.markDirtyAndSave();
                 logic.host.markForNetworkUpdate();
+                logic.wakeUpIfAdaptive();
             }
 
             return result;
@@ -832,6 +835,7 @@ public class ItemInterfaceLogic extends AbstractResourceInterfaceLogic<ItemStack
                 if (stored.getCount() <= 0) logic.storage[targetSlot] = null;
                 logic.host.markDirtyAndSave();
                 logic.host.markForNetworkUpdate();
+                logic.wakeUpIfAdaptive();
             }
 
             return result;

@@ -24,6 +24,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
 
+import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
@@ -61,6 +62,7 @@ public class ItemRecoveryContainer extends Item {
     // NBT keys
     private static final String NBT_TYPE = "DropType";
     private static final String NBT_FLUID_NAME = "FluidName";
+    private static final String NBT_FLUID_TAG = "FluidTag";
     private static final String NBT_AMOUNT = "Amount";
     // For gas/essentia integration
     private static final String NBT_GAS_NAME = "GasName";
@@ -100,9 +102,19 @@ public class ItemRecoveryContainer extends Item {
     public static ItemStack createForFluid(@Nullable FluidStack fluid) {
         if (fluid == null || fluid.amount <= 0) return ItemStack.EMPTY;
 
-        // FIXME: Fluid's NBT doesn't seem to be saved (will be bad for potions, f.e.)
+        NBTTagCompound nbt = new NBTTagCompound();
+        nbt.setInteger(NBT_TYPE, TYPE_FLUID);
+        nbt.setString(NBT_FLUID_NAME, fluid.getFluid().getName());
+        nbt.setInteger(NBT_AMOUNT, fluid.amount);
 
-        return create(TYPE_FLUID, NBT_FLUID_NAME, fluid.getFluid().getName(), fluid.amount);
+        // Store fluid's NBT (for potions, etc.)
+        if (fluid.tag != null) {
+            nbt.setTag(NBT_FLUID_TAG, fluid.tag.copy());
+        }
+
+        ItemStack stack = new ItemStack(ItemRegistry.RECOVERY_CONTAINER);
+        stack.setTagCompound(nbt);
+        return stack;
     }
 
     /**
@@ -195,7 +207,15 @@ public class ItemRecoveryContainer extends Item {
         Fluid fluid = FluidRegistry.getFluid(fluidName);
         if (fluid == null) return null;
 
-        return new FluidStack(fluid, getAmount(stack));
+        FluidStack fluidStack = new FluidStack(fluid, getAmount(stack));
+
+        // Restore fluid's NBT (for potions, etc.)
+        NBTTagCompound itemNbt = stack.getTagCompound();
+        if (itemNbt != null && itemNbt.hasKey(NBT_FLUID_TAG, Constants.NBT.TAG_COMPOUND)) {
+            fluidStack.tag = itemNbt.getCompoundTag(NBT_FLUID_TAG).copy();
+        }
+
+        return fluidStack;
     }
 
     /**

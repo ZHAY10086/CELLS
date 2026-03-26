@@ -1,7 +1,6 @@
 package com.cells.blocks.interfacebase;
 
 import java.lang.reflect.Array;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -20,6 +19,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
+import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.items.IItemHandler;
 
 import appeng.api.config.Actionable;
@@ -366,6 +366,7 @@ public abstract class AbstractResourceInterfaceLogic<R, AE extends IAEStack<AE>,
 
         this.host.markDirtyAndSave();
         this.host.markForNetworkUpdate();
+        this.wakeUpIfAdaptive();
 
         return toInsert;
     }
@@ -1077,15 +1078,12 @@ public abstract class AbstractResourceInterfaceLogic<R, AE extends IAEStack<AE>,
         int count = data.readShort();
         for (int idx = 0; idx < count; idx++) {
             int slot = data.readShort();
-            int nameLen = data.readShort();
-            byte[] nameBytes = new byte[nameLen];
-            data.readBytes(nameBytes);
-            String resourceName = new String(nameBytes, StandardCharsets.UTF_8);
-            int amount = data.readInt();
+            NBTTagCompound tag = ByteBufUtils.readTag(data);
 
             if (slot < 0 || slot >= STORAGE_SLOTS) continue;
+            if (tag == null) continue;
 
-            R resource = getResourceByName(resourceName, amount);
+            R resource = readResourceFromNBT(tag);
             if (resource != null) {
                 this.storage[slot] = resource;
                 changed = true;
@@ -1113,11 +1111,9 @@ public abstract class AbstractResourceInterfaceLogic<R, AE extends IAEStack<AE>,
 
             data.writeShort(i);
 
-            byte[] nameBytes = getResourceName(resource).getBytes(StandardCharsets.UTF_8);
-            data.writeShort(nameBytes.length);
-            data.writeBytes(nameBytes);
-
-            data.writeInt(getAmount(resource));
+            NBTTagCompound tag = new NBTTagCompound();
+            writeResourceToNBT(resource, tag);
+            ByteBufUtils.writeTag(data, tag);
         }
     }
 
@@ -1139,14 +1135,12 @@ public abstract class AbstractResourceInterfaceLogic<R, AE extends IAEStack<AE>,
         int count = data.readShort();
         for (int idx = 0; idx < count; idx++) {
             int slot = data.readShort();
-            int nameLen = data.readShort();
-            byte[] nameBytes = new byte[nameLen];
-            data.readBytes(nameBytes);
-            String resourceName = new String(nameBytes, StandardCharsets.UTF_8);
+            NBTTagCompound tag = ByteBufUtils.readTag(data);
 
             if (slot < 0 || slot >= FILTER_SLOTS) continue;
+            if (tag == null) continue;
 
-            R resource = getResourceByName(resourceName, 1);
+            R resource = readResourceFromNBT(tag);
             if (resource != null) {
                 this.filters[slot] = resource;
                 changed = true;
@@ -1175,9 +1169,9 @@ public abstract class AbstractResourceInterfaceLogic<R, AE extends IAEStack<AE>,
 
             data.writeShort(i);
 
-            byte[] nameBytes = getResourceName(filter).getBytes(StandardCharsets.UTF_8);
-            data.writeShort(nameBytes.length);
-            data.writeBytes(nameBytes);
+            NBTTagCompound tag = new NBTTagCompound();
+            writeResourceToNBT(filter, tag);
+            ByteBufUtils.writeTag(data, tag);
         }
     }
 

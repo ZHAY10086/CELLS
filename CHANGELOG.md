@@ -8,6 +8,12 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Semantic Versioning: https://semver.org/spec/v2.0.0.html
 
 
+## [0.5.11] - ???
+- Fix Import Interfaces not waking up when resources are inserted in via GUI after switching to Adaptive mode.
+- Fix client-side refresh of interface slots not sending NBT (losing the NBT of potions, for example), causing the client to display incorrect information.
+- Fix Content Recovery Orb not handling fluid NBT.
+
+
 ## [0.5.10-beta] - 2026-03-26
 ### Fixed
 - Fix Import/Export Fluid Interfaces not accepting the same fluid with different NBT (e.g. potions).
