@@ -8,6 +8,7 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 
 import com.cells.ItemRegistry;
 import com.cells.client.CellItemColors;
+import com.cells.client.ComponentItemColors;
 import com.cells.client.ComponentTooltipHandler;
 import com.cells.client.KeyBindings;
 import com.cells.client.MemoryCardInteractionHandler;
@@ -46,6 +47,9 @@ public class ClientProxy extends CommonProxy {
 
         // Register layered cell color handlers for all cell types
         registerCellColors(itemColors);
+
+        // Register component color handlers for all component types
+        registerComponentColors(itemColors);
 
         // Recovery container uses the contained fluid's color for tinting
         if (ItemRegistry.RECOVERY_CONTAINER != null) {
@@ -86,6 +90,34 @@ public class ClientProxy extends CommonProxy {
         // Configurable cells (supports all channel types)
         if (ItemRegistry.CONFIGURABLE_CELL != null) {
             itemColors.registerItemColorHandler(colorHandler, ItemRegistry.CONFIGURABLE_CELL);
+        }
+    }
+
+    /**
+     * Register color handlers for the modular layered component texture system.
+     * All component types use ComponentItemColors to determine tint color for the wave layer.
+     */
+    private void registerComponentColors(ItemColors itemColors) {
+        ComponentItemColors colorHandler = ComponentItemColors.INSTANCE;
+
+        // Compacting components
+        if (ItemRegistry.COMPACTING_COMPONENT != null) {
+            itemColors.registerItemColorHandler(colorHandler, ItemRegistry.COMPACTING_COMPONENT);
+        }
+
+        // Hyper Density components (item)
+        if (ItemRegistry.HYPER_DENSITY_COMPONENT != null) {
+            itemColors.registerItemColorHandler(colorHandler, ItemRegistry.HYPER_DENSITY_COMPONENT);
+        }
+
+        // Hyper Density Compacting components
+        if (ItemRegistry.HYPER_DENSITY_COMPACTING_COMPONENT != null) {
+            itemColors.registerItemColorHandler(colorHandler, ItemRegistry.HYPER_DENSITY_COMPACTING_COMPONENT);
+        }
+
+        // Fluid Hyper Density components
+        if (ItemRegistry.FLUID_HYPER_DENSITY_COMPONENT != null) {
+            itemColors.registerItemColorHandler(colorHandler, ItemRegistry.FLUID_HYPER_DENSITY_COMPONENT);
         }
     }
 }

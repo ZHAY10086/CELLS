@@ -110,7 +110,7 @@ public class CellViewCategory implements IRecipeCategory<CellViewRecipe>, IRecip
 
         // Get the cell icon for the category
         this.icon = guiHelper.drawableBuilder(
-            new ResourceLocation(Tags.MODID, "textures/items/cells/hyper_density/hyper_density_cell_1g.png"), 0, 0, 16, 16)
+            new ResourceLocation(Tags.MODID, "textures/items/cells/cell_preview.png"), 0, 0, 16, 16)
             .setTextureSize(16, 16)
             .build();
     }

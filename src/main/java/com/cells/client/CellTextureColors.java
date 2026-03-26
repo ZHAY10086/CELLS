@@ -128,7 +128,8 @@ public final class CellTextureColors {
         CONFIGURABLE_ESSENTIA(0xEA00FF),
         COMPACTING(0x5050FF),
         HYPER_DENSITY_ITEM(0x00FFFF),
-        HYPER_DENSITY_FLUID(0xFF00FF);
+        HYPER_DENSITY_FLUID(0xFF00FF),
+        HYPER_DENSITY_COMPACTING(0x5050FF);
 
         // Pre-computed colors for each brightness cycle (0=low, 1=medium, 2=high)
         private final int[] outerColors;  // outer shape (darker)
@@ -167,6 +168,69 @@ public final class CellTextureColors {
         public int getOuterColor(int tier) {
             return outerColors[getBrightnessCycle(tier)];
         }
+    }
+
+    // =====================
+    // Component Tint Colors (for wave layer)
+    // =====================
+
+    /**
+     * Component wave base color for Hyper Density Item type.
+     * Pure cyan, used to tint the grayscale wave texture.
+     */
+    public static final int HYPER_DENSITY_ITEM_WAVE_COLOR = 0x00FFFF;
+
+    /**
+     * Component wave base color for Hyper Density Fluid type.
+     * Pure magenta, used to tint the grayscale wave texture.
+     */
+    public static final int HYPER_DENSITY_FLUID_WAVE_COLOR = 0xFF00FF;
+
+    /**
+     * Component wave base color for Hyper Density Compacting type.
+     * Purple-blue, used to tint the grayscale wave texture.
+     */
+    public static final int HYPER_DENSITY_COMPACTING_WAVE_COLOR = 0x5050FF;
+
+    /**
+     * Component wave base color for Compacting type.
+     * Purple-blue, used to tint the grayscale wave texture.
+     */
+    public static final int COMPACTING_WAVE_COLOR = 0x5050FF;
+
+    /**
+     * Enumeration of component types for wave layer coloring.
+     * Each type has a base color used to tint the grayscale wave texture.
+     */
+    public enum ComponentType {
+        HYPER_DENSITY_ITEM(HYPER_DENSITY_ITEM_WAVE_COLOR),
+        HYPER_DENSITY_FLUID(HYPER_DENSITY_FLUID_WAVE_COLOR),
+        HYPER_DENSITY_COMPACTING(HYPER_DENSITY_COMPACTING_WAVE_COLOR),
+        COMPACTING(COMPACTING_WAVE_COLOR);
+
+        private final int waveColor;
+
+        ComponentType(int waveColor) {
+            this.waveColor = waveColor;
+        }
+
+        /**
+         * Get the wave tint color for this component type.
+         * This color is applied to the grayscale wave layer.
+         */
+        public int getWaveColor() {
+            return waveColor | 0xFF000000;  // Ensure full alpha
+        }
+    }
+
+    /**
+     * Get the component wave tint color for a component type.
+     *
+     * @param componentType The component type
+     * @return Tint color for the component wave layer
+     */
+    public static int getComponentWaveColor(ComponentType componentType) {
+        return componentType.getWaveColor();
     }
 
     // =====================

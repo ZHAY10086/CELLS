@@ -8,7 +8,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Semantic Versioning: https://semver.org/spec/v2.0.0.html
 
 
-## [0.5.10-beta] - 2026-03-24
+## [0.5.10-beta] - 2026-03-26
 ### Fixed
 - Fix Import/Export Fluid Interfaces not accepting the same fluid with different NBT (e.g. potions).
 - Fix some blocks using the wrong texture.
@@ -26,13 +26,15 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ### Changed
 - Make the Creative Cell accept and void content that they produce, acting as both a producer and a sink, to avoid issues with items not being able to return to the network because we extracted them from the cell but they can't be inserted back.
-- Reject Cells as valid targets for Creative Cells
+- Reject Cells as valid targets for Creative Cells.
+- Retouch component textures to be easier to work with (more unified). The wave animation has been removed to be reworked later (was nearly imperceptible).
 
 ### Technical
 - Unify Import/Export Interfaces (tiles and parts) even more, to allow for less tedious addition of Gas/Essentia types.
 - Unify Creative Cells for the same purpose.
 - Unify all slot behaviors (Sneak-click, left-click, right-click, quick-add, JEI add, rendering, etc.)
 - Allow Item Interface to provide IItemRepository instead of only IItemHandler, for less capabilities overhead.
+- Replace backed textures (~150) by overlaid layers with tinting. Any new cell type would not add new textures, only requiring tinting support in the code. This shaves ~300kB from the (compressed) JAR.
 
 
 ## [0.5.9-rc] - 2026-03-17

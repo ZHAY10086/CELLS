@@ -279,10 +279,11 @@ public class ItemRegistry {
                     makeLayeredModelLocation("normal", CellTextureColors.getShapeIndex(i)));
             }
 
+            // Components use layered models with tintable wave layer
             String[] componentTiers = ItemCompactingComponent.getTierNames();
             for (int i = 0; i < componentTiers.length; i++) {
                 ModelLoader.setCustomModelResourceLocation(COMPACTING_COMPONENT, i,
-                    makeModelLocation(COMPACTING_COMPONENT, "cells/compacting", "_" + componentTiers[i]));
+                    makeComponentLayeredModelLocation("normal", componentTiers[i]));
             }
         }
 
@@ -297,7 +298,7 @@ public class ItemRegistry {
             String[] hdComponentTiers = ItemHyperDensityComponent.getTierNames();
             for (int i = 0; i < hdComponentTiers.length; i++) {
                 ModelLoader.setCustomModelResourceLocation(HYPER_DENSITY_COMPONENT, i,
-                    makeModelLocation(HYPER_DENSITY_COMPONENT, "cells/hyper_density", "_" + hdComponentTiers[i]));
+                    makeComponentLayeredModelLocation("hyper_density", hdComponentTiers[i]));
             }
         }
 
@@ -312,7 +313,7 @@ public class ItemRegistry {
             String[] hdCompactingComponentTiers = ItemHyperDensityCompactingComponent.getTierNames();
             for (int i = 0; i < hdCompactingComponentTiers.length; i++) {
                 ModelLoader.setCustomModelResourceLocation(HYPER_DENSITY_COMPACTING_COMPONENT, i,
-                    makeModelLocation(HYPER_DENSITY_COMPACTING_COMPONENT, "cells/hyper_density_compacting", "_" + hdCompactingComponentTiers[i]));
+                    makeComponentLayeredModelLocation("hyper_density", hdCompactingComponentTiers[i]));
             }
         }
 
@@ -330,7 +331,7 @@ public class ItemRegistry {
             String[] fluidHdComponentTiers = ItemFluidHyperDensityComponent.getTierNames();
             for (int i = 0; i < fluidHdComponentTiers.length; i++) {
                 ModelLoader.setCustomModelResourceLocation(FLUID_HYPER_DENSITY_COMPONENT, i,
-                    makeModelLocation(FLUID_HYPER_DENSITY_COMPONENT, "cells/hyper_density_fluid", "_" + fluidHdComponentTiers[i]));
+                    makeComponentLayeredModelLocation("hyper_density", fluidHdComponentTiers[i]));
             }
         }
 
@@ -446,7 +447,22 @@ public class ItemRegistry {
      */
     @SideOnly(Side.CLIENT)
     private static ModelResourceLocation makeLayeredModelLocation(String frameType, int shapeIndex) {
-        return new ModelResourceLocation(Tags.MODID + ":cells/cell_layered_" + frameType + "_" + shapeIndex, "inventory");
+        String modelPath = "cells/cell_" + frameType + "/layered_" + shapeIndex;
+        return new ModelResourceLocation(Tags.MODID + ":" + modelPath, "inventory");
+    }
+
+    /**
+     * Create a ModelResourceLocation for a layered component model.
+     * These models use tintable wave textures (layer0=wave, layer1=frame).
+     *
+     * @param componentType "normal" or "hyper_density"
+     * @param tierName The tier suffix (e.g., "1k", "4k", etc.)
+     * @return The model resource location
+     */
+    @SideOnly(Side.CLIENT)
+    private static ModelResourceLocation makeComponentLayeredModelLocation(String componentType, String tierName) {
+        String modelPath = "cells/component_" + componentType + "/layered_" + tierName;
+        return new ModelResourceLocation(Tags.MODID + ":" + modelPath, "inventory");
     }
 
     @SideOnly(Side.CLIENT)
@@ -462,33 +478,5 @@ public class ItemRegistry {
 
     private static ModelResourceLocation makeModelLocation(Item item, String folder) {
         return makeModelLocation(item, folder, null);
-    }
-
-    @SideOnly(Side.CLIENT)
-    private static void registerModel(Item item) {
-        if (item == null) return;
-
-        String folder;
-        if (item instanceof ItemCompactingCell || item instanceof ItemCompactingComponent) {
-            folder = "cells/compacting";
-        } else if (item instanceof ItemHyperDensityCell || item instanceof ItemHyperDensityComponent) {
-            folder = "cells/hyper_density";
-        } else if (item instanceof ItemFluidHyperDensityCell || item instanceof ItemFluidHyperDensityComponent) {
-            folder = "cells/hyper_density_fluid";
-        } else if (item instanceof ItemHyperDensityCompactingCell || item instanceof ItemHyperDensityCompactingComponent) {
-            folder = "cells/hyper_density_compacting";
-        } else if (item instanceof ItemConfigurableCell) {
-            folder = "cells/configurable";
-        } else if (item instanceof AbstractCreativeCellItem) {
-            folder = "cells/creative";
-        } else if (item instanceof ItemOverflowCard || item instanceof ItemOreDictCard
-            || item instanceof ItemTrashUnselectedCard || item instanceof ItemEqualDistributionCard
-            || item instanceof ItemCompressionTierCard || item instanceof ItemDecompressionTierCard) {
-            folder = "upgrades";
-        } else {
-            folder = "processors";
-        }
-
-        ModelLoader.setCustomModelResourceLocation(item, 0, makeModelLocation(item, folder));
     }
 }
