@@ -8,18 +8,20 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Semantic Versioning: https://semver.org/spec/v2.0.0.html
 
 
-## [0.5.11] - ???
+## [0.5.10-beta2] - 2026-03-26
+### Added
+- Make Adaptive Mode more efficient by only forcing the wake-up when we are sleeping (not just slower). This means a somewhat constant stream of item will not ask the network to wake up at every insertion, relying instead on AE2's adaptive rates. "Fixed Polling" is not affected by this change (as it never "sleeps").
+- Add AE2 ToolNetworkTool support for Import/Export Interfaces (Upgrade Cards holder).
+
+### Fixed
 - Fix Import Interfaces not waking up when resources are inserted in via GUI after switching to Adaptive mode.
 - Fix client-side refresh of interface slots not sending NBT (losing the NBT of potions, for example), causing the client to display incorrect information.
 - Fix Content Recovery Orb not handling fluid NBT.
+- Fix crash when JEI is not present (missing some checks).
+- Fix crash when Storage Drawers is present (double IItemRepository initialization).
 
 
 ## [0.5.10-beta] - 2026-03-26
-### Fixed
-- Fix Import/Export Fluid Interfaces not accepting the same fluid with different NBT (e.g. potions).
-- Fix some blocks using the wrong texture.
-- Fix inconsistencies with the Memory Card (now tested on all Full-block vs Part).
-
 ### Added
 - Optimize the Storage Bus on Item Interface interaction (only ITEM) to be at the same performance level as a drawer wall (without the drawer wall sync overhead).
 - Add Creative Fluid Cell, the fluid counterpart of the Creative Cell, with the same behavior but for fluids.
@@ -29,6 +31,11 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Add Essentia Creative Cell.
 - Add Essentia Import/Export interface. It can be used directly on Thaumatorium, Infusion, and probably also with Essentia hatches.
 - Add Recovery Orb item, an item that is dropped when a non-item interface is broken/shrunk and cannot send its contents back to the network.
+
+### Fixed
+- Fix Import/Export Fluid Interfaces not accepting the same fluid with different NBT (e.g. potions).
+- Fix some blocks using the wrong texture.
+- Fix inconsistencies with the Memory Card (now tested on all Full-block vs Part).
 
 ### Changed
 - Make the Creative Cell accept and void content that they produce, acting as both a producer and a sink, to avoid issues with items not being able to return to the network because we extracted them from the cell but they can't be inserted back.

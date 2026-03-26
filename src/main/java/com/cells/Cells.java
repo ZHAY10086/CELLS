@@ -7,6 +7,7 @@ import org.apache.logging.log4j.Logger;
 
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.capabilities.CapabilityManager;
+import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.SidedProxy;
@@ -52,8 +53,12 @@ public class Cells {
     public void preInit(FMLPreInitializationEvent event) {
         // Register IItemRepository capability so AE2 Storage Buses can use bulk slotless
         // access on our item interfaces, even without Storage Drawers installed.
-        // Safe to call multiple times — Forge ignores duplicate registrations.
-        CapabilityManager.INSTANCE.register(IItemRepository.class, new IItemRepository.NullStorage(), IItemRepository.NullImpl::new);
+        // Only register if Storage Drawers is not installed, as it registers the capability itself.
+        // TODO: What if someone else has the "great idea" of doing the exact same thing?
+        //       Can we detect conflicts or multiple registrations?
+        if (!Loader.isModLoaded("storagedrawers")) {
+            CapabilityManager.INSTANCE.register(IItemRepository.class, new IItemRepository.NullStorage(), IItemRepository.NullImpl::new);
+        }
 
         // Initialize configuration
         File configDir = event.getModConfigurationDirectory();

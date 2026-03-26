@@ -20,7 +20,6 @@ import com.cells.cells.configurable.ChannelType;
 import com.cells.cells.configurable.ComponentHelper;
 import com.cells.cells.configurable.ComponentInfo;
 import com.cells.cells.configurable.ItemConfigurableCell;
-import com.cells.cells.creative.AbstractCreativeCellItem;
 import com.cells.cells.creative.item.ItemCreativeCell;
 import com.cells.cells.creative.fluid.ItemCreativeFluidCell;
 import com.cells.cells.hyperdensity.compacting.ItemHyperDensityCompactingCell;

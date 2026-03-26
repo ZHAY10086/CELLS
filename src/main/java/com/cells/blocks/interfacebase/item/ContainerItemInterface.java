@@ -59,24 +59,13 @@ public class ContainerItemInterface
     private ContainerItemInterface(final InventoryPlayer ip, final IItemInterfaceHost host, final Object anchor) {
         super(ip, host, anchor, ItemInterfaceLogic.DEFAULT_MAX_SLOT_SIZE);
 
-        // Create paged storage handler for GUI use
+        // Create paged storage handler for GUI use (item-specific)
         this.pagedStorageHandler = new PagedItemHandler(
             host.getStorageInventory(),
             ItemInterfaceLogic.SLOTS_PER_PAGE,
             () -> this.currentPage,
             () -> this.totalPages
         );
-
-
-        // Add upgrade slots
-        for (int i = 0; i < ItemInterfaceLogic.UPGRADE_SLOTS; i++) {
-            this.addSlotToContainer(new SlotUpgrade<>(
-                host.getUpgradeInventory(), i, 186, 25 + i * 18, host
-            ));
-        }
-
-        // Bind player inventory
-        this.bindPlayerInventory(ip, 0, 174);
     }
 
     // ================================= Accessors =================================
@@ -93,21 +82,6 @@ public class ContainerItemInterface
     @Override
     protected ResourceType getResourceType() {
         return ResourceType.ITEM;
-    }
-
-    @Override
-    protected int getUpgradeSlotCount() {
-        return ItemInterfaceLogic.UPGRADE_SLOTS;
-    }
-
-    @Override
-    protected int getFilterSlotCount() {
-        return ItemInterfaceLogic.FILTER_SLOTS;
-    }
-
-    @Override
-    protected int getSlotsPerPage() {
-        return ItemInterfaceLogic.SLOTS_PER_PAGE;
     }
 
     @Override

@@ -478,66 +478,19 @@ public class ItemInterfaceLogic extends AbstractResourceInterfaceLogic<ItemStack
 
     /**
      * Slotless insertion logic that ignores item's maxStackSize.
-     * Finds the correct slot via {@link #filterToSlotMap} using {@link ItemStackKey}.
+     * Delegates to the base class {@link #receiveFiltered} and converts return type.
      * <p>
-     * Handles overflow and trash-unselected upgrade cards:
-     * - If no filter matches and trash-unselected is installed, the item is voided.
-     * - If the slot is full and overflow is installed, excess items are voided.
+     * Handles overflow and trash-unselected upgrade cards via the base class.
      */
     private ItemStack slotlessInsertItem(@Nonnull ItemStack stack, boolean simulate) {
         if (stack.isEmpty()) return ItemStack.EMPTY;
 
-        // Find the correct slot from the filter map
-        ItemStackKey key = ItemStackKey.of(stack);
-        if (key == null) return stack;
+        int accepted = receiveFiltered(stack, !simulate);
+        if (accepted >= stack.getCount()) return ItemStack.EMPTY;
 
-        // No matching filter — void if trash-unselected upgrade is installed, otherwise reject
-        Integer targetSlot = this.filterToSlotMap.get(key);
-        if (targetSlot == null) return this.installedTrashUnselectedUpgrade ? ItemStack.EMPTY : stack;
-
-        int limit = this.maxSlotSize;
-        ItemStack existing = this.storage[targetSlot];
-
-        if (existing != null) {
-            // Verify the existing stack matches (guards against orphaned items in the slot)
-            if (!key.equals(ItemStackKey.of(existing))) return stack;
-
-            // Slot is full — void excess if overflow upgrade is installed
-            int space = limit - existing.getCount();
-            if (space <= 0) return this.installedOverflowUpgrade ? ItemStack.EMPTY : stack;
-
-            int toInsert = Math.min(stack.getCount(), space);
-            if (!simulate) {
-                existing.grow(toInsert);
-                this.host.markDirtyAndSave();
-                this.host.markForNetworkUpdate();
-                this.wakeUpIfAdaptive();
-            }
-
-            if (toInsert >= stack.getCount()) return ItemStack.EMPTY;
-
-            ItemStack remainder = stack.copy();
-            remainder.shrink(toInsert);
-            // Void any remainder if overflow upgrade is installed
-            return this.installedOverflowUpgrade ? ItemStack.EMPTY : remainder;
-        } else {
-            int toInsert = Math.min(stack.getCount(), limit);
-            if (!simulate) {
-                ItemStack newStack = stack.copy();
-                newStack.setCount(toInsert);
-                this.storage[targetSlot] = newStack;
-                this.host.markDirtyAndSave();
-                this.host.markForNetworkUpdate();
-                this.wakeUpIfAdaptive();
-            }
-
-            if (toInsert >= stack.getCount()) return ItemStack.EMPTY;
-
-            ItemStack remainder = stack.copy();
-            remainder.shrink(toInsert);
-            // Void any remainder if overflow upgrade is installed
-            return this.installedOverflowUpgrade ? ItemStack.EMPTY : remainder;
-        }
+        ItemStack remainder = stack.copy();
+        remainder.shrink(accepted);
+        return remainder;
     }
 
     // ============================== Item-specific NBT (legacy migration) ==============================
@@ -755,22 +708,8 @@ public class ItemInterfaceLogic extends AbstractResourceInterfaceLogic<ItemStack
             if (slot < 0 || slot >= logic.filterSlotList.size()) return ItemStack.EMPTY;
 
             int storageSlot = logic.filterSlotList.get(slot);
-            ItemStack stack = logic.storage[storageSlot];
-            if (stack == null) return ItemStack.EMPTY;
-
-            int toExtract = Math.min(amount, stack.getCount());
-            ItemStack result = stack.copy();
-            result.setCount(toExtract);
-
-            if (!simulate) {
-                stack.shrink(toExtract);
-                if (stack.getCount() <= 0) logic.storage[storageSlot] = null;
-                logic.host.markDirtyAndSave();
-                logic.host.markForNetworkUpdate();
-                logic.wakeUpIfAdaptive();
-            }
-
-            return result;
+            ItemStack result = logic.drainFromSlot(storageSlot, amount, !simulate);
+            return result != null ? result : ItemStack.EMPTY;
         }
 
         @Override
@@ -823,22 +762,8 @@ public class ItemInterfaceLogic extends AbstractResourceInterfaceLogic<ItemStack
             Integer targetSlot = logic.filterToSlotMap.get(key);
             if (targetSlot == null) return ItemStack.EMPTY;
 
-            ItemStack stored = logic.storage[targetSlot];
-            if (stored == null || stored.isEmpty()) return ItemStack.EMPTY;
-
-            int toExtract = Math.min(amount, stored.getCount());
-            ItemStack result = stored.copy();
-            result.setCount(toExtract);
-
-            if (!simulate) {
-                stored.shrink(toExtract);
-                if (stored.getCount() <= 0) logic.storage[targetSlot] = null;
-                logic.host.markDirtyAndSave();
-                logic.host.markForNetworkUpdate();
-                logic.wakeUpIfAdaptive();
-            }
-
-            return result;
+            ItemStack result = logic.drainFromSlot(targetSlot, amount, !simulate);
+            return result != null ? result : ItemStack.EMPTY;
         }
     }
 

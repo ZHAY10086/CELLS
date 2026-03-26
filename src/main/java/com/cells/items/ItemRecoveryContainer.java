@@ -108,9 +108,7 @@ public class ItemRecoveryContainer extends Item {
         nbt.setInteger(NBT_AMOUNT, fluid.amount);
 
         // Store fluid's NBT (for potions, etc.)
-        if (fluid.tag != null) {
-            nbt.setTag(NBT_FLUID_TAG, fluid.tag.copy());
-        }
+        if (fluid.tag != null) nbt.setTag(NBT_FLUID_TAG, fluid.tag.copy());
 
         ItemStack stack = new ItemStack(ItemRegistry.RECOVERY_CONTAINER);
         stack.setTagCompound(nbt);
@@ -454,9 +452,7 @@ public class ItemRecoveryContainer extends Item {
 
         // On client side, always return SUCCESS to prevent the block GUI from opening.
         // The transfer (or failure message) will be handled server-side.
-        if (world.isRemote) {
-            return EnumActionResult.SUCCESS;
-        }
+        if (world.isRemote) return EnumActionResult.SUCCESS;
 
         int transferred = 0;
 

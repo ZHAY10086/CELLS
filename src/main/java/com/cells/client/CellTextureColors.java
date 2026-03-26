@@ -139,26 +139,23 @@ public final class CellTextureColors {
             // Brightness levels for each cycle
             // Cycle 0: outer=44%, inner=72%
             // Cycle 1: outer=72%, inner=100%
-            // Cycle 2: outer=100%, inner=100% (max)
             this.outerColors = new int[] {
                 applyBrightness(baseColor, 0.44f),  // cycle 0
                 applyBrightness(baseColor, 0.72f),  // cycle 1
-                applyBrightness(baseColor, 1.00f)   // cycle 2 (max)
             };
             this.innerColors = new int[] {
                 applyBrightness(baseColor, 0.72f),  // cycle 0
                 applyBrightness(baseColor, 1.00f),  // cycle 1
-                applyBrightness(baseColor, 1.00f)   // cycle 2 (max)
             };
         }
 
         /**
-         * Get the brightness cycle for a tier (0, 1, or 2).
-         * Each cycle spans 6 tiers: shapes 1-5 then 0 (eclipse).
+         * Get the brightness cycle for a tier (0 or 1).
+         * Each cycle spans 6 tiers: shapes 0-5.
          * Tiers 0-5 = cycle 0, tiers 6-11 = cycle 1, etc.
          */
         private static int getBrightnessCycle(int tier) {
-            return Math.min(tier / 6, 2);
+            return Math.min(tier / 6, 1);
         }
 
         public int getInnerColor(int tier) {
@@ -240,19 +237,19 @@ public final class CellTextureColors {
     /**
      * Get the shape texture index for a tier (0-5).
      * Shape textures cycle every 6 tiers, offset by 1 so that:
-     * - 1k (tier 0) uses shape 1
-     * - 4k (tier 1) uses shape 2
+     * - 1k (tier 0) uses shape 0
+     * - 4k (tier 1) uses shape 1
      * - ...
-     * - 1m (tier 5) uses shape 0 (wraps)
-     * - 4m (tier 6) uses shape 1
+     * - 1m (tier 5) uses shape 5
+     * - 4m (tier 6) uses shape 0 (wraps)
      * - ...
-     * - 2g (tier 11) uses shape 0 (wraps)
+     * - 2g (tier 11) uses shape 5
      *
      * @param tier Tier index (0-11)
      * @return Shape index (0-5)
      */
     public static int getShapeIndex(int tier) {
-        return (tier + 1) % 6;
+        return tier % 6;
     }
 
     // =====================

@@ -56,16 +56,6 @@ public class ContainerEssentiaInterface
      */
     private ContainerEssentiaInterface(final InventoryPlayer ip, final IEssentiaInterfaceHost host, final Object anchor) {
         super(ip, host, anchor, EssentiaInterfaceLogic.DEFAULT_MAX_SLOT_SIZE);
-
-        // Add upgrade slots
-        for (int i = 0; i < EssentiaInterfaceLogic.UPGRADE_SLOTS; i++) {
-            this.addSlotToContainer(new SlotUpgrade<>(
-                host.getUpgradeInventory(), i, 186, 25 + i * 18, host
-            ));
-        }
-
-        // Bind player inventory
-        this.bindPlayerInventory(ip, 0, 174);
     }
 
     // ================================= Abstract Implementations =================================
@@ -73,21 +63,6 @@ public class ContainerEssentiaInterface
     @Override
     protected ResourceType getResourceType() {
         return ResourceType.ESSENTIA;
-    }
-
-    @Override
-    protected int getUpgradeSlotCount() {
-        return EssentiaInterfaceLogic.UPGRADE_SLOTS;
-    }
-
-    @Override
-    protected int getFilterSlotCount() {
-        return EssentiaInterfaceLogic.FILTER_SLOTS;
-    }
-
-    @Override
-    protected int getSlotsPerPage() {
-        return EssentiaInterfaceLogic.SLOTS_PER_PAGE;
     }
 
     @Override

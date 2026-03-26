@@ -18,6 +18,8 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.common.Loader;
+import net.minecraftforge.fml.common.Optional;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.items.IItemHandler;
@@ -44,7 +46,6 @@ import com.cells.cells.common.INBTSizeProvider;
 import com.cells.config.CellsConfig;
 import com.cells.core.CellsCreativeTab;
 import com.cells.gui.CellsGuiHandler;
-import com.cells.integration.jei.CellsJEIPlugin;
 import com.cells.integration.thaumicenergistics.ThaumicEnergisticsIntegration;
 import com.cells.integration.mekanismenergistics.MekanismEnergisticsIntegration;
 import com.cells.mixin.MixinState;
@@ -115,6 +116,15 @@ public class ItemConfigurableCell extends Item implements ICellWorkbenchItem, II
         } catch (NoClassDefFoundError e) {
             // JEI not loaded, skip hint
         }
+    }
+
+    /**
+     * Check if JEI cell view feature is enabled.
+     * Must be called only after checking Loader.isModLoaded("jei").
+     */
+    @Optional.Method(modid = "jei")
+    private static boolean isJeiCellViewEnabled() {
+        return com.cells.integration.jei.CellsJEIPlugin.enableCellView;
     }
 
     @Override
@@ -194,7 +204,9 @@ public class ItemConfigurableCell extends Item implements ICellWorkbenchItem, II
         CellUpgradeHelper.addUpgradeTooltips(getUpgradesInventory(stack), tooltip);
 
         // Add JEI cell view hint if JEI is loaded and cell view is enabled
-        if (CellsJEIPlugin.enableCellView) addJeiCellViewHint(tooltip);
+        if (Loader.isModLoaded("jei") && isJeiCellViewEnabled()) {
+            addJeiCellViewHint(tooltip);
+        }
 
         // Show cell description
         tooltip.add("");
