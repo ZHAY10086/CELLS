@@ -242,6 +242,7 @@ public class ItemRecoveryContainer extends Item {
 
     @Override
     @Nonnull
+    @SideOnly(Side.CLIENT)
     public String getItemStackDisplayName(@Nonnull ItemStack stack) {
         int type = getType(stack);
         String typeName = I18n.format("cells.type." + getTypeKey(type));

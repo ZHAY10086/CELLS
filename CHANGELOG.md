@@ -8,6 +8,12 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Semantic Versioning: https://semver.org/spec/v2.0.0.html
 
 
+## [0.5.10-beta3] - 2026-03-27
+### Fixed
+- Fix incorrect use of server-side I18n on several places.
+- Minor tooltip fix.
+
+
 ## [0.5.10-beta2] - 2026-03-26
 ### Added
 - Make Adaptive Mode more efficient by only forcing the wake-up when we are sleeping (not just slower). This means a somewhat constant stream of item will not ask the network to wake up at every insertion, relying instead on AE2's adaptive rates. "Fixed Polling" is not affected by this change (as it never "sleeps").
