@@ -65,10 +65,12 @@ public class EssentiaInterfaceLogic extends AbstractResourceInterfaceLogic<Essen
      */
     public static final int EXPORT_SUCTION = 0;
 
+    public long getDefaultMaxSlotSize() {
+        return Math.min(DEFAULT_MAX_SLOT_SIZE, getMaxMaxSlotSize());
+    }
+
     public EssentiaInterfaceLogic(Host host) {
         super(host, EssentiaStack.class);
-        // Override parent's default maxSlotSize for essentia-appropriate values
-        this.maxSlotSize = DEFAULT_MAX_SLOT_SIZE;
     }
 
     @Override
@@ -128,11 +130,13 @@ public class EssentiaInterfaceLogic extends AbstractResourceInterfaceLogic<Essen
         AspectList list = new AspectList();
 
         for (int i = 0; i < STORAGE_SLOTS; i++) {
-            EssentiaStack stored = this.storage[i];
-            if (stored == null || stored.getAmount() <= 0) continue;
+            EssentiaStack identity = this.storage[i];
+            long amount = this.amounts[i];
+            if (identity == null || amount <= 0) continue;
 
-            Aspect aspect = stored.getAspect();
-            if (aspect != null) list.add(aspect, stored.getAmount());
+            Aspect aspect = identity.getAspect();
+            // Clamp to int for AspectList API compatibility
+            if (aspect != null) list.add(aspect, (int) Math.min(amount, Integer.MAX_VALUE));
         }
 
         return list;
@@ -158,8 +162,7 @@ public class EssentiaInterfaceLogic extends AbstractResourceInterfaceLogic<Essen
         int slot = findSlotForAspect(aspect);
         if (slot < 0) return false;
 
-        EssentiaStack stored = this.storage[slot];
-        return stored != null && stored.getAmount() >= amount;
+        return this.storage[slot] != null && this.amounts[slot] >= amount;
     }
 
     /**
@@ -170,9 +173,11 @@ public class EssentiaInterfaceLogic extends AbstractResourceInterfaceLogic<Essen
     public int getEssentiaCount(Aspect aspect) {
         if (aspect == null) return 0;
 
-        for (EssentiaStack stored : this.storage) {
-            if (stored != null && stored.getAspect() == aspect) {
-                return stored.getAmount();
+        for (int i = 0; i < STORAGE_SLOTS; i++) {
+            EssentiaStack identity = this.storage[i];
+            if (identity != null && identity.getAspect() == aspect) {
+                // Clamp to int for API compatibility
+                return (int) Math.min(this.amounts[i], Integer.MAX_VALUE);
             }
         }
 
@@ -293,9 +298,9 @@ public class EssentiaInterfaceLogic extends AbstractResourceInterfaceLogic<Essen
     @Nullable
     public Aspect getStoredEssentiaType() {
         for (int i = 0; i < STORAGE_SLOTS; i++) {
-            EssentiaStack stored = this.storage[i];
-            if (stored != null && stored.getAmount() > 0 && stored.getAspect() != null) {
-                return stored.getAspect();
+            EssentiaStack identity = this.storage[i];
+            if (identity != null && this.amounts[i] > 0 && identity.getAspect() != null) {
+                return identity.getAspect();
             }
         }
         return null;
@@ -396,8 +401,9 @@ public class EssentiaInterfaceLogic extends AbstractResourceInterfaceLogic<Essen
 
         // Clear all storage first
         for (int i = 0; i < STORAGE_SLOTS; i++) {
-            if (this.storage[i] != null) {
+            if (this.storage[i] != null || this.amounts[i] != 0) {
                 this.storage[i] = null;
+                this.amounts[i] = 0;
                 changed = true;
             }
         }
@@ -409,13 +415,14 @@ public class EssentiaInterfaceLogic extends AbstractResourceInterfaceLogic<Essen
             byte[] tagBytes = new byte[tagLen];
             data.readBytes(tagBytes);
             String tag = new String(tagBytes, StandardCharsets.UTF_8);
-            int amount = data.readInt();
+            long amount = data.readLong();
 
             if (slot < 0 || slot >= STORAGE_SLOTS) continue;
 
             Aspect aspect = Aspect.getAspect(tag);
             if (aspect != null) {
-                this.storage[slot] = new EssentiaStack(aspect, amount);
+                this.storage[slot] = copyAsIdentity(new EssentiaStack(aspect, 1));
+                this.amounts[slot] = amount;
                 changed = true;
             }
         }
@@ -428,16 +435,17 @@ public class EssentiaInterfaceLogic extends AbstractResourceInterfaceLogic<Essen
         // Count non-empty storage slots first
         int count = 0;
         for (int i = 0; i < STORAGE_SLOTS; i++) {
-            if (this.storage[i] != null && this.storage[i].getAmount() > 0) count++;
+            if (this.storage[i] != null && this.amounts[i] > 0) count++;
         }
 
         data.writeShort(count);
 
         for (int i = 0; i < STORAGE_SLOTS; i++) {
-            EssentiaStack essentia = this.storage[i];
-            if (essentia == null || essentia.getAmount() <= 0) continue;
+            EssentiaStack identity = this.storage[i];
+            long amount = this.amounts[i];
+            if (identity == null || amount <= 0) continue;
 
-            Aspect aspect = essentia.getAspect();
+            Aspect aspect = identity.getAspect();
             if (aspect == null) continue;
 
             String tag = aspect.getTag();
@@ -446,7 +454,7 @@ public class EssentiaInterfaceLogic extends AbstractResourceInterfaceLogic<Essen
             data.writeShort(i);
             data.writeByte(tagBytes.length);
             data.writeBytes(tagBytes);
-            data.writeInt(essentia.getAmount());
+            data.writeLong(amount);
         }
     }
 
@@ -519,15 +527,15 @@ public class EssentiaInterfaceLogic extends AbstractResourceInterfaceLogic<Essen
     }
 
     @Override
-    protected ItemStack createRecoveryItem(EssentiaStack resource) {
-        if (resource == null || resource.getAspect() == null || resource.getAmount() <= 0) {
+    protected ItemStack createRecoveryItem(EssentiaStack identity, long amount) {
+        if (identity == null || identity.getAspect() == null || amount <= 0) {
             return ItemStack.EMPTY;
         }
 
         // Use the recovery container to store the essentia for later recovery
         return ItemRecoveryContainer.createForEssentia(
-            resource.getAspect().getTag(),
-            resource.getAmount()
+            identity.getAspect().getTag(),
+            amount
         );
     }
 }
