@@ -8,7 +8,12 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Semantic Versioning: https://semver.org/spec/v2.0.0.html
 
 
-## [0.5.11-beta] - 2026-03-27
+## [0.5.11-beta2] - 2026-03-30
+### Fixed
+- Fix Essentia Storage Bus having caching issues with our interfaces (this is a bug from Thaumic Energistics). This fix makes the Essentia Interface itself handle all the work for the Bus and force changes onto it. This will not fix *any* other block you put the Bus on, either fix the Storage Bus or do the work yourself.
+
+
+## [0.5.11-beta] - 2026-03-28
 ### Fixed
 - Fix some Upgrades not showing anymore in JEI/Creative Tab.
 

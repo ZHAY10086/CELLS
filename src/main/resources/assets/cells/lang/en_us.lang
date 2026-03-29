@@ -491,7 +491,7 @@ cells.recovery_container.no_transfer=Target cannot accept %s
 # Auto-Pull/Push Cards
 item.cells.pull_card.name=Auto-Pull Card
 item.cells.push_card.name=Auto-Push Card
-tooltip.cells.pull_card.desc=§7Allows Import Interfaces to pull §b%s§7 items/mB/etc. from adjacent inventories automatically every §2%s§r.
-tooltip.cells.push_card.desc=§7Allows Export Interfaces to push §b%s§7 items/mB/etc. to adjacent inventories automatically every §2%s§r.
+tooltip.cells.pull_card.desc=§7Allows Import Interfaces to pull §b%s§7 items/mB/etc. from adjacent inventories every §2%s§r.
+tooltip.cells.push_card.desc=§7Allows Export Interfaces to push §b%s§7 items/mB/etc. to adjacent inventories every §2%s§r.
 cells.push_pull_card.interval.title=Time Interval
 cells.push_pull_card.quantity.title=Transfer Quantity

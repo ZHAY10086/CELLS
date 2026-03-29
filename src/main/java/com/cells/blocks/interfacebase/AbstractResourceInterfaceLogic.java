@@ -182,6 +182,9 @@ public abstract class AbstractResourceInterfaceLogic<R, AE extends IAEStack<AE>,
     /** Tick interval for auto-pull/push operations, stored in the respective card's NBT. */
     protected int autoPullPushInterval = -1;
 
+    /** Quantity for auto-pull/push operations, stored in the respective card's NBT. */
+    protected int autoPushPullQuantity = 0;
+
     /** Number of installed capacity cards. */
     protected int installedCapacityUpgrades = 0;
 
@@ -236,6 +239,15 @@ public abstract class AbstractResourceInterfaceLogic<R, AE extends IAEStack<AE>,
     // It's still the same tickingRequest() method, and we could poll too often if the card interval is very low.
     // Could we make a fake grid node and compare it when we get the ticked to dispatch to the right logic?
     // State management is gonna be a hassle, I feel it.
+    //
+    // What we can do :
+    // - Keep a timeSinceStart via tickingRequest's ticksSinceLastCall
+    // - If timeSinceStart >= lastCardRun + cardInterval, perform push/pull operation
+    // - If timeSinceStart >= lastNetworkIO + Polling Rate, perform network I/O operation
+    // - Then you take the minimum of the two intervals to determine the ticking rate
+    // PROBLEM: We can have BOTH Adaptive Polling Rate AND Fixed CardInterterval
+    //          And that's a hassle because it becomes a game of Hot/Cold
+    //          (we can still do it by relying on ticksSinceLastCall to guess the intervals)
 
     // ============================== Abstract methods ==============================
 
@@ -821,8 +833,8 @@ public abstract class AbstractResourceInterfaceLogic<R, AE extends IAEStack<AE>,
                 countUpgrade(ItemAutoPushCard.class) > 0);
 
         if (this.installedAutoPushPullUpgrade) {
-            // Read the interval from the first found auto-pull/push card (there should only be 1)
-            this.autoPullPushInterval = getAutoPullPushIntervalFromUpgrades();
+            // Read the values from the first found auto-pull/push card (there should only be 1)
+            initAutoPullPushFromUpgrades();
         }
 
         int oldCapacityCount = this.installedCapacityUpgrades;
@@ -864,7 +876,7 @@ public abstract class AbstractResourceInterfaceLogic<R, AE extends IAEStack<AE>,
         return this.autoPullPushInterval;
     }
 
-    protected int getAutoPullPushIntervalFromUpgrades() {
+    protected int initAutoPullPushFromUpgrades() {
         for (int i = 0; i < this.upgradeInventory.getSlots(); i++) {
             ItemStack stack = this.upgradeInventory.getStackInSlot(i);
             if (stack.isEmpty()) continue;
@@ -873,8 +885,13 @@ public abstract class AbstractResourceInterfaceLogic<R, AE extends IAEStack<AE>,
                 (stack.getItem() instanceof ItemAutoPushCard))) {
                 NBTTagCompound tag = stack.getTagCompound();
                 if (tag != null && tag.hasKey("Interval", Constants.NBT.TAG_INT)) {
-                    return tag.getInteger("Interval");
+                    this.autoPullPushInterval = tag.getInteger("Interval");
                 }
+                if (tag != null && tag.hasKey("Quantity", Constants.NBT.TAG_INT)) {
+                    this.autoPushPullQuantity = tag.getInteger("Quantity");
+                }
+
+                break;
             }
         }
 
@@ -1742,6 +1759,16 @@ public abstract class AbstractResourceInterfaceLogic<R, AE extends IAEStack<AE>,
     }
 
     /**
+     * Get the maximum request size for the AE network.
+     * This is used to clamp requests to avoid issues with some mods
+     * that do not handle large request sizes correctly.
+     * @return The maximum request size
+     */
+    protected long getMaxAENetworkRequestSize() {
+        return Long.MAX_VALUE;
+    }
+
+    /**
      * Import resources from internal storage into the ME network.
      * Uses the parallel amounts array for long precision.
      */
@@ -1759,7 +1786,7 @@ public abstract class AbstractResourceInterfaceLogic<R, AE extends IAEStack<AE>,
 
                 // Create AE stack with identity only - setStackSize will set the actual amount
                 AE aeStack = toAEStack(copyWithAmount(identity, 1));
-                aeStack.setStackSize(amount);
+                aeStack.setStackSize(Math.min(amount, getMaxAENetworkRequestSize()));
 
                 AE remaining = inventory.injectItems(aeStack, Actionable.MODULATE, this.host.getActionSource());
 
@@ -1815,11 +1842,8 @@ public abstract class AbstractResourceInterfaceLogic<R, AE extends IAEStack<AE>,
 
                 // Request resources from network (AE2 uses long natively)
                 AE request = toAEStack(copyWithAmount(filter, 1));
-                request.setStackSize(space);
+                request.setStackSize(Math.min(space, getMaxAENetworkRequestSize()));
 
-                // FIXME: Even though each Interface can hold Max Long content,
-                //        Essentia only requests Max Int per polling.
-                //        This is probably a bug on Thaumic Energistics part.
                 AE extracted = inventory.extractItems(request, Actionable.MODULATE, this.host.getActionSource());
                 if (extracted == null || getAEStackSize(extracted) <= 0) continue;
 

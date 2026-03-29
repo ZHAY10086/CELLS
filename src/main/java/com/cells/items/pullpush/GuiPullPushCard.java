@@ -34,15 +34,11 @@ public class GuiPullPushCard extends AEBaseGui implements ContainerPullPushCard.
     private GuiButton minusHour;
     private GuiButton minusDay;
 
-    // TODO: Add quantity to GUI
-
-    private final boolean isPullCard;
     private int currentInterval = 20;
-    private long currentQuantity = 0;
+    private int currentQuantity = 0;
 
     public GuiPullPushCard(final InventoryPlayer inventoryPlayer, final EnumHand hand) {
         super(new ContainerPullPushCard(inventoryPlayer, hand));
-        this.isPullCard = ((ContainerPullPushCard) this.inventorySlots).isPullCard();
     }
 
     @Override
@@ -71,7 +67,7 @@ public class GuiPullPushCard extends AEBaseGui implements ContainerPullPushCard.
     }
 
     @Override
-    public void onQuantityChanged(long quantity) {
+    public void onQuantityChanged(int quantity) {
         this.currentQuantity = quantity;
     }
 
@@ -86,7 +82,9 @@ public class GuiPullPushCard extends AEBaseGui implements ContainerPullPushCard.
         int centerX = (this.xSize - textWidth) / 2;
         this.fontRenderer.drawString(timeStr, centerX, 57, 0xFFFFFF);
 
-        // TODO: add quantity display and controls. Probably like Max Slot GUI
+        // TODO: add quantity display and controls, like Max Slot GUI (but capped at Integer.MAX_VALUE)
+        // Text field at 54,106 (2,147,483,647 = ~66px) - size: 75x10
+        // We also want the "= {}" short suffix after field
     }
 
     @Override

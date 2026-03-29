@@ -43,7 +43,7 @@ public class ContainerPullPushCard extends AEBaseContainer {
 
     /** Interval in ticks, synced between client and server */
     @GuiSync(0)
-    public int interval = MINIMUM_INTERVAL;
+    public long interval = MINIMUM_INTERVAL;
 
     /** Quantity to be transfered per operation */
     @GuiSync(1)
@@ -70,8 +70,8 @@ public class ContainerPullPushCard extends AEBaseContainer {
     @SideOnly(Side.CLIENT)
     public void setListener(final IValuesListener listener) {
         this.listener = listener;
-        this.listener.onIntervalChanged(this.interval);
-        this.listener.onQuantityChanged(this.quantity);
+        this.listener.onIntervalChanged((int) Math.min(this.interval, Integer.MAX_VALUE));
+        this.listener.onQuantityChanged((int) Math.min(this.quantity, Integer.MAX_VALUE));
     }
 
     /**
@@ -97,7 +97,7 @@ public class ContainerPullPushCard extends AEBaseContainer {
      *
      * @param newValue The new quantity
      */
-    public void setQuantity(final long newValue) {
+    public void setQuantity(final int newValue) {
         long clamped = Math.max(MINIMUM_QUANTITY, newValue);
 
         // Update NBT
@@ -129,9 +129,9 @@ public class ContainerPullPushCard extends AEBaseContainer {
     @Override
     public void onUpdate(final String field, final Object oldValue, final Object newValue) {
         if (field.equals("interval") && this.listener != null) {
-            this.listener.onIntervalChanged(this.interval);
+            this.listener.onIntervalChanged((int) Math.min(this.interval, Integer.MAX_VALUE));
         } else if (field.equals("quantity") && this.listener != null) {
-            this.listener.onQuantityChanged(this.quantity);
+            this.listener.onQuantityChanged((int) Math.min(this.quantity, Integer.MAX_VALUE));
         }
 
         super.onUpdate(field, oldValue, newValue);
@@ -160,6 +160,6 @@ public class ContainerPullPushCard extends AEBaseContainer {
     @SideOnly(Side.CLIENT)
     public interface IValuesListener {
         void onIntervalChanged(int interval);
-        void onQuantityChanged(long quantity);
+        void onQuantityChanged(int quantity);
     }
 }
