@@ -141,4 +141,5 @@ public class BlockRegistry {
             new ModelResourceLocation(block.getRegistryName(), "inventory")
         );
     }
+
 }
