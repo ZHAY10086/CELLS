@@ -8,7 +8,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Semantic Versioning: https://semver.org/spec/v2.0.0.html
 
 
-### [0.5.12-alpha] - 2026-03-31
+## [0.5.12-alpha] - 2026-03-31
 ### Added
 - Implement Auto-Pull and Auto-Push Card functionality for all resource interfaces (Item, Fluid, Gas, Essentia). Cards can be configured with transfer quantity, interval, and keep-quantity to automatically move resources between adjacent inventories and the ME network buffer.
 - Optimize the I/O both from and to the Interfaces.
