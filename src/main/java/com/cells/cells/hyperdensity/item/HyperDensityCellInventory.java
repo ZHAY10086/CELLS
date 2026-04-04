@@ -66,6 +66,7 @@ public class HyperDensityCellInventory implements ICellInventory<IAEItemStack>, 
     // In-memory cache: ItemStackKey -> NBT index for O(1) lookups
     // Built on load, updated on insert/remove. Avoids string key generation per operation.
     private final Map<ItemStackKey, Integer> keyToNbtIndex = new HashMap<>();
+    private final Map<Integer, IAEItemStack> nbtIndexToItemStack = new HashMap<>();
 
     // Next available NBT index for new items (computed on load, updated on insert)
     private int cachedNextIndex = 0;
@@ -145,6 +146,7 @@ public class HyperDensityCellInventory implements ICellInventory<IAEItemStack>, 
         storedItemCount = 0;
         storedTypes = 0;
         keyToNbtIndex.clear();
+        nbtIndexToItemStack.clear();
         itemNbtSizes.clear();
         totalNbtSize = 0;
         cachedNextIndex = 0;
@@ -190,6 +192,7 @@ public class HyperDensityCellInventory implements ICellInventory<IAEItemStack>, 
                     }
 
                     keyToNbtIndex.put(key, index);
+                    nbtIndexToItemStack.put(index, channel.createStack(stack));
                     storedItemCount = CellMathHelper.addWithOverflowProtection(storedItemCount, count);
                     storedTypes++;
 
@@ -375,6 +378,7 @@ public class HyperDensityCellInventory implements ICellInventory<IAEItemStack>, 
             item.getDefinition().writeToNBT(itemTag);
             saveLongToTag(itemTag, count);
             itemsTag.setTag(nbtKey, itemTag);
+            nbtIndexToItemStack.put(index, item.copy());
 
             keyToNbtIndex.put(key, index);
 
@@ -504,13 +508,11 @@ public class HyperDensityCellInventory implements ICellInventory<IAEItemStack>, 
 
         for (String key : itemsTag.getKeySet()) {
             NBTTagCompound itemTag = itemsTag.getCompoundTag(key);
-            ItemStack stack = new ItemStack(itemTag);
-            if (stack.isEmpty()) continue;
+            IAEItemStack aeStack = nbtIndexToItemStack.get(Integer.parseInt(key));
 
             long count = loadLongFromTag(itemTag);
             if (count <= 0) continue;
 
-            IAEItemStack aeStack = channel.createStack(stack);
             if (aeStack != null) {
                 aeStack.setStackSize(count);
                 out.add(aeStack);
