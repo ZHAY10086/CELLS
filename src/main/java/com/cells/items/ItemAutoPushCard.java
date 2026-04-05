@@ -149,9 +149,6 @@ public class ItemAutoPushCard extends AbstractCustomUpgrade {
             tooltip.add("§e" + I18n.format("tooltip.cells.push_pull_card.interval_warning"));
         }
 
-        tooltip.add("");
-        tooltip.add(I18n.format("tooltip.cells.useatyourownrisk"));
-
         addCompatibilityTooltip(tooltip, "export_interface");
     }
 }
