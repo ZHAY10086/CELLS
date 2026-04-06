@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -116,6 +115,33 @@ public class CompactingCellInventory implements ICellInventory<IAEItemStack> {
      */
     private Map<Integer, Integer> oreIdToSlot = Collections.emptyMap();
 
+    /**
+     * Cached result of isCompressionChainEmpty() to avoid looping protoStack on every call.
+     * Invalidated whenever the chain is modified (init, reset, load from NBT).
+     */
+    private boolean cachedChainEmpty = true;
+
+    /**
+     * Cached IAEItemStack prototypes for each tier, built from protoStack during chain init.
+     * Used in getAvailableItems() and queueCrossTierNotification() to avoid calling
+     * channel.createStack() (which allocates a new AEItemStack + does registry lookup) on every call.
+     */
+    private IAEItemStack[] cachedAEStacks;
+
+    /**
+     * Cached max capacity in base units. This is a pure function of totalBytes, bytesPerType,
+     * unitsPerByte, and convRate[mainTier], all immutable after chain init.
+     * Invalidated on chain rebuild only.
+     */
+    private long cachedMaxCapacityInBaseUnits = -1;
+
+    /**
+     * Set by getSlotForItem() to indicate whether the last match was a direct proto match
+     * (true) or an ore dict equivalent match (false). Read by injectItems() to avoid the
+     * redundant isDirectMatch() call that would repeat the same areItemsEqual comparison.
+     */
+    private boolean lastSlotWasDirectMatch = false;
+
 
     public CompactingCellInventory(IInternalCompactingCell cellType, ItemStack cellStack, ISaveProvider container) {
         this.cellStack = cellStack;
@@ -161,7 +187,7 @@ public class CompactingCellInventory implements ICellInventory<IAEItemStack> {
         // The rebuild will happen in updateCompressionChainIfNeeded() when we have World access.
         // DO NOT set mainTier = -1 here, as that breaks getAvailableItems/tooltip display.
         boolean tierConfigMatches = (savedTiersUp == currentTiersUp && savedTiersDown == currentTiersDown);
-        chainFullyInitialized = tierConfigMatches && cachedHasPartition && !isCompressionChainEmpty() && mainTier >= 0;
+        chainFullyInitialized = tierConfigMatches && cachedHasPartition && !cachedChainEmpty && mainTier >= 0;
     }
 
     /**
@@ -170,11 +196,17 @@ public class CompactingCellInventory implements ICellInventory<IAEItemStack> {
     private void initializeArrays() {
         protoStack = new ItemStack[currentMaxTiers];
         convRate = new long[currentMaxTiers];
+        cachedAEStacks = new IAEItemStack[currentMaxTiers];
 
         for (int i = 0; i < currentMaxTiers; i++) {
             protoStack[i] = ItemStack.EMPTY;
             convRate[i] = 0;
+            cachedAEStacks[i] = null;
         }
+
+        // Invalidate derived caches
+        cachedChainEmpty = true;
+        cachedMaxCapacityInBaseUnits = -1;
     }
 
     /**
@@ -212,20 +244,6 @@ public class CompactingCellInventory implements ICellInventory<IAEItemStack> {
      */
     public int getTiersDown() {
         return cachedTiersDown;
-    }
-
-    /**
-     * Check if the input item is a direct match to the proto stack at the given slot.
-     * Returns false if the item was matched via ore dictionary equivalence.
-     * 
-     * @param input The input item
-     * @param slot The slot index
-     * @return true if direct match, false if ore dict equivalent
-     */
-    private boolean isDirectMatch(@Nonnull IAEItemStack input, int slot) {
-        if (slot < 0 || slot >= currentMaxTiers) return false;
-
-        return CellMathHelper.areItemsEqual(protoStack[slot], input.getDefinition());
     }
 
     /**
@@ -272,7 +290,8 @@ public class CompactingCellInventory implements ICellInventory<IAEItemStack> {
 
             if (delta == 0) continue;
 
-            IAEItemStack stack = channel.createStack(protoStack[i]);
+            IAEItemStack cached = (cachedAEStacks != null && i < cachedAEStacks.length) ? cachedAEStacks[i] : null;
+            IAEItemStack stack = (cached != null) ? cached.copy() : channel.createStack(protoStack[i]);
             if (stack != null) {
                 stack.setStackSize(delta);
                 changes.add(stack);
@@ -335,12 +354,18 @@ public class CompactingCellInventory implements ICellInventory<IAEItemStack> {
 
         // Recalculate mainTier if it's invalid, but we have chain data
         // This handles cases where old NBT had mainTier saved incorrectly
-        if (mainTier < 0 && !isCompressionChainEmpty() && !cachedPartitionItem.isEmpty()) {
+        // Recompute cachedChainEmpty first since protoStack was just reloaded
+        updateCachedChainEmpty();
+        if (mainTier < 0 && !cachedChainEmpty && !cachedPartitionItem.isEmpty()) {
             recalculateMainTierFromCachedPartition();
         }
 
         // Rebuild ore dictionary mapping from loaded protoStack
         rebuildCachedOreIds();
+
+        // Recompute remaining derived caches after chain data loaded from NBT
+        rebuildCachedAEStacks();
+        cachedMaxCapacityInBaseUnits = -1;
     }
 
     /**
@@ -365,7 +390,7 @@ public class CompactingCellInventory implements ICellInventory<IAEItemStack> {
         // Only save chain data if:
         // 1. We have a chain initialized
         // 2. Our chain version is >= NBT version (we're not stale)
-        if (!isCompressionChainEmpty() && canSaveChain) {
+        if (!cachedChainEmpty && canSaveChain) {
             tagCompound.setInteger(NBT_MAIN_TIER, mainTier);
             tagCompound.setInteger(NBT_CHAIN_VERSION, chainVersion);
             tagCompound.setInteger(NBT_TIERS_UP, cachedTiersUp);
@@ -439,6 +464,11 @@ public class CompactingCellInventory implements ICellInventory<IAEItemStack> {
             mainTier = 0;
             rebuildCachedOreIds();
 
+            // Recompute derived caches for fallback single-tier chain
+            updateCachedChainEmpty();
+            rebuildCachedAEStacks();
+            cachedMaxCapacityInBaseUnits = -1;
+
             return;
         }
 
@@ -462,6 +492,11 @@ public class CompactingCellInventory implements ICellInventory<IAEItemStack> {
 
         // Pre-compute valid ore IDs for the compression chain
         rebuildCachedOreIds();
+
+        // Recompute derived caches after chain rebuild
+        updateCachedChainEmpty();
+        rebuildCachedAEStacks();
+        cachedMaxCapacityInBaseUnits = -1;
     }
 
     /**
@@ -509,20 +544,22 @@ public class CompactingCellInventory implements ICellInventory<IAEItemStack> {
 
         // First try direct match
         for (int i = 0; i < currentMaxTiers; i++) {
-            if (CellMathHelper.areItemsEqual(protoStack[i], definition)) return i;
+            if (CellMathHelper.areItemsEqual(protoStack[i], definition)) {
+                lastSlotWasDirectMatch = true;
+                return i;
+            }
         }
 
         // If ore dict card installed, try ore dictionary equivalence
         if (cachedHasOreDictCard && !oreIdToSlot.isEmpty()) {
-            // Get candidate slots that share a valid ore ID with the input
-            Set<Integer> candidateSlots = OreDictValidator.getMatchingSlots(definition, oreIdToSlot);
-
-            // Check each candidate for NBT equality
-            for (int slot : candidateSlots) {
-                if (ItemStack.areItemStackTagsEqual(protoStack[slot], definition)) return slot;
+            int slot = OreDictValidator.findFirstMatchingSlot(definition, oreIdToSlot, protoStack);
+            if (slot >= 0) {
+                lastSlotWasDirectMatch = false;
+                return slot;
             }
         }
 
+        lastSlotWasDirectMatch = false;
         return -1;
     }
 
@@ -543,17 +580,43 @@ public class CompactingCellInventory implements ICellInventory<IAEItemStack> {
         // If compression chain is empty, reject - the caller should have called
         // updateCompressionChainIfNeeded() before this. If the chain is still empty
         // after that, it means initialization failed (no World, no recipes, etc.)
-        if (isCompressionChainEmpty()) return -1;
+        if (cachedChainEmpty) return -1;
 
         return getSlotForItem(stack);
     }
 
-    private boolean isCompressionChainEmpty() {
+    /**
+     * Recompute the isCompressionChainEmpty result by looping protoStack.
+     * Only called when the chain is modified, callers should read cachedChainEmpty instead.
+     */
+    private void updateCachedChainEmpty() {
         for (int i = 0; i < currentMaxTiers; i++) {
-            if (!protoStack[i].isEmpty()) return false;
+            if (!protoStack[i].isEmpty()) {
+                cachedChainEmpty = false;
+                return;
+            }
         }
 
-        return true;
+        cachedChainEmpty = true;
+    }
+
+    /**
+     * Rebuild the cached IAEItemStack prototypes from protoStack.
+     * Called after chain initialization or NBT load so getAvailableItems()
+     * and queueCrossTierNotification() can use copy() instead of channel.createStack().
+     */
+    private void rebuildCachedAEStacks() {
+        if (cachedAEStacks == null || cachedAEStacks.length != currentMaxTiers) {
+            cachedAEStacks = new IAEItemStack[currentMaxTiers];
+        }
+
+        for (int i = 0; i < currentMaxTiers; i++) {
+            if (protoStack[i].isEmpty()) {
+                cachedAEStacks[i] = null;
+            } else {
+                cachedAEStacks[i] = channel.createStack(protoStack[i]);
+            }
+        }
     }
 
     /**
@@ -561,7 +624,7 @@ public class CompactingCellInventory implements ICellInventory<IAEItemStack> {
      * Public method for tooltip use - returns true if protoStack has items.
      */
     public boolean isChainInitialized() {
-        return !isCompressionChainEmpty();
+        return !cachedChainEmpty;
     }
 
     /**
@@ -594,7 +657,7 @@ public class CompactingCellInventory implements ICellInventory<IAEItemStack> {
         // chain becomes empty but NBT still has data from the OLD tier config. Loading
         // that stale data would corrupt the chain (wrong items, out-of-bounds mainTier).
         // Only reload if the NBT tier config matches what we expect.
-        if (isCompressionChainEmpty()) {
+        if (cachedChainEmpty) {
             int nbtTiersUp = tagCompound.hasKey(NBT_TIERS_UP) ? tagCompound.getInteger(NBT_TIERS_UP) : DEFAULT_TIERS_UP;
             int nbtTiersDown = tagCompound.hasKey(NBT_TIERS_DOWN) ? tagCompound.getInteger(NBT_TIERS_DOWN) : DEFAULT_TIERS_DOWN;
 
@@ -682,7 +745,7 @@ public class CompactingCellInventory implements ICellInventory<IAEItemStack> {
             loadFromNBT();
             // Update cached state after reloading
             cachedHasPartition = checkHasPartition();
-            chainFullyInitialized = cachedHasPartition && !isCompressionChainEmpty() && mainTier >= 0;
+            chainFullyInitialized = cachedHasPartition && !cachedChainEmpty && mainTier >= 0;
         }
 
         // Check if tier card configuration has changed
@@ -755,13 +818,7 @@ public class CompactingCellInventory implements ICellInventory<IAEItemStack> {
 
         // If ore dict card installed, try ore dictionary equivalence
         if (cachedHasOreDictCard && !oreIdToSlot.isEmpty()) {
-            // Get candidate slots that share a valid ore ID with the input
-            Set<Integer> candidateSlots = OreDictValidator.getMatchingSlots(definition, oreIdToSlot);
-
-            // Check each candidate for NBT equality
-            for (int slot : candidateSlots) {
-                if (ItemStack.areItemStackTagsEqual(protoStack[slot], definition)) return true;
-            }
+            return OreDictValidator.hasMatchingSlot(definition, oreIdToSlot, protoStack);
         }
 
         return false;
@@ -838,11 +895,16 @@ public class CompactingCellInventory implements ICellInventory<IAEItemStack> {
 
         // Fallback: if chain is still empty after initialization (shouldn't happen),
         // create a single-tier chain with just the partition item
-        if (isCompressionChainEmpty()) {
+        if (cachedChainEmpty) {
             protoStack[0] = partitionItem.copy();
             protoStack[0].setCount(1);
             convRate[0] = 1;
             mainTier = 0;
+
+            // Update caches for the fallback single-tier chain
+            updateCachedChainEmpty();
+            rebuildCachedAEStacks();
+            cachedMaxCapacityInBaseUnits = -1;
         }
 
         cachedPartitionItem = partitionItem.copy();
@@ -908,7 +970,7 @@ public class CompactingCellInventory implements ICellInventory<IAEItemStack> {
         boolean needsTierRebuild = (mainTier < 0) && !cachedPartitionItem.isEmpty();
 
         // Check if chain needs to be built (partition exists but chain is empty)
-        boolean needsInitialization = hasPartition() && isCompressionChainEmpty();
+        boolean needsInitialization = hasPartition() && cachedChainEmpty;
 
         // Handle tier card change - rebuild chain even with items
         if (needsTierRebuild) {
@@ -919,7 +981,7 @@ public class CompactingCellInventory implements ICellInventory<IAEItemStack> {
             reset();
             storedBaseUnits = savedBaseUnits;
             initializeCompressionChain(cachedPartitionItem, world);
-            chainFullyInitialized = mainTier >= 0 && !isCompressionChainEmpty();
+            chainFullyInitialized = mainTier >= 0 && !cachedChainEmpty;
             saveChanges();
 
             return;
@@ -955,7 +1017,7 @@ public class CompactingCellInventory implements ICellInventory<IAEItemStack> {
         cachedPartitionItem = currentPartition.copy();
         cachedPartitionItem.setCount(1);
         cachedHasPartition = true;
-        chainFullyInitialized = mainTier >= 0 && !isCompressionChainEmpty();
+        chainFullyInitialized = mainTier >= 0 && !cachedChainEmpty;
 
         // Increment chain version so other handler instances detect the change
         chainVersion++;
@@ -1001,9 +1063,8 @@ public class CompactingCellInventory implements ICellInventory<IAEItemStack> {
 
         // If ore dict card is installed, also allow ore dictionary equivalent items
         if (cachedHasOreDictCard) {
-            // Get candidate slots that share a valid ore ID with the input
             if (oreIdToSlot.isEmpty()) {
-                // Check partition slots via ore dict if the ore ID map is empty (shouldn't happen)
+                // Fallback: check partition slots via ore dict if the ore ID map is empty (shouldn't happen)
                 for (int i = 0; i < configInv.getSlots(); i++) {
                     ItemStack partItem = configInv.getStackInSlot(i);
                     if (!partItem.isEmpty() && OreDictValidator.areOreDictEquivalent(partItem, definition)) {
@@ -1011,12 +1072,7 @@ public class CompactingCellInventory implements ICellInventory<IAEItemStack> {
                     }
                 }
             } else {
-                Set<Integer> candidateSlots = OreDictValidator.getMatchingSlots(definition, oreIdToSlot);
-
-                // Check each candidate for NBT equality
-                for (int slot : candidateSlots) {
-                    if (ItemStack.areItemStackTagsEqual(protoStack[slot], definition)) return true;
-                }
+                return OreDictValidator.hasMatchingSlot(definition, oreIdToSlot, protoStack);
             }
         }
 
@@ -1073,12 +1129,16 @@ public class CompactingCellInventory implements ICellInventory<IAEItemStack> {
      * divisions for display, so we must be slightly conservative here.
      */
     private long getMaxCapacityInBaseUnits() {
+        if (cachedMaxCapacityInBaseUnits >= 0) return cachedMaxCapacityInBaseUnits;
+
         long totalBytes = getTotalBytes();
-        long typeBytes = isCompressionChainEmpty() ? 0 : getBytesPerType();
+        long typeBytes = cachedChainEmpty ? 0 : getBytesPerType();
         long availableBytes = totalBytes - typeBytes;
 
-        if (availableBytes <= 0) return 0;
-        if (mainTier < 0 || mainTier >= currentMaxTiers || convRate[mainTier] <= 0) return 0;
+        if (availableBytes <= 0 || mainTier < 0 || mainTier >= currentMaxTiers || convRate[mainTier] <= 0) {
+            cachedMaxCapacityInBaseUnits = 0;
+            return 0;
+        }
 
         int itemsPerByte = channel.getUnitsPerByte();
 
@@ -1104,6 +1164,7 @@ public class CompactingCellInventory implements ICellInventory<IAEItemStack> {
             maxBaseUnits = 0;
         }
 
+        cachedMaxCapacityInBaseUnits = maxBaseUnits;
         return maxBaseUnits;
     }
 
@@ -1204,6 +1265,13 @@ public class CompactingCellInventory implements ICellInventory<IAEItemStack> {
         storedBaseUnits = 0;
         mainTier = -1;
         chainFullyInitialized = false;
+
+        // Invalidate derived caches
+        cachedChainEmpty = true;
+        cachedMaxCapacityInBaseUnits = -1;
+        if (cachedAEStacks != null) {
+            for (int i = 0; i < cachedAEStacks.length; i++) cachedAEStacks[i] = null;
+        }
     }
 
     // =====================
@@ -1251,7 +1319,8 @@ public class CompactingCellInventory implements ICellInventory<IAEItemStack> {
 
         // Check if input is an ore dict equivalent (not direct match)
         // If so, we need to emit correction deltas
-        boolean directMatch = isDirectMatch(input, slot);
+        // getSlotForItem already determined this, reuse the cached result
+        boolean directMatch = lastSlotWasDirectMatch;
 
         // Fast path: all items fit
         if (inputInBaseUnits <= remainingCapacity) {
@@ -1360,7 +1429,9 @@ public class CompactingCellInventory implements ICellInventory<IAEItemStack> {
             long availableCount = storedBaseUnits / convRate[i];
             if (availableCount <= 0) continue;
 
-            IAEItemStack stack = channel.createStack(protoStack[i]);
+            // Use pre-built AE stack prototype + copy instead of channel.createStack
+            IAEItemStack cached = (cachedAEStacks != null && i < cachedAEStacks.length) ? cachedAEStacks[i] : null;
+            IAEItemStack stack = (cached != null) ? cached.copy() : channel.createStack(protoStack[i]);
             if (stack != null) {
                 stack.setStackSize(availableCount);
                 out.add(stack);
@@ -1409,7 +1480,7 @@ public class CompactingCellInventory implements ICellInventory<IAEItemStack> {
     @Override
     public boolean canHoldNewItem() {
         // Compacting cells only hold one item type (with compression tiers)
-        return isCompressionChainEmpty() && getRemainingItemCount() > 0;
+        return cachedChainEmpty && getRemainingItemCount() > 0;
     }
 
     @Override
@@ -1436,12 +1507,12 @@ public class CompactingCellInventory implements ICellInventory<IAEItemStack> {
 
     @Override
     public long getStoredItemTypes() {
-        return isCompressionChainEmpty() ? 0 : 1;
+        return cachedChainEmpty ? 0 : 1;
     }
 
     @Override
     public long getRemainingItemTypes() {
-        return isCompressionChainEmpty() ? 1 : 0;
+        return cachedChainEmpty ? 1 : 0;
     }
 
     @Override
@@ -1452,7 +1523,7 @@ public class CompactingCellInventory implements ICellInventory<IAEItemStack> {
         long storedItemsCeiling = getStoredInMainTierCeiling();
 
         // Add type overhead
-        long typeBytes = isCompressionChainEmpty() ? 0 : getBytesPerType();
+        long typeBytes = cachedChainEmpty ? 0 : getBytesPerType();
 
         // Use ceiling division for bytes as well
         return typeBytes + (storedItemsCeiling + itemsPerByte - 1) / itemsPerByte;

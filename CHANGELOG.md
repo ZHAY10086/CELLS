@@ -8,6 +8,11 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Semantic Versioning: https://semver.org/spec/v2.0.0.html
 
 
+## [0.5.13-beta2] - 2026-04-06
+### Added
+- Optimize the hot path for Compacting Cells.
+
+
 ## [0.5.13-beta] - 2026-04-06
 ### Fixed
 - Fix (long overdue) issues with the Compacting Cells :
