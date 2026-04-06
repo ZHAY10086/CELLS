@@ -184,7 +184,7 @@ public class HyperDensityCompactingCellInventory implements ICellInventory<IAEIt
      * Example for iron: nugget=1, ingot=9, block=81
      * </p>
      */
-    private int[] convRate;
+    private long[] convRate;
 
     /** Current maximum number of tiers based on tier card configuration. */
     private int currentMaxTiers;
@@ -312,7 +312,7 @@ public class HyperDensityCompactingCellInventory implements ICellInventory<IAEIt
      */
     private void initializeArrays() {
         protoStack = new ItemStack[currentMaxTiers];
-        convRate = new int[currentMaxTiers];
+        convRate = new long[currentMaxTiers];
 
         for (int i = 0; i < currentMaxTiers; i++) {
             protoStack[i] = ItemStack.EMPTY;
@@ -494,11 +494,10 @@ public class HyperDensityCompactingCellInventory implements ICellInventory<IAEIt
             convRate[i] = 0;
         }
 
-        // Load conversion rates array
+        // Load conversion rates array (supports both new long compound format and legacy int array)
         if (tagCompound.hasKey(NBT_CONV_RATES)) {
-            int[] rates = tagCompound.getIntArray(NBT_CONV_RATES);
-            if (Math.min(rates.length, currentMaxTiers) >= 0)
-                System.arraycopy(rates, 0, convRate, 0, Math.min(rates.length, currentMaxTiers));
+            long[] rates = CellMathHelper.loadLongArray(tagCompound, NBT_CONV_RATES, currentMaxTiers);
+            System.arraycopy(rates, 0, convRate, 0, Math.min(rates.length, currentMaxTiers));
         }
 
         // Load prototype items for each tier
@@ -513,6 +512,12 @@ public class HyperDensityCompactingCellInventory implements ICellInventory<IAEIt
 
         // Load main tier index
         if (tagCompound.hasKey(NBT_MAIN_TIER)) mainTier = tagCompound.getInteger(NBT_MAIN_TIER);
+
+        // Validate mainTier against current array bounds.
+        // When a tier card is removed, the array shrinks but NBT may still have
+        // a mainTier from the old (larger) configuration. Without this check,
+        // mainTier can point past the end of the array, causing crashes.
+        if (mainTier >= currentMaxTiers) mainTier = -1;
 
         // Load cached partition item
         if (tagCompound.hasKey(NBT_CACHED_PARTITION)) {
@@ -536,11 +541,14 @@ public class HyperDensityCompactingCellInventory implements ICellInventory<IAEIt
     private void recalculateMainTierFromCachedPartition() {
         if (cachedPartitionItem.isEmpty()) return;
 
-        mainTier = 0;
+        // Default to -1 (invalid) if no match is found in the chain.
+        // This signals that the chain needs rebuilding rather than silently
+        // defaulting to tier 0 which could misinterpret stored base units.
+        mainTier = -1;
         for (int i = 0; i < currentMaxTiers; i++) {
             if (CellMathHelper.areItemsEqual(protoStack[i], cachedPartitionItem)) {
                 mainTier = i;
-                break;
+                return;
             }
         }
     }
@@ -579,7 +587,7 @@ public class HyperDensityCompactingCellInventory implements ICellInventory<IAEIt
             tagCompound.setInteger(NBT_CHAIN_VERSION, chainVersion);
             tagCompound.setInteger(NBT_TIERS_UP, cachedTiersUp);
             tagCompound.setInteger(NBT_TIERS_DOWN, cachedTiersDown);
-            tagCompound.setIntArray(NBT_CONV_RATES, convRate);
+            CellMathHelper.saveLongArray(tagCompound, NBT_CONV_RATES, convRate);
 
             NBTTagCompound protoNbt = new NBTTagCompound();
             for (int i = 0; i < currentMaxTiers; i++) {
@@ -737,7 +745,7 @@ public class HyperDensityCompactingCellInventory implements ICellInventory<IAEIt
      * </p>
      *
      * @param stack The item to check
-     * @return The tier slot (0-2), 0 if chain needs init, or -1 if rejected
+     * @return The tier slot (0+), or -1 if rejected
      */
     private int canAcceptItem(@Nonnull IAEItemStack stack) {
         if (!hasPartition()) return -1;
@@ -746,9 +754,11 @@ public class HyperDensityCompactingCellInventory implements ICellInventory<IAEIt
         reloadFromNBTIfNeeded();
 
         if (!isAllowedByPartition(stack)) return -1;
-        if (isCompressionChainEmpty()) return 0;
 
-        // FIXME: 0 for uninitialized chain is ambiguous with actual slot 0
+        // If compression chain is empty, reject - the caller should have called
+        // updateCompressionChainIfNeeded() before this. If the chain is still empty
+        // after that, it means initialization failed (no World, no recipes, etc.)
+        if (isCompressionChainEmpty()) return -1;
 
         return getSlotForItem(stack);
     }
@@ -799,11 +809,43 @@ public class HyperDensityCompactingCellInventory implements ICellInventory<IAEIt
         // Check if NBT has chain data
         if (!tagCompound.hasKey(NBT_PROTO_ITEMS) || !tagCompound.hasKey(NBT_CONV_RATES)) return false;
 
-        // If local cache is empty, we definitely need to load
-        if (isCompressionChainEmpty()) return true;
+        // If local cache is empty, check if NBT data is for the CURRENT tier config.
+        // When reloadFromNBTIfNeeded() resizes arrays for a tier card change, the local
+        // chain becomes empty but NBT still has data from the OLD tier config. Loading
+        // that stale data would corrupt the chain (wrong items, out-of-bounds mainTier).
+        // Only reload if the NBT tier config matches what we expect.
+        if (isCompressionChainEmpty()) {
+            int nbtTiersUp = tagCompound.hasKey(NBT_TIERS_UP) ? tagCompound.getInteger(NBT_TIERS_UP) : DEFAULT_TIERS_UP;
+            int nbtTiersDown = tagCompound.hasKey(NBT_TIERS_DOWN) ? tagCompound.getInteger(NBT_TIERS_DOWN) : DEFAULT_TIERS_DOWN;
+
+            // If the NBT tier config doesn't match our current cached config,
+            // the data is stale and should NOT be loaded - the chain will be
+            // rebuilt from scratch by updateCompressionChainIfNeeded() instead
+            if (nbtTiersUp != cachedTiersUp || nbtTiersDown != cachedTiersDown) return false;
+
+            return true;
+        }
 
         // Check if NBT chain version differs from our local version
         // This detects when another handler instance has replaced the chain
+        int nbtVersion = tagCompound.hasKey(NBT_CHAIN_VERSION) ? tagCompound.getInteger(NBT_CHAIN_VERSION) : 0;
+
+        return nbtVersion != localChainVersion;
+    }
+
+    /**
+     * Quick check if the chain version in NBT differs from our local version.
+     * <p>
+     * This detects when another handler instance has replaced the chain (e.g., via
+     * Cell Terminal API call). Used in the fast path to invalidate stale chain state
+     * without performing a full NBT reload.
+     * <p>
+     * The cost is a single HashMap lookup on the NBT compound, which is negligible
+     * compared to the cost of operating on a stale chain.
+     *
+     * @return true if the chain has been externally modified since we last loaded it
+     */
+    private boolean hasChainVersionChanged() {
         int nbtVersion = tagCompound.hasKey(NBT_CHAIN_VERSION) ? tagCompound.getInteger(NBT_CHAIN_VERSION) : 0;
 
         return nbtVersion != localChainVersion;
@@ -1289,9 +1331,13 @@ public class HyperDensityCompactingCellInventory implements ICellInventory<IAEIt
         long maxBaseUnits = CellMathHelper.multiplyWithOverflowProtection(maxMainTierItems, convRate[mainTier]);
 
         // Reserve space for ceiling rounding: at most (convRate - 1) base units
-        // plus (itemsPerByte - 1) items worth of rounding
+        // plus (itemsPerByte - 1) items worth of rounding.
+        // Use overflow-protected arithmetic since convRate can be very large with tier cards.
         if (maxBaseUnits != Long.MAX_VALUE) {
-            long reserveForRounding = (long)(convRate[mainTier] - 1) + (long)(itemsPerByte - 1) * convRate[mainTier];
+            long reserveForRounding = CellMathHelper.addWithOverflowProtection(
+                convRate[mainTier] - 1,
+                CellMathHelper.multiplyWithOverflowProtection(itemsPerByte - 1, convRate[mainTier])
+            );
             if (maxBaseUnits > reserveForRounding) {
                 maxBaseUnits -= reserveForRounding;
             } else {
@@ -1458,13 +1504,15 @@ public class HyperDensityCompactingCellInventory implements ICellInventory<IAEIt
     public IAEItemStack injectItems(IAEItemStack input, Actionable mode, IActionSource src) {
         if (input == null || input.getStackSize() <= 0) return null;
 
-        // Fast path: if chain is fully initialized, skip all the validation checks
-        // The chain can only change if the cell is removed from the drive
+        // Fast path: if chain is fully initialized and hasn't been replaced externally,
+        // skip all the validation checks. The hasChainVersionChanged() check detects when
+        // another handler (e.g., Cell Terminal API) has replaced the chain since we loaded it.
         int slot;
-        if (chainFullyInitialized) {
+        if (chainFullyInitialized && !hasChainVersionChanged()) {
             slot = getSlotForItem(input);
         } else {
             // Slow path: need to initialize or validate the chain
+            chainFullyInitialized = false;
             reloadFromNBTIfNeeded();
 
             if (!hasPartition()) return input;
@@ -1478,7 +1526,7 @@ public class HyperDensityCompactingCellInventory implements ICellInventory<IAEIt
         // Item not in compression chain - reject
         if (slot < 0) return input;
 
-        int rate = convRate[slot];
+        long rate = convRate[slot];
         if (rate <= 0) return input;
 
         // Convert input count to base units - overflow protection needed for HD cells
@@ -1551,8 +1599,9 @@ public class HyperDensityCompactingCellInventory implements ICellInventory<IAEIt
     public IAEItemStack extractItems(IAEItemStack request, Actionable mode, IActionSource src) {
         if (request == null || request.getStackSize() <= 0) return null;
 
-        if (!chainFullyInitialized) {
+        if (!chainFullyInitialized || hasChainVersionChanged()) {
             // Slow path: need to initialize or validate the chain
+            chainFullyInitialized = false;
             reloadFromNBTIfNeeded();
             updateCompressionChainIfNeeded(CellMathHelper.getWorldFromSource(src));
         }
@@ -1560,7 +1609,7 @@ public class HyperDensityCompactingCellInventory implements ICellInventory<IAEIt
         int slot = getSlotForItem(request);
         if (slot < 0) return null;
 
-        int rate = convRate[slot];
+        long rate = convRate[slot];
         if (rate <= 0) return null;
 
         // Calculate available at this tier using integer division
@@ -1571,7 +1620,10 @@ public class HyperDensityCompactingCellInventory implements ICellInventory<IAEIt
 
         if (mode == Actionable.MODULATE) {
             long oldBaseUnits = storedBaseUnits;
-            storedBaseUnits -= toExtract * rate;
+            // toExtract <= storedBaseUnits / rate, so toExtract * rate <= storedBaseUnits (no overflow).
+            // Safety clamp in case of any edge case arithmetic issue.
+            long baseUnitsToRemove = CellMathHelper.multiplyWithOverflowProtection(toExtract, rate);
+            storedBaseUnits = Math.max(0, storedBaseUnits - baseUnitsToRemove);
             saveChangesDeferred();
             // For extraction, we always return the proto item, so no ore dict correction needed
             queueCrossTierNotification(src, oldBaseUnits, slot, null, 0);
@@ -1596,8 +1648,8 @@ public class HyperDensityCompactingCellInventory implements ICellInventory<IAEIt
      */
     @Override
     public IItemList<IAEItemStack> getAvailableItems(IItemList<IAEItemStack> out) {
-        // Reload from NBT if needed and check for tier card changes
-        if (!chainFullyInitialized) {
+        // Reload from NBT if needed, check for tier card changes, or detect external chain replacement
+        if (!chainFullyInitialized || hasChainVersionChanged()) {
             reloadFromNBTIfNeeded();
 
             // If mainTier == -1, the chain needs rebuilding (tier card changed)
@@ -1614,7 +1666,7 @@ public class HyperDensityCompactingCellInventory implements ICellInventory<IAEIt
         for (int i = 0; i < currentMaxTiers; i++) {
             if (protoStack[i].isEmpty()) continue;
 
-            int rate = convRate[i];
+            long rate = convRate[i];
             if (rate <= 0) continue;
 
             long availableCount = storedBaseUnits / rate;
