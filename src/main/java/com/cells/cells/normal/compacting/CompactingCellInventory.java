@@ -29,6 +29,7 @@ import appeng.util.Platform;
 import com.cells.cells.compacting.CompactingHelper;
 import com.cells.util.CellMathHelper;
 import com.cells.util.CellUpgradeHelper;
+import com.cells.util.ItemStackKey;
 import com.cells.util.DeferredCellOperations;
 import com.cells.util.OreDictValidator;
 
@@ -129,6 +130,14 @@ public class CompactingCellInventory implements ICellInventory<IAEItemStack> {
     private IAEItemStack[] cachedAEStacks;
 
     /**
+     * Cached ItemStackKey per protoStack tier, built alongside cachedAEStacks.
+     * Used in getSlotForItem(), isInCompressionChain(), isAllowedByPartition(), and
+     * updateMainTier() to replace CellMathHelper.areItemsEqual() with a null-check
+     * + ItemStackKey.matches(), avoiding repeated isEmpty() + areItemStackTagsEqual() overhead.
+     */
+    private ItemStackKey[] cachedProtoKeys;
+
+    /**
      * Cached max capacity in base units. This is a pure function of totalBytes, bytesPerType,
      * unitsPerByte, and convRate[mainTier], all immutable after chain init.
      * Invalidated on chain rebuild only.
@@ -197,11 +206,13 @@ public class CompactingCellInventory implements ICellInventory<IAEItemStack> {
         protoStack = new ItemStack[currentMaxTiers];
         convRate = new long[currentMaxTiers];
         cachedAEStacks = new IAEItemStack[currentMaxTiers];
+        cachedProtoKeys = new ItemStackKey[currentMaxTiers];
 
         for (int i = 0; i < currentMaxTiers; i++) {
             protoStack[i] = ItemStack.EMPTY;
             convRate[i] = 0;
             cachedAEStacks[i] = null;
+            cachedProtoKeys[i] = null;
         }
 
         // Invalidate derived caches
@@ -524,7 +535,8 @@ public class CompactingCellInventory implements ICellInventory<IAEItemStack> {
         // defaulting to tier 0 which could misinterpret stored base units.
         mainTier = -1;
         for (int i = 0; i < currentMaxTiers; i++) {
-            if (CellMathHelper.areItemsEqual(protoStack[i], cachedPartitionItem)) {
+            if (cachedProtoKeys != null && cachedProtoKeys[i] != null
+                    && cachedProtoKeys[i].matches(cachedPartitionItem)) {
                 mainTier = i;
                 return;
             }
@@ -542,9 +554,10 @@ public class CompactingCellInventory implements ICellInventory<IAEItemStack> {
     private int getSlotForItem(@Nonnull IAEItemStack stack) {
         ItemStack definition = stack.getDefinition();
 
-        // First try direct match
+        // First try direct match using cached keys (avoids repeated isEmpty + areItemStackTagsEqual)
         for (int i = 0; i < currentMaxTiers; i++) {
-            if (CellMathHelper.areItemsEqual(protoStack[i], definition)) {
+            if (cachedProtoKeys != null && cachedProtoKeys[i] != null
+                    && cachedProtoKeys[i].matches(definition)) {
                 lastSlotWasDirectMatch = true;
                 return i;
             }
@@ -609,12 +622,17 @@ public class CompactingCellInventory implements ICellInventory<IAEItemStack> {
         if (cachedAEStacks == null || cachedAEStacks.length != currentMaxTiers) {
             cachedAEStacks = new IAEItemStack[currentMaxTiers];
         }
+        if (cachedProtoKeys == null || cachedProtoKeys.length != currentMaxTiers) {
+            cachedProtoKeys = new ItemStackKey[currentMaxTiers];
+        }
 
         for (int i = 0; i < currentMaxTiers; i++) {
             if (protoStack[i].isEmpty()) {
                 cachedAEStacks[i] = null;
+                cachedProtoKeys[i] = null;
             } else {
                 cachedAEStacks[i] = channel.createStack(protoStack[i]);
+                cachedProtoKeys[i] = ItemStackKey.of(protoStack[i]);
             }
         }
     }
@@ -811,9 +829,10 @@ public class CompactingCellInventory implements ICellInventory<IAEItemStack> {
     public boolean isInCompressionChain(@Nonnull IAEItemStack stack) {
         ItemStack definition = stack.getDefinition();
 
-        // First try direct match
+        // First try direct match using cached keys
         for (int i = 0; i < currentMaxTiers; i++) {
-            if (CellMathHelper.areItemsEqual(protoStack[i], definition)) return true;
+            if (cachedProtoKeys != null && cachedProtoKeys[i] != null
+                    && cachedProtoKeys[i].matches(definition)) return true;
         }
 
         // If ore dict card installed, try ore dictionary equivalence
@@ -1050,9 +1069,10 @@ public class CompactingCellInventory implements ICellInventory<IAEItemStack> {
         // Check if item matches any partition slot (or is in the compression chain)
         ItemStack definition = stack.getDefinition();
 
-        // First check if it's in our compression chain (exact match)
+        // First check if it's in our compression chain (exact match, using cached keys)
         for (int i = 0; i < currentMaxTiers; i++) {
-            if (CellMathHelper.areItemsEqual(protoStack[i], definition)) return true;
+            if (cachedProtoKeys != null && cachedProtoKeys[i] != null
+                    && cachedProtoKeys[i].matches(definition)) return true;
         }
 
         // Check partition slots directly (for initial setup)
@@ -1271,6 +1291,9 @@ public class CompactingCellInventory implements ICellInventory<IAEItemStack> {
         cachedMaxCapacityInBaseUnits = -1;
         if (cachedAEStacks != null) {
             for (int i = 0; i < cachedAEStacks.length; i++) cachedAEStacks[i] = null;
+        }
+        if (cachedProtoKeys != null) {
+            for (int i = 0; i < cachedProtoKeys.length; i++) cachedProtoKeys[i] = null;
         }
     }
 
