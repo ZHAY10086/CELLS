@@ -9,6 +9,9 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 
 ## [0.5.13-beta2] - 2026-04-10
+### Fixed
+- Fix Export Essentia Interface exposing 0 essentia when polled, resulting in no essentia being exported.
+
 ### Added
 - Optimize the hot path for all cells.
 
