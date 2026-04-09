@@ -8,10 +8,18 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Semantic Versioning: https://semver.org/spec/v2.0.0.html
 
 
-## [0.5.13-beta2] - 2026-04-10
+## [0.5.14-beta] - 2026-04-12
+### Added
+- Universal Import/Export Interface, variants that combine all 4 types into 1.
+- Per-slot max capacity override.
+
+
+## [0.5.13-beta2] - 2026-04-09
 ### Fixed
 - Fix Export Essentia Interface exposing 0 essentia when polled, resulting in no essentia being exported.
 - Fix negative buttons in Max Slot Size GUI resetting the value to 1 (instead of adding the negative delta).
+- Fix auto-pull/push card disabling network IO when no adjacent inventory is present (e.g., removing all chests adjacent to the interface would stop it from importing/exporting to the ME network altogether).
+- Fix Import/Export Interface's Controls Help not having a JEI exclusion area.
 
 ### Added
 - Optimize the hot path for all cells.
