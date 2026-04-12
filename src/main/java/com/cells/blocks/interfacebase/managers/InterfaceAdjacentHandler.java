@@ -385,12 +385,17 @@ public class InterfaceAdjacentHandler<R, K> {
             long extracted = this.ops.extractResourceFromHandler(adjacentHandler, filterKey, maxToExtract, facing);
             if (extracted <= 0) continue;
 
-            // Insert into our buffer, identity may already be preserved from filter match
+            // Insert into our buffer. Identity may already be preserved from a previous
+            // clearSlot (filter match) with amount == 0. In that case, adjustSlotAmount
+            // would reject the delta (it guards against zero-amount slots), so we must
+            // use setSlotAmount directly, same pattern as insertIntoSlot/exportResources.
             R identity = this.inventoryManager.getStorageIdentity(filterIdx);
             if (identity == null) {
                 R filter = this.inventoryManager.getRawFilter(filterIdx);
                 this.inventoryManager.setResourceInSlotWithAmount(filterIdx,
                         this.ops.copyAsIdentity(filter), extracted);
+            } else if (this.inventoryManager.getSlotAmount(filterIdx) <= 0) {
+                this.inventoryManager.setSlotAmount(filterIdx, extracted);
             } else {
                 this.inventoryManager.adjustSlotAmount(filterIdx, extracted);
             }

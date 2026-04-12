@@ -16,6 +16,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Fix `/inspectSlots` only showing the first detected capability instead of all of them.
 - Fix push/pull-card affecting all sides of a parts, instead of just the facing side.
 - Fix push/pull-card not registering containers at world start, in some cases.
+- Fix pull card voiding items after pushing to network.
 
 ### Added
 - Add Universal Import/Export Interface, variants that combine all 4 types into 1.
