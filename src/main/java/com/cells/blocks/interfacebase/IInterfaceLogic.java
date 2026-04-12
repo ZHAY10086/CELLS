@@ -1,6 +1,7 @@
 package com.cells.blocks.interfacebase;
 
 import java.util.List;
+import java.util.Map;
 
 import io.netty.buffer.ByteBuf;
 
@@ -39,6 +40,36 @@ public interface IInterfaceLogic {
      * @return The new max slot size after clamping to valid range.
      */
     long setMaxSlotSize(long size);
+
+    // ================================= Per-Slot Size Overrides =================================
+
+    /**
+     * Get the effective size for a specific slot.
+     * Returns the per-slot override if set, otherwise the global maxSlotSize.
+     */
+    long getEffectiveMaxSlotSize(int slot);
+
+    /**
+     * Set a per-slot size override.
+     * @return The validated override size.
+     */
+    long setMaxSlotSizeOverride(int slot, long size);
+
+    /**
+     * Get the per-slot size override, or -1 if no override is set.
+     */
+    long getMaxSlotSizeOverride(int slot);
+
+    /**
+     * Clear the per-slot size override, reverting to the global maxSlotSize.
+     */
+    void clearMaxSlotSizeOverride(int slot);
+
+    /**
+     * Get an unmodifiable view of all per-slot size overrides.
+     * Used for container sync.
+     */
+    Map<Integer, Long> getmaxSlotSizeOverrides();
 
     /**
      * @return Polling rate in ticks.
@@ -116,6 +147,17 @@ public interface IInterfaceLogic {
      * Called on network events to ensure timely processing.
      */
     void wakeUpIfAdaptive();
+
+    /**
+     * Called when the grid proxy becomes ready (after onReady/addToWorld).
+     * Re-scans the adjacent capability cache and re-registers tick rate.
+     * <p>
+     * During readFromNBT, adjacent TEs may not yet be loaded (chunk load order is
+     * non-deterministic), so the initial capability scan may find nothing despite
+     * neighbors being present. This re-scan runs after all TEs are in the world,
+     * ensuring the push/pull card detects adjacent containers correctly.
+     */
+    default void onGridReady() { }
 
     // ================================= NBT/Stream Serialization =================================
 

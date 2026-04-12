@@ -98,7 +98,7 @@ public class GuiFluidInterface extends AbstractResourceInterfaceGui<IFluidInterf
         return new FluidTankSlot<>(
             this.host, displaySlot, displaySlot, x, y,
             () -> this.container.currentPage * SLOTS_PER_PAGE,
-            () -> this.container.maxSlotSize
+            () -> getEffectiveMaxSlotSizeForDisplay(displaySlot)
         );
     }
 

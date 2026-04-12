@@ -1,0 +1,8 @@
+{
+    "parent": "cells:part/part_item_base",
+    "textures": {
+        "sides": "cells:parts/export_interface/gas/sides",
+        "back": "cells:parts/export_interface/gas/back",
+        "front": "cells:blocks/export_interface/gas/front_fixed"
+    }
+}

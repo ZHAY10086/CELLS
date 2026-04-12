@@ -1,7 +1,9 @@
 package com.cells.integration.mekanismenergistics;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
+import net.minecraft.client.renderer.block.statemap.StateMapperBase;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.util.ResourceLocation;
@@ -19,6 +21,7 @@ import appeng.core.features.BlockStackSrc;
 import appeng.tile.AEBaseTile;
 
 import com.cells.Tags;
+import com.cells.config.CellsConfig;
 
 
 /**
@@ -104,9 +107,27 @@ public final class GasBlockRegistry {
 
     @SideOnly(Side.CLIENT)
     private static void registerBlockModel(Block block) {
+        ResourceLocation regName = block.getRegistryName();
+
+        if (CellsConfig.useFixedInterfaceTextures) {
+            ResourceLocation fixedModel = new ResourceLocation(regName.getNamespace(), regName.getPath() + "_fixed");
+            ModelResourceLocation fixedModelLoc = new ModelResourceLocation(fixedModel, "inventory");
+
+            ModelLoader.setCustomModelResourceLocation(Item.getItemFromBlock(block), 0, fixedModelLoc);
+
+            ModelLoader.setCustomStateMapper(block, new StateMapperBase() {
+                @Override
+                protected ModelResourceLocation getModelResourceLocation(IBlockState state) {
+                    return new ModelResourceLocation(fixedModel, "normal");
+                }
+            });
+
+            return;
+        }
+
         ModelLoader.setCustomModelResourceLocation(
             Item.getItemFromBlock(block), 0,
-            new ModelResourceLocation(block.getRegistryName(), "inventory")
+            new ModelResourceLocation(regName, "inventory")
         );
     }
 }

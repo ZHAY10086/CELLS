@@ -1,13 +1,10 @@
 package com.cells.parts;
 
-import java.io.IOException;
 import java.util.EnumSet;
 import java.util.List;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-
-import io.netty.buffer.ByteBuf;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -19,6 +16,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+
+import net.minecraftforge.items.IItemHandler;
 
 import appeng.api.implementations.items.IMemoryCard;
 import appeng.api.implementations.items.MemoryCardMessages;
@@ -42,8 +41,6 @@ import appeng.parts.PartModel;
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.util.SettingsFrom;
 import appeng.util.inv.InvOperation;
-
-import net.minecraftforge.items.IItemHandler;
 
 import com.cells.blocks.interfacebase.AbstractResourceInterfaceLogic;
 import com.cells.blocks.interfacebase.IInterfaceHost;
@@ -80,7 +77,8 @@ public abstract class AbstractInterfacePart<L extends IInterfaceLogic> extends P
     protected final IActionSource actionSource;
     protected L logic;
 
-    // Debounce: getTotalWorldTime is two field reads + a long compare,
+    // Debounce for markDirtyAndSave
+    // getTotalWorldTime is two field reads + a long compare,
     // markChunkDirty is two chunk map lookups + a boolean write.
     private long lastSaveTick = -1;
 
@@ -160,11 +158,6 @@ public abstract class AbstractInterfacePart<L extends IInterfaceLogic> extends P
         // Call markChunkDirty directly on the host tile to flag the chunk for saving.
         // We intentionally skip markForSave() / saveChanges() to bypass the bloat.
         w.markChunkDirty(te.getPos(), te);
-    }
-
-    @Override
-    public void markForNetworkUpdate() {
-        this.getHost().markForUpdate();
     }
 
     @Override
@@ -248,6 +241,26 @@ public abstract class AbstractInterfacePart<L extends IInterfaceLogic> extends P
     }
 
     @Override
+    public long getEffectiveMaxSlotSize(int slot) {
+        return this.logic.getEffectiveMaxSlotSize(slot);
+    }
+
+    @Override
+    public long setMaxSlotSizeOverride(int slot, long size) {
+        return this.logic.setMaxSlotSizeOverride(slot, size);
+    }
+
+    @Override
+    public long getMaxSlotSizeOverride(int slot) {
+        return this.logic.getMaxSlotSizeOverride(slot);
+    }
+
+    @Override
+    public void clearMaxSlotSizeOverride(int slot) {
+        this.logic.clearMaxSlotSizeOverride(slot);
+    }
+
+    @Override
     public int getPollingRate() {
         return this.logic.getPollingRate();
     }
@@ -296,6 +309,18 @@ public abstract class AbstractInterfacePart<L extends IInterfaceLogic> extends P
     @Override
     public float getCableConnectionLength(AECableType cable) {
         return 4;
+    }
+
+    // ============================== Grid lifecycle ==============================
+
+    @Override
+    public void addToWorld() {
+        super.addToWorld();
+
+        // Re-scan the capability cache now that all TEs are in the world and the
+        // grid proxy is ready. During readFromNBT, adjacent TEs may not have been
+        // loaded yet, leaving the push/pull card's cache empty.
+        this.logic.onGridReady();
     }
 
     // ============================== Network events ==============================
@@ -368,21 +393,6 @@ public abstract class AbstractInterfacePart<L extends IInterfaceLogic> extends P
     }
 
     // ============================== Stream sync ==============================
-
-    @Override
-    public boolean readFromStream(final ByteBuf data) throws IOException {
-        boolean result = super.readFromStream(data);
-        result |= this.logic.readStorageFromStream(data);
-        result |= this.logic.readFiltersFromStream(data);
-        return result;
-    }
-
-    @Override
-    public void writeToStream(final ByteBuf data) throws IOException {
-        super.writeToStream(data);
-        this.logic.writeStorageToStream(data);
-        this.logic.writeFiltersToStream(data);
-    }
 
     @Override
     public void onPlacement(final EntityPlayer player, final EnumHand hand, final ItemStack held, final AEPartLocation side) {
@@ -499,6 +509,15 @@ public abstract class AbstractInterfacePart<L extends IInterfaceLogic> extends P
     }
 
     public EnumSet<EnumFacing> getTargets() {
+        return EnumSet.of(this.getSide().getFacing());
+    }
+
+    /**
+     * Parts only interact with the block on their attached side,
+     * unlike full-block tiles which interact with all 6 adjacent blocks.
+     */
+    @Override
+    public EnumSet<EnumFacing> getTargetFacings() {
         return EnumSet.of(this.getSide().getFacing());
     }
 }

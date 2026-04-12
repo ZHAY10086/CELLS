@@ -21,17 +21,34 @@ import appeng.util.SettingsFrom;
  */
 public interface IInterfaceHost {
 
-    /**
-     * Mark this host for a network update to sync changes to clients.
-     * Should be called whenever storage or visible state changes.
-     */
-    void markForNetworkUpdate();
-
     long validateMaxSlotSize(long size);
 
     long getMaxSlotSize();
 
     long setMaxSlotSize(long size);
+
+    // ================================= Per-Slot Size Overrides =================================
+
+    /**
+     * Get the effective size for a specific slot (override or global maxSlotSize).
+     */
+    long getEffectiveMaxSlotSize(int slot);
+
+    /**
+     * Set a per-slot size override.
+     * @return The validated override size.
+     */
+    long setMaxSlotSizeOverride(int slot, long size);
+
+    /**
+     * Get the per-slot size override, or -1 if no override is set.
+     */
+    long getMaxSlotSizeOverride(int slot);
+
+    /**
+     * Clear the per-slot size override, reverting to global maxSlotSize.
+     */
+    void clearMaxSlotSizeOverride(int slot);
 
     int getPollingRate();
 

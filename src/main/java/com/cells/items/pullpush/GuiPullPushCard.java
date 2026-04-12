@@ -19,6 +19,7 @@ import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.widgets.GuiTabButton;
 
 import com.cells.Tags;
+import com.cells.blocks.combinedinterface.ICombinedInterfaceHost;
 import com.cells.blocks.interfacebase.IFilterableInterfaceHost;
 import com.cells.blocks.interfacebase.IInterfaceHost;
 import com.cells.network.CellsNetworkHandler;
@@ -99,6 +100,20 @@ public class GuiPullPushCard extends AEBaseGui implements ContainerPullPushCard.
      */
     @SuppressWarnings("rawtypes")
     public GuiPullPushCard(final InventoryPlayer inventoryPlayer, final IFilterableInterfaceHost host) {
+        super(new ContainerPullPushCard(inventoryPlayer, host));
+        this.xSize = 176;
+        this.ySize = 156;
+        this.isImport = ((ContainerPullPushCard) this.inventorySlots).isPullCard();
+        this.interfaceHost = host;
+    }
+
+    /**
+     * Combined interface mode: opened from a combined interface GUI via the Pull/Push
+     * upgrade button. Combined hosts cannot implement IFilterableInterfaceHost due to
+     * type erasure, so they require a separate constructor.
+     * Includes a back button to return to the combined interface GUI.
+     */
+    public GuiPullPushCard(final InventoryPlayer inventoryPlayer, final ICombinedInterfaceHost host) {
         super(new ContainerPullPushCard(inventoryPlayer, host));
         this.xSize = 176;
         this.ySize = 156;

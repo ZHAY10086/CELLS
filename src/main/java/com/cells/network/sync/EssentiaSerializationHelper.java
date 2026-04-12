@@ -54,7 +54,13 @@ public final class EssentiaSerializationHelper {
         byte[] tagBytes = tag.getBytes(StandardCharsets.UTF_8);
         buf.writeInt(tagBytes.length);
         buf.writeBytes(tagBytes);
-        buf.writeInt(essentia.getAmount());
+
+        // Write the IAEEssentiaStack's long stack size, not the inner EssentiaStack's int amount.
+        // InterfaceInventoryManager stores amounts as longs, which would be truncated by int.
+        long stackSize = (stack instanceof IAEEssentiaStack)
+            ? ((IAEEssentiaStack) stack).getStackSize()
+            : essentia.getAmount();
+        buf.writeLong(stackSize);
     }
 
     /**
@@ -68,12 +74,19 @@ public final class EssentiaSerializationHelper {
         buf.readBytes(tagBytes);
         String tag = new String(tagBytes, StandardCharsets.UTF_8);
 
-        int amount = buf.readInt();
+        // Read as long to match the writeLong in write(). Essentia amounts can exceed int range
+        // in our storage system (InterfaceInventoryManager stores amounts as longs).
+        long amount = buf.readLong();
 
         Aspect aspect = Aspect.getAspect(tag);
         if (aspect == null) return null;
 
-        return AEEssentiaStack.fromEssentiaStack(new EssentiaStack(aspect, amount));
+        // EssentiaStack constructor takes int, so pass 1 as dummy for identity only.
+        // Restore the real long amount on the IAEEssentiaStack.
+        IAEEssentiaStack result = AEEssentiaStack.fromEssentiaStack(new EssentiaStack(aspect, 1));
+        if (result != null) result.setStackSize(amount);
+
+        return result;
     }
 
     /**

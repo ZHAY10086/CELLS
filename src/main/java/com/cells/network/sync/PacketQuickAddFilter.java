@@ -4,11 +4,12 @@ import io.netty.buffer.ByteBuf;
 
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Container;
-import net.minecraft.util.text.TextComponentTranslation;
 
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+
+import com.cells.gui.overlay.ServerMessageHelper;
 
 
 /**
@@ -84,33 +85,31 @@ public class PacketQuickAddFilter implements IMessage {
 
                 // Verify resource type matches
                 if (quickAddContainer.getQuickAddResourceType() != message.type) {
-                    player.sendMessage(new TextComponentTranslation(
+                    ServerMessageHelper.error(player,
                         "message.cells.not_valid_content",
-                        new TextComponentTranslation(quickAddContainer.getTypeLocalizationKey())
-                    ));
+                        quickAddContainer.getTypeLocalizationKey()
+                    );
                     return;
                 }
 
                 // Null/empty resource check
                 if (message.resource == null) {
-                    player.sendMessage(new TextComponentTranslation(
+                    ServerMessageHelper.error(player,
                         "message.cells.not_valid_content",
-                        new TextComponentTranslation(quickAddContainer.getTypeLocalizationKey())
-                    ));
+                        quickAddContainer.getTypeLocalizationKey()
+                    );
                     return;
                 }
 
                 // Duplicate check
                 if (quickAddContainer.isResourceInFilter(message.resource)) {
-                    player.sendMessage(new TextComponentTranslation(
-                        "message.cells.filter_duplicate"));
+                    ServerMessageHelper.warning(player, "message.cells.filter_duplicate");
                     return;
                 }
 
                 // Attempt to add
                 if (!quickAddContainer.quickAddToFilter(message.resource, player)) {
-                    player.sendMessage(new TextComponentTranslation(
-                        "message.cells.no_filter_space"));
+                    ServerMessageHelper.error(player, "message.cells.no_filter_space");
                 }
             });
 

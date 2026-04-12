@@ -1,7 +1,9 @@
 package com.cells;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
+import net.minecraft.client.renderer.block.statemap.StateMapperBase;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.util.ResourceLocation;
@@ -26,6 +28,11 @@ import com.cells.blocks.exportinterface.BlockExportInterface;
 import com.cells.blocks.exportinterface.TileExportInterface;
 import com.cells.blocks.fluidexportinterface.BlockFluidExportInterface;
 import com.cells.blocks.fluidexportinterface.TileFluidExportInterface;
+import com.cells.blocks.combinedinterface.BlockCombinedImportInterface;
+import com.cells.blocks.combinedinterface.BlockCombinedExportInterface;
+import com.cells.blocks.combinedinterface.TileCombinedImportInterface;
+import com.cells.blocks.combinedinterface.TileCombinedExportInterface;
+import com.cells.config.CellsConfig;
 import com.cells.integration.mekanismenergistics.GasBlockRegistry;
 import com.cells.integration.mekanismenergistics.MekanismEnergisticsIntegration;
 import com.cells.integration.thaumicenergistics.EssentiaBlockRegistry;
@@ -38,6 +45,8 @@ public class BlockRegistry {
     public static BlockFluidImportInterface FLUID_IMPORT_INTERFACE;
     public static BlockExportInterface EXPORT_INTERFACE;
     public static BlockFluidExportInterface FLUID_EXPORT_INTERFACE;
+    public static BlockCombinedImportInterface COMBINED_IMPORT_INTERFACE;
+    public static BlockCombinedExportInterface COMBINED_EXPORT_INTERFACE;
 
     public static void init() {
         // Block construction is deferred to registry events
@@ -52,11 +61,15 @@ public class BlockRegistry {
         FLUID_IMPORT_INTERFACE = new BlockFluidImportInterface();
         EXPORT_INTERFACE = new BlockExportInterface();
         FLUID_EXPORT_INTERFACE = new BlockFluidExportInterface();
+        COMBINED_IMPORT_INTERFACE = new BlockCombinedImportInterface();
+        COMBINED_EXPORT_INTERFACE = new BlockCombinedExportInterface();
 
         event.getRegistry().register(IMPORT_INTERFACE);
         event.getRegistry().register(FLUID_IMPORT_INTERFACE);
         event.getRegistry().register(EXPORT_INTERFACE);
         event.getRegistry().register(FLUID_EXPORT_INTERFACE);
+        event.getRegistry().register(COMBINED_IMPORT_INTERFACE);
+        event.getRegistry().register(COMBINED_EXPORT_INTERFACE);
 
         // Register tile entities
         GameRegistry.registerTileEntity(TileImportInterface.class,
@@ -67,6 +80,10 @@ public class BlockRegistry {
             new ResourceLocation(Tags.MODID, "export_interface"));
         GameRegistry.registerTileEntity(TileFluidExportInterface.class,
             new ResourceLocation(Tags.MODID, "export_fluid_interface"));
+        GameRegistry.registerTileEntity(TileCombinedImportInterface.class,
+            new ResourceLocation(Tags.MODID, "import_combined_interface"));
+        GameRegistry.registerTileEntity(TileCombinedExportInterface.class,
+            new ResourceLocation(Tags.MODID, "export_combined_interface"));
 
         // Register tile-to-item mappings for Network Tool display
         // Without this, tiles won't show up in the Network Tool GUI
@@ -78,6 +95,10 @@ public class BlockRegistry {
             new BlockStackSrc(EXPORT_INTERFACE, 0, ActivityState.Enabled));
         AEBaseTile.registerTileItem(TileFluidExportInterface.class,
             new BlockStackSrc(FLUID_EXPORT_INTERFACE, 0, ActivityState.Enabled));
+        AEBaseTile.registerTileItem(TileCombinedImportInterface.class,
+            new BlockStackSrc(COMBINED_IMPORT_INTERFACE, 0, ActivityState.Enabled));
+        AEBaseTile.registerTileItem(TileCombinedExportInterface.class,
+            new BlockStackSrc(COMBINED_EXPORT_INTERFACE, 0, ActivityState.Enabled));
 
         // Register gas interface blocks if MekanismEnergistics is loaded
         if (MekanismEnergisticsIntegration.isModLoaded()) {
@@ -96,6 +117,8 @@ public class BlockRegistry {
         event.getRegistry().register(createItemBlock(FLUID_IMPORT_INTERFACE));
         event.getRegistry().register(createItemBlock(EXPORT_INTERFACE));
         event.getRegistry().register(createItemBlock(FLUID_EXPORT_INTERFACE));
+        event.getRegistry().register(createItemBlock(COMBINED_IMPORT_INTERFACE));
+        event.getRegistry().register(createItemBlock(COMBINED_EXPORT_INTERFACE));
 
         // Register gas interface items if MekanismEnergistics is loaded
         if (MekanismEnergisticsIntegration.isModLoaded()) {
@@ -122,6 +145,8 @@ public class BlockRegistry {
         registerBlockModel(FLUID_IMPORT_INTERFACE);
         registerBlockModel(EXPORT_INTERFACE);
         registerBlockModel(FLUID_EXPORT_INTERFACE);
+        registerBlockModel(COMBINED_IMPORT_INTERFACE);
+        registerBlockModel(COMBINED_EXPORT_INTERFACE);
 
         // Register gas interface models if MekanismEnergistics is loaded
         if (MekanismEnergisticsIntegration.isModLoaded()) {
@@ -136,9 +161,30 @@ public class BlockRegistry {
 
     @SideOnly(Side.CLIENT)
     private void registerBlockModel(Block block) {
+        ResourceLocation regName = block.getRegistryName();
+
+        // When using fixed textures, redirect both the item model and the block state
+        // to use the _fixed model variant (which references non-animated textures)
+        if (CellsConfig.useFixedInterfaceTextures) {
+            ResourceLocation fixedModel = new ResourceLocation(regName.getNamespace(), regName.getPath() + "_fixed");
+            ModelResourceLocation fixedModelLoc = new ModelResourceLocation(fixedModel, "inventory");
+
+            ModelLoader.setCustomModelResourceLocation(Item.getItemFromBlock(block), 0, fixedModelLoc);
+
+            // Redirect the in-world block state to use the fixed model
+            ModelLoader.setCustomStateMapper(block, new StateMapperBase() {
+                @Override
+                protected ModelResourceLocation getModelResourceLocation(IBlockState state) {
+                    return new ModelResourceLocation(fixedModel, "normal");
+                }
+            });
+
+            return;
+        }
+
         ModelLoader.setCustomModelResourceLocation(
             Item.getItemFromBlock(block), 0,
-            new ModelResourceLocation(block.getRegistryName(), "inventory")
+            new ModelResourceLocation(regName, "inventory")
         );
     }
 

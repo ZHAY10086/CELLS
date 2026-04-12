@@ -6,6 +6,7 @@ import java.util.Set;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.resources.I18n;
 import net.minecraftforge.common.config.ConfigElement;
 import net.minecraftforge.fml.client.IModGuiFactory;
 import net.minecraftforge.fml.client.config.GuiConfig;
@@ -55,7 +56,7 @@ public class CellsGuiFactory implements IModGuiFactory {
                 Tags.MODID,
                 false,
                 false,
-                Tags.MODNAME + " Configuration"
+                I18n.format(Tags.MODID + ".config.title")
             );
         }
 
@@ -68,17 +69,11 @@ public class CellsGuiFactory implements IModGuiFactory {
             List<IConfigElement> elements = new ArrayList<>();
 
             // Add each category
-            elements.addAll(new ConfigElement(
-                CellsConfig.getConfig().getCategory(CellsConfig.CATEGORY_GENERAL)
-            ).getChildElements());
-
-            elements.addAll(new ConfigElement(
-                CellsConfig.getConfig().getCategory(CellsConfig.CATEGORY_IDLE_DRAIN)
-            ).getChildElements());
-
-            elements.addAll(new ConfigElement(
-                CellsConfig.getConfig().getCategory(CellsConfig.CATEGORY_ENABLED)
-            ).getChildElements());
+            for (String category : CellsConfig.getConfig().getCategoryNames()) {
+                if (!CellsConfig.hiddenCategories.contains(category)) {
+                    elements.add(new ConfigElement(CellsConfig.getConfig().getCategory(category)));
+                }
+            }
 
             return elements;
         }

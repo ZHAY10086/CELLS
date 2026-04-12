@@ -46,6 +46,11 @@ cells.unit_names.unknown=units
 cells.max_slot_size.title=Max Slot Size
 cells.slot_size=Slot Size: §b%s§r %s
 cells.max_slot_size.tooltip=Maximum %s to keep in the slots.
+cells.slot_size_override.title=Max Slot Size (slot %d)
+cells.slot_size_override.clear_hint=Clear the field to reset override
+cells.slot_size_override.using_global=global
+cells.filter_slot.hint.left_click=Left-click to set/clear
+cells.filter_slot.hint.right_click=Right-click to override max slot size
 cells.polling_rate.title=Polling Rate
 cells.polling_rate.adaptive=Polling Rate: Adaptive
 cells.clear_filters=Clear Filters
@@ -73,10 +78,14 @@ message.cells.creative_cell.not_valid_content=Not a valid %s!
 message.cells.polling_rate_delayed=§ePolling rate saved but will take effect after next grid connection.§r
 
 # Config (GUI)
+cells.config.title=CELLS Configuration
 cells.config.category.general=General
+cells.config.category.cells=Cells
 cells.config.category.idle_drain=Idle Drain
 cells.config.category.enabled_cells=Enabled Cells
+cells.config.category.interfaces=Interfaces
 
+## Config: General
 cells.config.hdItemMaxTypes=HD Item Cells Max Types
 cells.config.hdFluidMaxTypes=HD Fluid Cells Max Types
 cells.config.hdItemMaxTypes.tooltip=Maximum item types for hyper-density item storage cells (1-16384). CAUTION: Setting this too high can result in NBT size issues and potential crashloops.
@@ -95,17 +104,6 @@ cells.config.nbtSizeWarningThresholdKB.tooltip=Warning threshold for NBT size in
 cells.config.enableNbtSizeTooltip=Enable NBT Size Tooltip
 cells.config.enableNbtSizeTooltip.tooltip=Enable NBT size computation and display in cell tooltips. Disable for better cell performance.
 
-cells.config.compactingIdleDrain=Compacting Cells Idle drain
-cells.config.hdIdleDrain=HD Item Cells Idle drain
-cells.config.hdCompactingIdleDrain=HD Compacting Cells Idle drain
-cells.config.fluidHdIdleDrain=HD Fluid Cells Idle drain
-cells.config.compactingIdleDrain.tooltip=Idle drain for compacting cells (passive AE/t consumption)
-cells.config.hdIdleDrain.tooltip=Idle drain for hyper-density cells (passive AE/t consumption)
-cells.config.hdCompactingIdleDrain.tooltip=Idle drain for hyper-density compacting cells (passive AE/t consumption)
-cells.config.fluidHdIdleDrain.tooltip=Idle drain for fluid hyper-density cells (passive AE/t consumption)
-cells.config.configurableCellIdleDrain=Configurable Cells Idle drain
-cells.config.configurableCellIdleDrain.tooltip=Idle drain for configurable cells (passive AE/t consumption)
-
 cells.config.compactingCellUpgradeSlots=Compacting Cells Upgrade Slots
 cells.config.compactingCellUpgradeSlots.tooltip=Number of upgrade slots for compacting cells (1-16)
 cells.config.hdItemCellUpgradeSlots=HD Item Cells Upgrade Slots
@@ -117,6 +115,23 @@ cells.config.hdFluidCellUpgradeSlots.tooltip=Number of upgrade slots for hyper-d
 cells.config.configurableCellUpgradeSlots=Configurable Cells Upgrade Slots
 cells.config.configurableCellUpgradeSlots.tooltip=Number of upgrade slots for configurable cells (1-16)
 
+## Config: Misc
+cells.config.enableEssentiaCreativeCellFix=Enable Essentia Creative Cell Fix
+cells.config.enableEssentiaCreativeCellFix.tooltip=Enable the fix for the Essentia Creative Cell that makes it report only Max Int instead of Max Long / 2. This prevents deltas from overflowing and not reporting the right amounts. Disable this config if Thaumic Energistics support long in your version.
+
+## Config: Idle Drain
+cells.config.compactingIdleDrain=Compacting Cells Idle drain
+cells.config.hdIdleDrain=HD Item Cells Idle drain
+cells.config.hdCompactingIdleDrain=HD Compacting Cells Idle drain
+cells.config.fluidHdIdleDrain=HD Fluid Cells Idle drain
+cells.config.compactingIdleDrain.tooltip=Idle drain for compacting cells (passive AE/t consumption)
+cells.config.hdIdleDrain.tooltip=Idle drain for hyper-density cells (passive AE/t consumption)
+cells.config.hdCompactingIdleDrain.tooltip=Idle drain for hyper-density compacting cells (passive AE/t consumption)
+cells.config.fluidHdIdleDrain.tooltip=Idle drain for fluid hyper-density cells (passive AE/t consumption)
+cells.config.configurableCellIdleDrain=Configurable Cells Idle drain
+cells.config.configurableCellIdleDrain.tooltip=Idle drain for configurable cells (passive AE/t consumption)
+
+## Config: Enabled
 cells.config.enableCompactingCell=Enable Compacting Cell
 cells.config.enableHDCells=Enable HD Cell
 cells.config.enableHDCompactingCells=Enable HD Compacting Cell
@@ -128,12 +143,14 @@ cells.config.enableFluidHDCells.tooltip=Enable Hyper-Density Fluid storage cells
 cells.config.enableConfigurableCells=Enable Configurable Cell
 cells.config.enableConfigurableCells.tooltip=Enable Configurable storage cells
 
-# Interface Config
-cells.config.category.interfaces=Interfaces
+## Config: Interfaces
 cells.config.interfaceMaxSlotSizeLimit=Interface Max Slot Size Limit
 cells.config.interfaceMaxSlotSizeLimit.tooltip=Maximum slot size limit for interfaces. Caps the user-configurable max slot size per slot. Min: 1, Max: 9.2 quintillion (Long.MAX_VALUE), Default: 9.2 quintillion (Long.MAX_VALUE).
 cells.config.interfaceMinPollingRate=Interface Minimum Polling Rate
 cells.config.interfaceMinPollingRate.tooltip=Minimum polling rate for interfaces in ticks. 0 allows adaptive (AE2-managed tick rates). Higher values force interfaces to poll at least this often.
+cells.config.useFixedInterfaceTextures=Use Fixed Interface Textures
+cells.config.useFixedInterfaceTextures.tooltip=Use fixed (non-animated) textures for interface blocks and parts. Requires a game restart to take effect.
+
 
 # Compacting Cells
 item.cells.compacting_cell.1k.name=1k ME Compacting Cell
@@ -378,6 +395,8 @@ tile.cells.export_interface.name=Export Interface
 tile.cells.export_interface.fluid.name=Fluid Export Interface
 tile.cells.export_interface.gas.name=Gas Export Interface
 tile.cells.export_interface.essentia.name=Essentia Export Interface
+tile.cells.import_interface.combined.name=Universal Import Interface
+tile.cells.export_interface.combined.name=Universal Export Interface
 
 item.cells.part.import_interface.name=Import Interface
 item.cells.part.import_fluid_interface.name=Fluid Import Interface
@@ -387,6 +406,8 @@ item.cells.part.export_interface.name=Export Interface
 item.cells.part.export_fluid_interface.name=Fluid Export Interface
 item.cells.part.export_gas_interface.name=Gas Export Interface
 item.cells.part.export_essentia_interface.name=Essentia Export Interface
+item.cells.part.import_combined_interface.name=Universal Import Interface
+item.cells.part.export_combined_interface.name=Universal Export Interface
 
 # Interface GUI titles (format: cells.{direction}_interface.{type}.title)
 cells.import_interface.item.title=Import Interface
@@ -397,6 +418,8 @@ cells.export_interface.item.title=Export Interface
 cells.export_interface.fluid.title=Fluid Export Interface
 cells.export_interface.gas.title=Gas Export Interface
 cells.export_interface.essentia.title=Essentia Export Interface
+cells.import_interface.combined.title=Universal Import Interface
+cells.export_interface.combined.title=Universal Export Interface
 
 # Info tooltips for block items
 ## Item interfaces (hardcoded in BlockImportInterface/BlockExportInterface)
@@ -411,6 +434,8 @@ tooltip.cells.export_interface.gas.info=Exposes gas from the ME network through 
 tooltip.cells.import_interface.essentia.info=Import essentia into the ME network through filtered slots. Any extraction should be done via Pull Card (incompatible with tubes).
 tooltip.cells.export_interface.essentia.info=Exposes essentia from the ME network through filtered slots. Compatible with tubes, Infusion, Thaumatorium, Essentia Hatch, etc.
 tooltip.cells.export_interface.essentia.part.info=Exposes essentia from the ME network through filtered slots.
+tooltip.cells.import_interface.combined.info=Imports items, fluids, gas, and essentia into the ME network through a single block. Use tabs to switch between resource types.
+tooltip.cells.export_interface.combined.info=Exposes items, fluids, gas, and essentia from the ME network through a single block. Use tabs to switch between resource types.
 
 # Essentia part warning (parts cannot participate in tube network)
 tooltip.cells.essentia_part.no_tubes=§eThis part can only be used with Push/Pull card. Use the full block for more interactions.
@@ -515,7 +540,7 @@ cells.pull_push_button.enabled.title=Configure Pull/Push Card
 cells.pull_push_button.enabled.desc=Click to open the card's configuration GUI.
 
 # /inspectSlot Command
-commands.cells.inspect_slots.usage=/inspectSlots [--handler] [resource1] [resource2] ...
+commands.cells.inspect_slots.usage=/inspectSlots [resource1] [resource2] ...
 commands.cells.inspect_slots.not_player=This command must be run by a player.
 commands.cells.inspect_slots.no_block=No block in sight.
 commands.cells.inspect_slots.no_tile=No tile entity at [%d, %d, %d].

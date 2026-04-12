@@ -16,7 +16,9 @@ import appeng.util.Platform;
 import appeng.tile.inventory.AppEngInternalInventory;
 
 import com.cells.ItemRegistry;
+import com.cells.blocks.combinedinterface.ICombinedInterfaceHost;
 import com.cells.blocks.interfacebase.IFilterableInterfaceHost;
+import com.cells.blocks.interfacebase.IInterfaceLogic;
 import com.cells.items.ItemAutoPullCard;
 import com.cells.items.ItemAutoPushCard;
 
@@ -57,6 +59,14 @@ public class ContainerPullPushCard extends AEBaseContainer {
     @SuppressWarnings("rawtypes")
     private final IFilterableInterfaceHost interfaceHost;
 
+    /**
+     * Reference to the combined interface host when the card is being edited from within
+     * a combined interface GUI. Null unless opened from a combined interface.
+     * Combined hosts cannot implement IFilterableInterfaceHost due to type erasure,
+     * so they need their own field. refreshUpgrades() must be called on ALL logics.
+     */
+    private final ICombinedInterfaceHost combinedHost;
+
     @SideOnly(Side.CLIENT)
     private IValuesListener listener;
 
@@ -92,6 +102,7 @@ public class ContainerPullPushCard extends AEBaseContainer {
         super(playerInv, null, null);
         this.hand = hand;
         this.interfaceHost = null;
+        this.combinedHost = null;
         this.cardStack = playerInv.player.getHeldItem(hand);
 
         // Determine card type
@@ -114,9 +125,45 @@ public class ContainerPullPushCard extends AEBaseContainer {
 
         this.hand = null;
         this.interfaceHost = host;
+        this.combinedHost = null;
 
         // Find the pull/push card in the upgrade inventory
         AppEngInternalInventory upgradeInv = host.getUpgradeInventory();
+        ItemStack found = ItemStack.EMPTY;
+
+        for (int i = 0; i < upgradeInv.getSlots(); i++) {
+            ItemStack stack = upgradeInv.getStackInSlot(i);
+            if (stack.getItem() instanceof ItemAutoPullCard || stack.getItem() instanceof ItemAutoPushCard) {
+                found = stack;
+                break;
+            }
+        }
+
+        this.cardStack = found;
+        this.isPullCard = found.getItem() instanceof ItemAutoPullCard;
+
+        this.initVars();
+    }
+
+    /**
+     * Combined interface mode: the card is in the combined interface's shared upgrade
+     * inventory and is being edited from the interface GUI.
+     * <p>
+     * Combined hosts cannot implement {@link IFilterableInterfaceHost} due to Java's
+     * type erasure on its generic parameters, so they require a separate constructor.
+     * Changes trigger refreshUpgrades() on ALL logics since they share the upgrade inventory.
+     */
+    public ContainerPullPushCard(InventoryPlayer playerInv, ICombinedInterfaceHost host) {
+        super(playerInv,
+            host instanceof TileEntity ? (TileEntity) host : null,
+            host instanceof IPart ? (IPart) host : null);
+
+        this.hand = null;
+        this.interfaceHost = null;
+        this.combinedHost = host;
+
+        // Find the pull/push card in the shared upgrade inventory
+        AppEngInternalInventory upgradeInv = host.getItemLogic().getUpgradeInventory();
         ItemStack found = ItemStack.EMPTY;
 
         for (int i = 0; i < upgradeInv.getSlots(); i++) {
@@ -142,6 +189,21 @@ public class ContainerPullPushCard extends AEBaseContainer {
     }
 
     /**
+     * Refresh upgrades on the appropriate host after card settings change.
+     * Handles both single-type hosts (IFilterableInterfaceHost) and combined hosts
+     * (ICombinedInterfaceHost), which need ALL logics refreshed.
+     */
+    private void refreshHostUpgrades() {
+        if (this.interfaceHost != null) {
+            this.interfaceHost.refreshUpgrades();
+        } else if (this.combinedHost != null) {
+            for (IInterfaceLogic logic : this.combinedHost.getAllLogics()) {
+                logic.refreshUpgrades();
+            }
+        }
+    }
+
+    /**
      * Set the interval for this card.
      *
      * @param newValue The new interval in ticks
@@ -160,7 +222,7 @@ public class ContainerPullPushCard extends AEBaseContainer {
 
         // In interface mode, refresh upgrades so the interface picks up the
         // new interval without needing to remove and re-insert the card.
-        if (this.interfaceHost != null) this.interfaceHost.refreshUpgrades();
+        this.refreshHostUpgrades();
     }
 
     /**
@@ -180,7 +242,7 @@ public class ContainerPullPushCard extends AEBaseContainer {
 
         this.quantity = clamped;
 
-        if (this.interfaceHost != null) this.interfaceHost.refreshUpgrades();
+        this.refreshHostUpgrades();
     }
 
     /**
@@ -200,7 +262,7 @@ public class ContainerPullPushCard extends AEBaseContainer {
 
         this.keepsQuantity = clamped;
 
-        if (this.interfaceHost != null) this.interfaceHost.refreshUpgrades();
+        this.refreshHostUpgrades();
     }
 
     @Override
@@ -241,7 +303,7 @@ public class ContainerPullPushCard extends AEBaseContainer {
      *         false if the card is hand-held.
      */
     public boolean isInterfaceMode() {
-        return this.interfaceHost != null;
+        return this.interfaceHost != null || this.combinedHost != null;
     }
 
     /**
@@ -250,6 +312,13 @@ public class ContainerPullPushCard extends AEBaseContainer {
     @SuppressWarnings("rawtypes")
     public IFilterableInterfaceHost getInterfaceHost() {
         return this.interfaceHost;
+    }
+
+    /**
+     * @return The combined interface host when in combined interface mode, or null otherwise.
+     */
+    public ICombinedInterfaceHost getCombinedHost() {
+        return this.combinedHost;
     }
 
     public boolean isPullCard() {

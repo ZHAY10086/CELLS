@@ -3,15 +3,14 @@ package com.cells.integration.thaumicenergistics;
 import javax.annotation.Nullable;
 
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
-
-import thaumicenergistics.api.EssentiaStack;
 
 import appeng.items.parts.PartModels;
 import appeng.parts.PartModel;
 
-import com.cells.Tags;
+import thaumicenergistics.api.EssentiaStack;
+
 import com.cells.parts.AbstractInterfacePart;
+import com.cells.parts.PartModelsHelper;
 
 
 /**
@@ -37,17 +36,16 @@ public class PartEssentiaExportInterface extends AbstractInterfacePart<EssentiaI
         implements IEssentiaInterfaceHost, EssentiaInterfaceLogic.Host {
 
     private static final String prefix = "part/export_interface/essentia/";
-
-    public static final ResourceLocation MODEL_BASE = new ResourceLocation(Tags.MODID, prefix + "base");
-
-    @PartModels
-    public static final PartModel MODELS_OFF = new PartModel(MODEL_BASE, new ResourceLocation(Tags.MODID, prefix + "off"));
+    private static final Object[] MODELS = PartModelsHelper.createInterfaceModels(prefix);
 
     @PartModels
-    public static final PartModel MODELS_ON = new PartModel(MODEL_BASE, new ResourceLocation(Tags.MODID, prefix + "on"));
+    public static final PartModel MODELS_OFF = (PartModel) MODELS[1];
 
     @PartModels
-    public static final PartModel MODELS_HAS_CHANNEL = new PartModel(MODEL_BASE, new ResourceLocation(Tags.MODID, prefix + "has_channel"));
+    public static final PartModel MODELS_ON = (PartModel) MODELS[2];
+
+    @PartModels
+    public static final PartModel MODELS_HAS_CHANNEL = (PartModel) MODELS[3];
 
     public PartEssentiaExportInterface(final ItemStack is) {
         super(is);

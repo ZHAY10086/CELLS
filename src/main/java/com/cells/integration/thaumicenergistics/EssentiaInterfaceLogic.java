@@ -30,6 +30,7 @@ import appeng.api.parts.IPart;
 import appeng.api.parts.IPartHost;
 import appeng.api.storage.IMEInventory;
 import appeng.api.util.AEPartLocation;
+import appeng.tile.inventory.AppEngInternalInventory;
 
 import thaumcraft.api.aspects.Aspect;
 import thaumcraft.api.aspects.AspectList;
@@ -58,6 +59,8 @@ import com.cells.items.ItemRecoveryContainer;
  * Unlike fluid/gas interfaces, essentia uses {@link IAspectContainer} directly
  * on the tile entity rather than a Forge capability. The external handler is
  * exposed through the tile implementing {@link IAspectContainer}.
+ * <p>
+ * TODO: Should we add writeToStream/readToStream with essentia for Goggle interaction
  */
 public class EssentiaInterfaceLogic extends AbstractResourceInterfaceLogic<EssentiaStack, IAEEssentiaStack, EssentiaStackKey> {
 
@@ -119,8 +122,15 @@ public class EssentiaInterfaceLogic extends AbstractResourceInterfaceLogic<Essen
         return DEFAULT_MAX_SLOT_SIZE;
     }
 
-    public EssentiaInterfaceLogic(Host host) {
+    public EssentiaInterfaceLogic(AbstractResourceInterfaceLogic.Host host) {
         super(host, EssentiaStack.class);
+    }
+
+    /**
+     * Constructor with a shared upgrade inventory for combined interfaces.
+     */
+    public EssentiaInterfaceLogic(AbstractResourceInterfaceLogic.Host host, AppEngInternalInventory sharedUpgradeInventory) {
+        super(host, EssentiaStack.class, sharedUpgradeInventory);
     }
 
     @Override

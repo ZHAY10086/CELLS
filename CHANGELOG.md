@@ -9,9 +9,24 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 
 ## [0.5.14-beta] - 2026-04-12
+### Fixed
+- Fix some fields missing from the in-game config.
+- Fix severe performance regression in interface client sync: replace per-ItemStack GZIP compression with lightweight NBT encoding, and move indiscriminate client sync of all interfaces to only the one GUI the player has open.
+- Fix max slot size values under 1000 being silently discarded.
+- Fix `/inspectSlots` only showing the first detected capability instead of all of them.
+- Fix push/pull-card affecting all sides of a parts, instead of just the facing side.
+- Fix push/pull-card not registering containers at world start, in some cases.
+
 ### Added
-- Universal Import/Export Interface, variants that combine all 4 types into 1.
-- Per-slot max capacity override.
+- Add Universal Import/Export Interface, variants that combine all 4 types into 1.
+- Add config to switch interfaces to non-animated textures.
+- Add per-slot max capacity override.
+- Add message overlay system for in-game feedback (success/error/warning messages above the hotbar).
+
+### Changed
+- Change the slot display from "current" to "current / max", to show how full the slot is.
+- Change "flattened" config to categories
+- Change `/inspectSlots` to show all capabilities of a block sequentially instead of only the first match.
 
 
 ## [0.5.13-beta2] - 2026-04-09

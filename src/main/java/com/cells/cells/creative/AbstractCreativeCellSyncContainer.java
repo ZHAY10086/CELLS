@@ -13,10 +13,10 @@ import net.minecraft.inventory.IContainerListener;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHand;
-import net.minecraft.util.text.TextComponentTranslation;
 
 import appeng.util.Platform;
 
+import com.cells.gui.overlay.ServerMessageHelper;
 import com.cells.network.CellsNetworkHandler;
 import com.cells.network.sync.IQuickAddFilterContainer;
 import com.cells.network.sync.IResourceSyncContainer;
@@ -172,27 +172,26 @@ public abstract class AbstractCreativeCellSyncContainer<H extends AbstractCreati
 
         if (resource == null) {
             // Invalid type - send feedback (server-side only to avoid duplicates)
-            if (Platform.isServer()) {
-                player.sendMessage(new TextComponentTranslation(
-                    "message.cells.creative_cell.not_valid_content",
-                    new TextComponentTranslation(getTypeLocalizationKey())
-                ));
+            if (Platform.isServer() && player instanceof EntityPlayerMP) {
+                ServerMessageHelper.error(
+                    (EntityPlayerMP) player, "message.cells.creative_cell.not_valid_content",
+                    getTypeLocalizationKey());
             }
             return ItemStack.EMPTY;
         }
 
         // Check for duplicates before adding (server-side only to avoid duplicates)
         if (filterContains(resource)) {
-            if (Platform.isServer()) {
-                player.sendMessage(new TextComponentTranslation("message.cells.filter_duplicate"));
+            if (Platform.isServer() && player instanceof EntityPlayerMP) {
+                ServerMessageHelper.warning((EntityPlayerMP) player, "message.cells.filter_duplicate");
             }
             return ItemStack.EMPTY;
         }
 
         if (!quickAddToFilter(resource, player)) {
             // No space - send feedback (server-side only to avoid duplicates)
-            if (Platform.isServer()) {
-                player.sendMessage(new TextComponentTranslation("message.cells.no_filter_space"));
+            if (Platform.isServer() && player instanceof EntityPlayerMP) {
+                ServerMessageHelper.error((EntityPlayerMP) player, "message.cells.no_filter_space");
             }
         }
 
@@ -270,7 +269,9 @@ public abstract class AbstractCreativeCellSyncContainer<H extends AbstractCreati
                     // Send duplicate feedback to player (server-side only)
                     if (Platform.isServer()) {
                         EntityPlayer player = this.getInventoryPlayer().player;
-                        player.sendMessage(new TextComponentTranslation("message.cells.filter_duplicate"));
+                        if (player instanceof EntityPlayerMP) {
+                            ServerMessageHelper.warning((EntityPlayerMP) player, "message.cells.filter_duplicate");
+                        }
                     }
                     continue;
                 }

@@ -64,6 +64,25 @@ public interface IResourceInterfaceLogic<AE, K> extends IInterfaceLogic {
     int findSlotByKey(@Nonnull K key);
 
     /**
+     * Get storage data as an AE stack for container-level sync.
+     * Returns an AE stack with identity and amount, or null if the slot is empty.
+     *
+     * @param slot The storage slot index (0-based, across all pages)
+     * @return An AE stack with identity and amount, or null
+     */
+    @Nullable
+    AE getStorageAsAEStack(int slot);
+
+    /**
+     * Set storage from an AE stack received via container sync.
+     * Used on the client side when receiving storage updates from the server.
+     *
+     * @param slot    The storage slot index (0-based, across all pages)
+     * @param aeStack The AE stack containing identity and amount, or null to clear
+     */
+    void setStorageFromAEStack(int slot, @Nullable AE aeStack);
+
+    /**
      * Get the amount stored in a specific slot.
      * Uses long precision for accurate overflow handling.
      *

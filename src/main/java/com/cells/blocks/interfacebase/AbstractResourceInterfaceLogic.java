@@ -1,7 +1,7 @@
 package com.cells.blocks.interfacebase;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -77,12 +77,6 @@ public abstract class AbstractResourceInterfaceLogic<R, AE extends IAEStack<AE>,
          */
         void markDirtyAndSave();
 
-        /**
-         * Mark this host for client update.
-         * Tile: markForUpdate(). Part: getHost().markForUpdate().
-         */
-        void markForNetworkUpdate();
-
         /** Get the world this host is in (may be null during loading). */
         @Nullable
         World getHostWorld();
@@ -92,6 +86,14 @@ public abstract class AbstractResourceInterfaceLogic<R, AE extends IAEStack<AE>,
 
         /** Get the IGridTickable to re-register with tick manager. */
         IGridTickable getTickable();
+
+        /**
+         * Get the set of facings this host is allowed to interact with.
+         * Full-block tiles return all 6 directions, cable bus parts return only their attached side.
+         */
+        default EnumSet<EnumFacing> getTargetFacings() {
+            return EnumSet.allOf(EnumFacing.class);
+        }
     }
 
     public static final int SLOTS_PER_PAGE = 36;
@@ -107,25 +109,6 @@ public abstract class AbstractResourceInterfaceLogic<R, AE extends IAEStack<AE>,
     }
 
     protected final Host host;
-
-    /** Filter array - stores the filter resource for each slot. */
-    private final R[] filters;
-
-    /**
-     * Storage array - stores resource IDENTITY only (type + NBT, not amount).
-     * The actual amounts are stored in the parallel {@link #amounts} array.
-     * This separation allows amounts to exceed Integer.MAX_VALUE while still
-     * using native resource types that have int-based amount fields.
-     */
-    private final R[] storage;
-
-    /**
-     * Parallel amounts array - stores the actual amount for each storage slot.
-     * This is separate from storage[] because native resource types (FluidStack,
-     * GasStack, ItemStack) have int-based amount fields that cannot exceed ~2.1B.
-     * By storing amounts separately as long, we can store up to ~9.2 quintillion.
-     */
-    private final long[] amounts;
 
     /** Current GUI page index (0-based). */
     protected int currentPage = 0;
@@ -146,20 +129,40 @@ public abstract class AbstractResourceInterfaceLogic<R, AE extends IAEStack<AE>,
     /** Manages capability cache and auto-pull/push with adjacent blocks. */
     protected final InterfaceAdjacentHandler<R, K> adjacentHandler;
 
-    @SuppressWarnings("unchecked")
     protected AbstractResourceInterfaceLogic(Host host, Class<R> resourceClass) {
         this.host = host;
-
-        // Create arrays for filters and storage
-        this.filters = (R[]) Array.newInstance(resourceClass, FILTER_SLOTS);
-        this.storage = (R[]) Array.newInstance(resourceClass, STORAGE_SLOTS);
-        this.amounts = new long[STORAGE_SLOTS];
 
         // Initialize managers (order matters: inventory before adjacent, which needs it)
         this.upgradeManager = new InterfaceUpgradeManager(host, host.isExport(), createUpgradeCallbacks());
 
-        this.inventoryManager = new InterfaceInventoryManager<>(createInventoryResourceOps(), createInventoryCallbacks(),
-                this.filters, this.storage, this.amounts, this.getDefaultMaxSlotSize());
+        this.inventoryManager = new InterfaceInventoryManager<>(createInventoryResourceOps(),
+                createInventoryCallbacks(), resourceClass, this.getDefaultMaxSlotSize());
+
+        this.tickScheduler = new InterfaceTickScheduler(createTickCallbacks());
+
+        this.adjacentHandler = createAdjacentHandler(
+                createAdjacentResourceOps(), createAdjacentCallbacks(), this.inventoryManager);
+
+        refreshUpgrades();
+        refreshFilterMap();
+    }
+
+    /**
+     * Constructor that accepts a shared upgrade inventory.
+     * Used by combined interfaces where multiple logics share the same physical upgrade slots.
+     * The shared inventory is owned by another logic's upgrade manager; this logic uses it read-only
+     * for card detection but still fires its own callbacks (capacity changes, auto-pull/push, etc.).
+     *
+     * @param sharedUpgradeInventory An existing AppEngInternalInventory to share across logics
+     */
+    protected AbstractResourceInterfaceLogic(Host host, Class<R> resourceClass, AppEngInternalInventory sharedUpgradeInventory) {
+        this.host = host;
+
+        // Use the shared upgrade inventory instead of creating a new one
+        this.upgradeManager = new InterfaceUpgradeManager(host.isExport(), createUpgradeCallbacks(), sharedUpgradeInventory);
+
+        this.inventoryManager = new InterfaceInventoryManager<>(createInventoryResourceOps(),
+                createInventoryCallbacks(), resourceClass, this.getDefaultMaxSlotSize());
 
         this.tickScheduler = new InterfaceTickScheduler(createTickCallbacks());
 
@@ -210,7 +213,6 @@ public abstract class AbstractResourceInterfaceLogic<R, AE extends IAEStack<AE>,
         return new InterfaceInventoryManager.Callbacks() {
             @Override public boolean isExport() { return host.isExport(); }
             @Override public void markDirtyAndSave() { host.markDirtyAndSave(); }
-            @Override public void markForNetworkUpdate() { host.markForNetworkUpdate(); }
             @Override public void wakeUpIfAdaptive() { AbstractResourceInterfaceLogic.this.wakeUpIfAdaptive(); }
             @Override public int getEffectiveFilterSlots() { return AbstractResourceInterfaceLogic.this.getEffectiveFilterSlots(); }
             @Override public AENetworkProxy getGridProxy() { return host.getGridProxy(); }
@@ -250,7 +252,7 @@ public abstract class AbstractResourceInterfaceLogic<R, AE extends IAEStack<AE>,
             @Override public BlockPos getHostPos() { return host.getHostPos(); }
             @Override public boolean isExport() { return host.isExport(); }
             @Override public void markDirtyAndSave() { host.markDirtyAndSave(); }
-            @Override public void markForNetworkUpdate() { host.markForNetworkUpdate(); }
+            @Override public EnumSet<EnumFacing> getTargetFacings() { return host.getTargetFacings(); }
         };
     }
 
@@ -755,6 +757,31 @@ public abstract class AbstractResourceInterfaceLogic<R, AE extends IAEStack<AE>,
     }
 
     @Override
+    public long getEffectiveMaxSlotSize(int slot) {
+        return this.inventoryManager.getEffectiveMaxSlotSize(slot);
+    }
+
+    @Override
+    public long setMaxSlotSizeOverride(int slot, long size) {
+        return this.inventoryManager.setMaxSlotSizeOverride(slot, size);
+    }
+
+    @Override
+    public long getMaxSlotSizeOverride(int slot) {
+        return this.inventoryManager.getMaxSlotSizeOverride(slot);
+    }
+
+    @Override
+    public void clearMaxSlotSizeOverride(int slot) {
+        this.inventoryManager.clearMaxSlotSizeOverride(slot);
+    }
+
+    @Override
+    public java.util.Map<Integer, Long> getmaxSlotSizeOverrides() {
+        return this.inventoryManager.getmaxSlotSizeOverrides();
+    }
+
+    @Override
     public int getPollingRate() {
         return this.tickScheduler.getPollingRate();
     }
@@ -769,6 +796,38 @@ public abstract class AbstractResourceInterfaceLogic<R, AE extends IAEStack<AE>,
      */
     public int setPollingRate(int ticks, EntityPlayer player) {
         return this.tickScheduler.setPollingRate(ticks, player);
+    }
+
+    /**
+     * Called when the grid proxy becomes ready (after onReady/addToWorld).
+     * Re-scans the adjacent capability cache and re-registers tick rate.
+     * <p>
+     * During readFromNBT, the capability cache scan may find no adjacent TEs because
+     * chunk load order is non-deterministic: our readFromNBT may run before adjacent
+     * TEs are placed in the world. The cache is then marked as "populated" but empty,
+     * creating a deadlock where isCardEffective() returns false (no cached capabilities),
+     * so the tick scheduler never fires the card operation, and the card operation is the
+     * only path that re-scans the cache.
+     * <p>
+     * This method runs after all TEs are in the world and the grid proxy is ready,
+     * breaking the deadlock by re-scanning the cache and re-registering the tick rate
+     * with the correct isCardEffective() result.
+     */
+    @Override
+    public void onGridReady() {
+        if (!this.upgradeManager.hasAutoPullPushUpgrade()) return;
+
+        // Re-scan the capability cache now that all TEs are guaranteed to be in the world.
+        refreshCapabilityCache();
+
+        // Re-register tick rate: during readFromNBT, the proxy wasn't ready so
+        // reRegisterTickRate was a no-op. Now isCardEffective() returns the correct
+        // value (true if neighbors were found), so the tick scheduler can switch to
+        // card-mode scheduling.
+        AENetworkProxy proxy = this.host.getGridProxy();
+        if (!proxy.isReady()) return;
+
+        TickManagerHelper.reRegisterTickable(proxy.getNode(), this.host.getTickable());
     }
 
     /**
@@ -840,6 +899,17 @@ public abstract class AbstractResourceInterfaceLogic<R, AE extends IAEStack<AE>,
     @Override
     public boolean isStorageEmpty(int slot) {
         return this.inventoryManager.isSlotEmpty(slot);
+    }
+
+    @Override
+    @Nullable
+    public AE getStorageAsAEStack(int slot) {
+        return this.inventoryManager.getStorageAsAEStack(slot);
+    }
+
+    @Override
+    public void setStorageFromAEStack(int slot, @Nullable AE aeStack) {
+        this.inventoryManager.setStorageFromAEStack(slot, aeStack);
     }
 
     // ============================== Array accessor methods for subclasses ==============================
@@ -937,6 +1007,26 @@ public abstract class AbstractResourceInterfaceLogic<R, AE extends IAEStack<AE>,
         return getTypeName() + "Storage";
     }
 
+    /**
+     * Get the NBT key for max slot size (e.g., "itemMaxSlotSize", "fluidMaxSlotSize").
+     * Type-prefixed to avoid collisions when multiple logics share the same NBT compound
+     * (Combined Interface). Backwards-compatible: readFromNBT falls back to the old
+     * unprefixed "maxSlotSize" key if the new key is absent.
+     */
+    protected String getMaxSlotSizeNBTKey() {
+        return getTypeName() + "MaxSlotSize";
+    }
+
+    /**
+     * Get the NBT key for polling rate (e.g., "itemPollingRate", "fluidPollingRate").
+     * Type-prefixed to avoid collisions when multiple logics share the same NBT compound
+     * (Combined Interface). Backwards-compatible: readFromNBT falls back to the old
+     * unprefixed "pollingRate" key if the new key is absent.
+     */
+    protected String getPollingRateNBTKey() {
+        return getTypeName() + "PollingRate";
+    }
+
     protected void readFiltersFromNBT(NBTTagCompound data, String name) {
         this.inventoryManager.readFiltersFromNBT(data, name);
     }
@@ -949,8 +1039,22 @@ public abstract class AbstractResourceInterfaceLogic<R, AE extends IAEStack<AE>,
         readStorageFromNBT(data);
 
         this.upgradeManager.readFromNBT(data);
-        this.inventoryManager.readFromNBT(data);
-        this.tickScheduler.readFromNBT(data);
+
+        // Use type-prefixed keys, with fallback to legacy unprefixed keys for
+        // backwards compatibility with existing worlds saved before the prefix fix.
+        String maxSlotSizeKey = getMaxSlotSizeNBTKey();
+        if (data.hasKey(maxSlotSizeKey)) {
+            this.inventoryManager.readFromNBT(data, maxSlotSizeKey);
+        } else {
+            this.inventoryManager.readFromNBT(data);
+        }
+
+        String pollingRateKey = getPollingRateNBTKey();
+        if (data.hasKey(pollingRateKey)) {
+            this.tickScheduler.readFromNBT(data, pollingRateKey, null);
+        } else {
+            this.tickScheduler.readFromNBT(data);
+        }
 
         this.inventoryManager.refreshFilterMap();
         this.upgradeManager.refreshUpgrades();
@@ -971,8 +1075,8 @@ public abstract class AbstractResourceInterfaceLogic<R, AE extends IAEStack<AE>,
         this.inventoryManager.writeFiltersToNBT(data, getFiltersNBTKey());
         this.inventoryManager.writeStorageToNBT(data, getStorageNBTKey());
         this.upgradeManager.writeToNBT(data);
-        this.inventoryManager.writeToNBT(data);
-        this.tickScheduler.writeToNBT(data);
+        this.inventoryManager.writeToNBT(data, getMaxSlotSizeNBTKey());
+        this.tickScheduler.writeToNBT(data, getPollingRateNBTKey());
     }
 
     // ============================== Stream serialization ==============================
@@ -1172,7 +1276,7 @@ public abstract class AbstractResourceInterfaceLogic<R, AE extends IAEStack<AE>,
      * capability target to work with. When the card has no targets, tick scheduling
      * falls back to normal (no-card) behavior to avoid disrupting network IO.
      * <p>
-     * This does NOT affect whether the card upgrade is "installed" — only whether
+     * This does NOT affect whether the card upgrade is "installed", only whether
      * it should influence the tick rate and IO throttling.
      *
      * @return true if the card is installed and has at least one adjacent target

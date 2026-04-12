@@ -27,6 +27,13 @@ import com.cells.network.packets.PacketSetMaxSlotSize;
  * GUI for configuring the max slot size of an Interface.
  * Similar to AE2's Priority GUI with +/- buttons and a number field.
  * Works with any host implementing {@link IInterfaceHost} (both TileEntity and IPart).
+ * <p>
+ * Supports two modes:
+ * <ul>
+ *   <li><b>Global mode</b>: Title "Max Slot Size", edits the global maxSlotSize.</li>
+ *   <li><b>Per-slot mode</b>: Title "Max Slot Size (slot X)", edits a per-slot override.
+ *       Clearing the field resets the override (reverts to global).</li>
+ * </ul>
  */
 public class GuiMaxSlotSize extends AEBaseGui {
 
@@ -55,6 +62,21 @@ public class GuiMaxSlotSize extends AEBaseGui {
         super(new ContainerMaxSlotSize(inventoryPlayer, host));
         this.host = host;
         this.xSize = 200; // Widened to accommodate long values
+        this.ySize = 107;
+    }
+
+    /**
+     * @return The container, typed for convenience.
+     */
+    private ContainerMaxSlotSize getContainer() {
+        return (ContainerMaxSlotSize) this.inventorySlots;
+    }
+
+    /**
+     * @return true if we're editing a per-slot override rather than the global max.
+     */
+    private boolean isOverrideMode() {
+        return getContainer().isOverrideMode();
     }
 
     @Override
@@ -96,21 +118,40 @@ public class GuiMaxSlotSize extends AEBaseGui {
         this.sizeField.setTextColor(0xFFFFFF);
         this.sizeField.setVisible(true);
         this.sizeField.setFocused(true);
-        ((ContainerMaxSlotSize) this.inventorySlots).setTextField(this.sizeField);
+        getContainer().setTextField(this.sizeField);
     }
 
     @Override
     public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
-        this.fontRenderer.drawString(I18n.format("cells.max_slot_size.title"), 8, 6, 0x404040);
+        // Title: in per-slot mode show "Max Slot Size (slot X)", otherwise "Max Slot Size"
+        if (isOverrideMode()) {
+            // 1-indexed slot number for user display
+            String title = I18n.format("cells.slot_size_override.title", getContainer().getOverrideSlot() + 1);
+            this.fontRenderer.drawString(title, 8, 6, 0x404040);
+        } else {
+            this.fontRenderer.drawString(I18n.format("cells.max_slot_size.title"), 8, 6, 0x404040);
+        }
 
         // Read from the container's synced field (kept up-to-date by @GuiSync)
-        long syncedSize = ((ContainerMaxSlotSize) this.inventorySlots).maxSlotSize;
+        long syncedSize = getContainer().maxSlotSize;
         if (syncedSize >= 0) this.currentMaxSlotSize = syncedSize;
 
         // After the text field: 17 + 135 + 3px padding => x=155
-        String shortNumber = ReadableNumberConverter.INSTANCE.toWideReadableForm(this.currentMaxSlotSize);
-        String displayText = "= " + shortNumber;
-        this.fontRenderer.drawString(displayText, 155, 57, 0x404040);
+        if (isOverrideMode() && getContainer().maxSlotSize < 0) {
+            // Override not set - show "global" hint in gray
+            String globalText = I18n.format("cells.slot_size_override.using_global");
+            this.fontRenderer.drawString(globalText, 155, 57, 0x808080);
+        } else {
+            String shortNumber = ReadableNumberConverter.INSTANCE.toWideReadableForm(this.currentMaxSlotSize);
+            String displayText = "= " + shortNumber;
+            this.fontRenderer.drawString(displayText, 155, 57, 0x404040);
+        }
+
+        // In per-slot mode, show hint text at the bottom of the GUI
+        if (isOverrideMode()) {
+            String hint = I18n.format("cells.slot_size_override.clear_hint");
+            this.fontRenderer.drawString(hint, 8, this.ySize - 14, 0x808080);
+        }
     }
 
     @Override
@@ -119,6 +160,30 @@ public class GuiMaxSlotSize extends AEBaseGui {
         this.drawTexturedModalRect(offsetX, offsetY, 0, 0, this.xSize, this.ySize);
 
         this.sizeField.drawTextBox();
+    }
+
+    @Override
+    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+        // Right-click on the text field clears it (same UX as filter slot right-click)
+        boolean insideField = mouseX >= this.sizeField.x && mouseX < this.sizeField.x + this.sizeField.width
+                           && mouseY >= this.sizeField.y && mouseY < this.sizeField.y + this.sizeField.height;
+
+        if (mouseButton == 1 && insideField) {
+            this.sizeField.setText("");
+
+            if (isOverrideMode()) {
+                // Clear the per-slot override (revert to global)
+                this.currentMaxSlotSize = 0;
+                CellsNetworkHandler.INSTANCE.sendToServer(new PacketSetMaxSlotSize(-1));
+            } else {
+                // In global mode, clear just resets the display (unsaved)
+                this.currentMaxSlotSize = 0;
+            }
+
+            return;
+        }
+
+        super.mouseClicked(mouseX, mouseY, mouseButton);
     }
 
     @Override
@@ -171,21 +236,31 @@ public class GuiMaxSlotSize extends AEBaseGui {
             // Restore cursor position from end, accounting for new commas
             int newCursor = Math.max(0, displayValue.length() - cursorFromEnd);
             this.sizeField.setCursorPosition(newCursor);
-
-            CellsNetworkHandler.INSTANCE.sendToServer(new PacketSetMaxSlotSize(value));
         }
+
+        // Always send the packet, even if the text matches (because values under 1000 don't get commas)
+        CellsNetworkHandler.INSTANCE.sendToServer(new PacketSetMaxSlotSize(value));
     }
 
     private void addQty(final int delta) {
-        long newValue;
+        long base;
 
+        // In per-slot mode with no current override, start from 0 so that
+        // buttons act as expected.
+        if (isOverrideMode() && getContainer().maxSlotSize < 0) {
+            base = 0;
+        } else {
+            base = this.currentMaxSlotSize;
+        }
+
+        long newValue;
         if (delta > 0) {
-            // Clamp so currentMaxSlotSize + delta doesn't overflow Long.MAX_VALUE
-            long headroom = Long.MAX_VALUE - this.currentMaxSlotSize;
-            newValue = this.currentMaxSlotSize + Math.min(delta, headroom);
+            // Clamp so base + delta doesn't overflow Long.MAX_VALUE
+            long headroom = Long.MAX_VALUE - base;
+            newValue = base + Math.min(delta, headroom);
         } else {
             // Negative delta: just add directly, validateMaxSlotSize handles clamping to minimum
-            newValue = this.currentMaxSlotSize + delta;
+            newValue = base + delta;
         }
 
         this.onQtyChanged(this.host.validateMaxSlotSize(newValue));
@@ -231,8 +306,14 @@ public class GuiMaxSlotSize extends AEBaseGui {
                     out = out.substring(1);
                 }
 
-                // Skip to allow empty field (unsaved)
-                if (!out.isEmpty()) {
+                if (out.isEmpty()) {
+                    if (isOverrideMode()) {
+                        // In per-slot mode, empty field clears the override
+                        this.currentMaxSlotSize = 0;
+                        CellsNetworkHandler.INSTANCE.sendToServer(new PacketSetMaxSlotSize(-1));
+                    }
+                    // In global mode, empty field is just unsaved (no packet sent)
+                } else {
                     try {
                         // Parse as long to handle large values
                         this.onQtyChanged(Long.parseLong(out));

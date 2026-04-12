@@ -8,7 +8,6 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
@@ -19,6 +18,7 @@ import appeng.api.parts.IPartHost;
 import appeng.api.util.AEPartLocation;
 
 import com.cells.blocks.interfacebase.IInterfaceHost;
+import com.cells.gui.overlay.ServerMessageHelper;
 import com.cells.network.MemoryCardSaveTracker;
 
 
@@ -120,7 +120,7 @@ public class PacketSaveMemoryCardWithFilters implements IMessage {
 
                 if (data != null && !data.isEmpty()) {
                     memoryCard.setMemoryCardContents(heldItem, name, data);
-                    player.sendMessage(new TextComponentTranslation("message.cells.memory_card.filters_saved"));
+                    ServerMessageHelper.success(player, "message.cells.memory_card.filters_saved");
                 }
             });
 

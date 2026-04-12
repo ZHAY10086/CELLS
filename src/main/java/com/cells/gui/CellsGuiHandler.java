@@ -1,5 +1,9 @@
 package com.cells.gui;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumHand;
@@ -18,6 +22,9 @@ import com.cells.blocks.interfacebase.fluid.IFluidInterfaceHost;
 import com.cells.blocks.interfacebase.IFilterableInterfaceHost;
 import com.cells.blocks.interfacebase.IInterfaceHost;
 import com.cells.blocks.interfacebase.item.IItemInterfaceHost;
+import com.cells.blocks.combinedinterface.ICombinedInterfaceHost;
+import com.cells.blocks.combinedinterface.ContainerCombinedInterface;
+import com.cells.blocks.combinedinterface.GuiCombinedInterface;
 import com.cells.blocks.interfacebase.ContainerMaxSlotSize;
 import com.cells.blocks.interfacebase.ContainerPollingRate;
 import com.cells.blocks.interfacebase.GuiMaxSlotSize;
@@ -59,6 +66,8 @@ public class CellsGuiHandler implements IGuiHandler {
     public static final int GUI_CREATIVE_ESSENTIA_CELL = 10;
     public static final int GUI_PULL_PUSH_CARD = 11;
     public static final int GUI_PULL_PUSH_CARD_INTERFACE = 12;
+    public static final int GUI_COMBINED_IMPORT_INTERFACE = 13;
+    public static final int GUI_COMBINED_EXPORT_INTERFACE = 14;
 
     // Part-based GUI IDs (require side encoding)
     public static final int GUI_PART_IMPORT_INTERFACE = 100;
@@ -68,6 +77,41 @@ public class CellsGuiHandler implements IGuiHandler {
     public static final int GUI_PART_EXPORT_INTERFACE = 104;
     public static final int GUI_PART_FLUID_EXPORT_INTERFACE = 105;
     public static final int GUI_PART_PULL_PUSH_CARD_INTERFACE = 106;
+    public static final int GUI_PART_COMBINED_IMPORT_INTERFACE = 107;
+    public static final int GUI_PART_COMBINED_EXPORT_INTERFACE = 108;
+
+    // ================================= Per-slot override pending slot map =================================
+
+    /**
+     * Per-player pending slot index for the per-slot size override GUI.
+     * When a player right-clicks a filter slot, the slot index is stored here
+     * before opening the regular Max Slot Size GUI. The container reads and
+     * consumes this value to enter per-slot mode.
+     * <p>
+     * A value of -1 (or absent) means the GUI opens in global mode.
+     */
+    private static final Map<UUID, Integer> pendingOverrideSlots = new HashMap<>();
+
+    /**
+     * Store a pending per-slot override index for a player.
+     * Called server-side by {@link com.cells.network.packets.PacketOpenSlotOverrideGui}
+     * right before opening the Max Slot Size GUI.
+     */
+    public static void setPendingOverrideSlot(EntityPlayer player, int slot) {
+        pendingOverrideSlots.put(player.getUniqueID(), slot);
+    }
+
+    /**
+     * Consume (read + remove) the pending per-slot override index for a player.
+     * Called by {@link ContainerMaxSlotSize} during construction to determine
+     * whether to operate in global or per-slot mode.
+     *
+     * @return The slot index, or -1 if no pending override was set.
+     */
+    public static int consumePendingOverrideSlot(EntityPlayer player) {
+        Integer slot = pendingOverrideSlots.remove(player.getUniqueID());
+        return slot != null ? slot : -1;
+    }
 
     // Lazily initialized gas GUI handler (null if MekanismEnergistics not loaded)
     private GasInterfaceGuiHandler gasGuiHandler;
@@ -178,7 +222,7 @@ public class CellsGuiHandler implements IGuiHandler {
         BlockPos pos = new BlockPos(x, y, z);
         TileEntity tile = world.getTileEntity(pos);
 
-        // TODO: refactor that
+        // TODO: refactor the whole GUID system
         // Handle part GUIs (encoded with side information)
         if (GuiIdUtils.isPartGui(id)) {
             IPart part = GuiIdUtils.getPartFromTile(tile, id);
@@ -225,6 +269,16 @@ public class CellsGuiHandler implements IGuiHandler {
                     if (part instanceof IFilterableInterfaceHost) {
                         //noinspection rawtypes
                         return new ContainerPullPushCard(player.inventory, (IFilterableInterfaceHost) part);
+                    }
+                    if (part instanceof ICombinedInterfaceHost) {
+                        return new ContainerPullPushCard(player.inventory, (ICombinedInterfaceHost) part);
+                    }
+                    break;
+
+                case GUI_PART_COMBINED_IMPORT_INTERFACE:
+                case GUI_PART_COMBINED_EXPORT_INTERFACE:
+                    if (part instanceof ICombinedInterfaceHost) {
+                        return new ContainerCombinedInterface(player.inventory, part);
                     }
                     break;
             }
@@ -283,6 +337,9 @@ public class CellsGuiHandler implements IGuiHandler {
                     //noinspection rawtypes
                     return new ContainerPullPushCard(player.inventory, (IFilterableInterfaceHost) tile);
                 }
+                if (tile instanceof ICombinedInterfaceHost) {
+                    return new ContainerPullPushCard(player.inventory, (ICombinedInterfaceHost) tile);
+                }
                 break;
 
             case GUI_EXPORT_INTERFACE:
@@ -294,6 +351,13 @@ public class CellsGuiHandler implements IGuiHandler {
             case GUI_FLUID_EXPORT_INTERFACE:
                 if (tile instanceof IFluidInterfaceHost) {
                     return new ContainerFluidInterface(player.inventory, tile);
+                }
+                break;
+
+            case GUI_COMBINED_IMPORT_INTERFACE:
+            case GUI_COMBINED_EXPORT_INTERFACE:
+                if (tile instanceof ICombinedInterfaceHost) {
+                    return new ContainerCombinedInterface(player.inventory, tile);
                 }
                 break;
         }
@@ -383,6 +447,16 @@ public class CellsGuiHandler implements IGuiHandler {
                         //noinspection rawtypes
                         return new GuiPullPushCard(player.inventory, (IFilterableInterfaceHost) part);
                     }
+                    if (part instanceof ICombinedInterfaceHost) {
+                        return new GuiPullPushCard(player.inventory, (ICombinedInterfaceHost) part);
+                    }
+                    break;
+
+                case GUI_PART_COMBINED_IMPORT_INTERFACE:
+                case GUI_PART_COMBINED_EXPORT_INTERFACE:
+                    if (part instanceof ICombinedInterfaceHost) {
+                        return new GuiCombinedInterface(player.inventory, part);
+                    }
                     break;
             }
 
@@ -440,6 +514,9 @@ public class CellsGuiHandler implements IGuiHandler {
                     //noinspection rawtypes
                     return new GuiPullPushCard(player.inventory, (IFilterableInterfaceHost) tile);
                 }
+                if (tile instanceof ICombinedInterfaceHost) {
+                    return new GuiPullPushCard(player.inventory, (ICombinedInterfaceHost) tile);
+                }
                 break;
 
             case GUI_EXPORT_INTERFACE:
@@ -451,6 +528,13 @@ public class CellsGuiHandler implements IGuiHandler {
             case GUI_FLUID_EXPORT_INTERFACE:
                 if (tile instanceof IFluidInterfaceHost) {
                     return new GuiFluidInterface(player.inventory, tile);
+                }
+                break;
+
+            case GUI_COMBINED_IMPORT_INTERFACE:
+            case GUI_COMBINED_EXPORT_INTERFACE:
+                if (tile instanceof ICombinedInterfaceHost) {
+                    return new GuiCombinedInterface(player.inventory, tile);
                 }
                 break;
         }

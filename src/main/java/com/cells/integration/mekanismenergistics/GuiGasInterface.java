@@ -104,7 +104,7 @@ public class GuiGasInterface extends AbstractResourceInterfaceGui<IGasInterfaceH
         return new GasTankSlot<>(
             this.host, displaySlot, displaySlot, x, y,
             () -> this.container.currentPage * SLOTS_PER_PAGE,
-            () -> this.container.maxSlotSize
+            () -> getEffectiveMaxSlotSizeForDisplay(displaySlot)
         );
     }
 

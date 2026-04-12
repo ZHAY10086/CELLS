@@ -1,0 +1,49 @@
+package com.cells.parts;
+
+import net.minecraft.item.ItemStack;
+
+import appeng.items.parts.PartModels;
+import appeng.parts.PartModel;
+
+import com.cells.gui.CellsGuiHandler;
+
+
+/**
+ * Part version of the Combined Import Interface.
+ * Combines item, fluid, gas, and essentia import capabilities in a single cable part.
+ */
+public class PartCombinedImportInterface extends AbstractCombinedInterfacePart {
+
+    private static final String prefix = "part/import_interface/combined/";
+    private static final Object[] MODELS = PartModelsHelper.createInterfaceModels(prefix);
+
+    @PartModels
+    public static final PartModel MODELS_OFF = (PartModel) MODELS[1];
+
+    @PartModels
+    public static final PartModel MODELS_ON = (PartModel) MODELS[2];
+
+    @PartModels
+    public static final PartModel MODELS_HAS_CHANNEL = (PartModel) MODELS[3];
+
+    public PartCombinedImportInterface(final ItemStack is) {
+        super(is);
+    }
+
+    @Override
+    protected PartModel getModelOff() { return MODELS_OFF; }
+
+    @Override
+    protected PartModel getModelOn() { return MODELS_ON; }
+
+    @Override
+    protected PartModel getModelHasChannel() { return MODELS_HAS_CHANNEL; }
+
+    @Override
+    public boolean isExport() { return false; }
+
+    @Override
+    public int getMainGuiId() {
+        return CellsGuiHandler.GUI_PART_COMBINED_IMPORT_INTERFACE;
+    }
+}

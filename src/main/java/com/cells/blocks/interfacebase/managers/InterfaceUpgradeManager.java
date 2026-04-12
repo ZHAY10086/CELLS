@@ -93,6 +93,20 @@ public class InterfaceUpgradeManager {
         };
     }
 
+    /**
+     * Constructor that accepts a shared upgrade inventory.
+     * Used by combined interfaces where multiple logics share the same physical upgrade slots.
+     * The shared inventory's validation and host notification are already configured by the
+     * primary logic's upgrade manager, this manager just reads card state from it.
+     *
+     * @param sharedUpgradeInventory An existing AppEngInternalInventory to use instead of creating a new one
+     */
+    public InterfaceUpgradeManager(boolean isExport, Callbacks callbacks, AppEngInternalInventory sharedUpgradeInventory) {
+        this.callbacks = callbacks;
+        this.isExport = isExport;
+        this.upgradeInventory = sharedUpgradeInventory;
+    }
+
     // ============================== Getters ==============================
 
     public AppEngInternalInventory getUpgradeInventory() {

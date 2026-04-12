@@ -101,7 +101,7 @@ public class GuiItemInterface extends AbstractResourceInterfaceGui<IItemInterfac
         return new ItemStorageSlot<>(
             this.host, displaySlot, displaySlot, x, y,
             () -> this.container.currentPage * SLOTS_PER_PAGE,
-            () -> this.container.maxSlotSize
+            () -> getEffectiveMaxSlotSizeForDisplay(displaySlot)
         );
     }
 

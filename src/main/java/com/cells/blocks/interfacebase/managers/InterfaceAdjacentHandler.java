@@ -2,6 +2,7 @@ package com.cells.blocks.interfacebase.managers;
 
 import java.lang.ref.WeakReference;
 import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
@@ -107,8 +108,11 @@ public class InterfaceAdjacentHandler<R, K> {
         /** Mark the host as dirty and save. */
         void markDirtyAndSave();
 
-        /** Mark the host for a network (client) update. */
-        void markForNetworkUpdate();
+        /**
+         * Get the set of facings this host is allowed to interact with.
+         * Full-block tiles return all 6 directions, cable bus parts return only their attached side.
+         */
+        EnumSet<EnumFacing> getTargetFacings();
     }
 
     private final ResourceOps<R, K> ops;
@@ -175,13 +179,20 @@ public class InterfaceAdjacentHandler<R, K> {
     public void refreshCapabilityCache() {
         this.cachedAdjacentTiles.clear();
         this.cachedCapabilities.clear();
-        this.capabilityCachePopulated = true;
 
         World world = this.callbacks.getHostWorld();
-        BlockPos pos = this.callbacks.getHostPos();
-        if (world == null || pos == null) return;
+        if (world == null) return;
 
-        for (EnumFacing facing : EnumFacing.VALUES) {
+        // getHostPos() may NPE during NBT loading for cable bus parts (world not yet set),
+        // so we check getHostWorld() first as a safe guard.
+        BlockPos pos = this.callbacks.getHostPos();
+        if (pos == null) return;
+
+        // Only mark populated after we've confirmed we can actually scan.
+        // If we bail out early, performAutoPullPush will retry on the next tick.
+        this.capabilityCachePopulated = true;
+
+        for (EnumFacing facing : this.callbacks.getTargetFacings()) {
             scanAndCacheFacing(world, pos, facing);
         }
     }
@@ -265,8 +276,10 @@ public class InterfaceAdjacentHandler<R, K> {
         if (!hasAutoPullPushUpgrade) return;
 
         World world = this.callbacks.getHostWorld();
+        if (world == null) return;
+
         BlockPos pos = this.callbacks.getHostPos();
-        if (world == null || pos == null) return;
+        if (pos == null) return;
 
         scanAndCacheFacing(world, pos, facing);
     }
@@ -279,8 +292,14 @@ public class InterfaceAdjacentHandler<R, K> {
      * @param hasAutoPullPushUpgrade Whether a card is currently installed
      */
     public void onNeighborChanged(BlockPos neighborPos, boolean hasAutoPullPushUpgrade) {
+        if (neighborPos == null) return;
+
+        // Check world first, getHostPos() may NPE during loading for cable bus parts
+        World world = this.callbacks.getHostWorld();
+        if (world == null) return;
+
         BlockPos pos = this.callbacks.getHostPos();
-        if (pos == null || neighborPos == null) return;
+        if (pos == null) return;
 
         for (EnumFacing facing : EnumFacing.VALUES) {
             if (pos.offset(facing).equals(neighborPos)) {
@@ -315,7 +334,7 @@ public class InterfaceAdjacentHandler<R, K> {
      * Check if any cached capability is present and valid.
      */
     public boolean hasAnyCachedCapability() {
-        for (EnumFacing facing : EnumFacing.VALUES) {
+        for (EnumFacing facing : this.callbacks.getTargetFacings()) {
             if (getValidCachedCapability(facing) != null) return true;
         }
         return false;
@@ -336,7 +355,6 @@ public class InterfaceAdjacentHandler<R, K> {
      */
     public boolean pullFromAdjacent(Object adjacentHandler, EnumFacing facing, int quantity, int keepQuantity) {
         boolean didWork = false;
-        long maxSlotSize = this.inventoryManager.getMaxSlotSize();
 
         // Pre-compute resource counts to avoid re-scanning the adjacent handler per filter slot.
         // Only needed when keepQuantity > 0 (otherwise we don't care about adjacent amounts).
@@ -347,7 +365,7 @@ public class InterfaceAdjacentHandler<R, K> {
             K filterKey = this.inventoryManager.getFilterKey(filterIdx);
             if (filterKey == null) continue;
 
-            long spaceRemaining = maxSlotSize - this.inventoryManager.getSlotAmount(filterIdx);
+            long spaceRemaining = this.inventoryManager.getEffectiveMaxSlotSize(filterIdx) - this.inventoryManager.getSlotAmount(filterIdx);
             if (spaceRemaining <= 0) continue;
 
             int maxToExtract = (int) Math.min(quantity, spaceRemaining);
@@ -380,10 +398,7 @@ public class InterfaceAdjacentHandler<R, K> {
             didWork = true;
         }
 
-        if (didWork) {
-            this.callbacks.markDirtyAndSave();
-            this.callbacks.markForNetworkUpdate();
-        }
+        if (didWork) this.callbacks.markDirtyAndSave();
 
         return didWork;
     }
@@ -443,10 +458,7 @@ public class InterfaceAdjacentHandler<R, K> {
             didWork = true;
         }
 
-        if (didWork) {
-            this.callbacks.markDirtyAndSave();
-            this.callbacks.markForNetworkUpdate();
-        }
+        if (didWork) this.callbacks.markDirtyAndSave();
 
         return didWork;
     }
@@ -468,7 +480,7 @@ public class InterfaceAdjacentHandler<R, K> {
         boolean didWork = false;
         boolean isExport = this.callbacks.isExport();
 
-        for (EnumFacing facing : EnumFacing.VALUES) {
+        for (EnumFacing facing : this.callbacks.getTargetFacings()) {
             Object handler = getValidCachedCapability(facing);
             if (handler == null) continue;
 

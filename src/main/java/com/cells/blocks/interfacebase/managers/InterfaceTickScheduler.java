@@ -3,8 +3,8 @@ package com.cells.blocks.interfacebase.managers;
 import javax.annotation.Nullable;
 
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.text.TextComponentTranslation;
 
 import appeng.api.networking.ticking.IGridTickable;
 import appeng.api.networking.ticking.TickRateModulation;
@@ -14,6 +14,7 @@ import appeng.me.GridAccessException;
 import appeng.me.helpers.AENetworkProxy;
 
 import com.cells.config.CellsConfig;
+import com.cells.gui.overlay.ServerMessageHelper;
 import com.cells.util.TickManagerHelper;
 
 
@@ -116,8 +117,8 @@ public class InterfaceTickScheduler {
         AENetworkProxy proxy = this.callbacks.getGridProxy();
         if (proxy.isReady()) {
             if (!TickManagerHelper.reRegisterTickable(proxy.getNode(), this.callbacks.getTickable())) {
-                if (player != null) {
-                    player.sendMessage(new TextComponentTranslation("message.cells.polling_rate_delayed"));
+                if (player instanceof EntityPlayerMP) {
+                    ServerMessageHelper.warning((EntityPlayerMP) player, "message.cells.polling_rate_delayed");
                 }
             }
 
@@ -329,22 +330,42 @@ public class InterfaceTickScheduler {
     // ============================== Serialization support ==============================
 
     /**
-     * Read polling rate from NBT.
+     * Read polling rate from NBT using the given key.
+     *
+     * @param data   The NBT compound to read from
+     * @param key    The NBT key to use (e.g., "pollingRate" or "itemPollingRate")
+     * @param player The player context for validation messages (may be null)
      */
-    public void readFromNBT(NBTTagCompound data, EntityPlayer player) {
-        if (data.hasKey("pollingRate")) {
-            this.setPollingRate(data.getInteger("pollingRate"), player);
-        }
-    }
-
-    public void readFromNBT(NBTTagCompound data) {
-        this.readFromNBT(data, null);
+    public void readFromNBT(NBTTagCompound data, String key, @Nullable EntityPlayer player) {
+        if (data.hasKey(key)) this.setPollingRate(data.getInteger(key), player);
     }
 
     /**
-     * Write polling rate to NBT.
+     * Read polling rate from NBT using the default "pollingRate" key.
+     */
+    public void readFromNBT(NBTTagCompound data, EntityPlayer player) {
+        readFromNBT(data, "pollingRate", player);
+    }
+
+    public void readFromNBT(NBTTagCompound data) {
+        this.readFromNBT(data, "pollingRate", null);
+    }
+
+    /**
+     * Write polling rate to NBT using the given key.
+     *
+     * @param data The NBT compound to write to
+     * @param key  The NBT key to use (e.g., "pollingRate" or "itemPollingRate")
+     */
+    public void writeToNBT(NBTTagCompound data, String key) {
+        data.setInteger(key, this.pollingRate);
+    }
+
+    /**
+     * Write polling rate to NBT using the default "pollingRate" key.
+     * Used by standalone (non-combined) interfaces.
      */
     public void writeToNBT(NBTTagCompound data) {
-        data.setInteger("pollingRate", this.pollingRate);
+        writeToNBT(data, "pollingRate");
     }
 }

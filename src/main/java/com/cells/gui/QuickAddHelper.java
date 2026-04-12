@@ -2,11 +2,10 @@ package com.cells.gui;
 
 import javax.annotation.Nullable;
 
-import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.fml.common.Loader;
@@ -16,6 +15,8 @@ import mekanism.api.gas.GasStack;
 import mekanism.api.gas.IGasHandler;
 import mekanism.api.gas.IGasItem;
 import mekanism.common.capabilities.Capabilities;
+
+import com.cells.gui.overlay.MessageHelper;
 
 
 /**
@@ -92,11 +93,7 @@ public class QuickAddHelper {
      * Send a "no X" error message to the player (for non-item interfaces).
      */
     public static void sendNoValidError(String type) {
-        Minecraft mc = Minecraft.getMinecraft();
-        if (mc.player != null) {
-            mc.player.sendMessage(new TextComponentTranslation("message.cells.not_valid_content",
-                new TextComponentTranslation("cells.type." + type)));
-        }
+        MessageHelper.error("message.cells.not_valid_content", I18n.format("cells.type." + type));
     }
 
     // ==================== Gas extraction methods (MekanismEnergistics integration) ====================

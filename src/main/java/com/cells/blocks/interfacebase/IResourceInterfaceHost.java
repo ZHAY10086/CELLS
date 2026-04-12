@@ -50,6 +50,17 @@ public interface IResourceInterfaceHost<AE extends IAEStack<AE>, K>
     }
 
     @Override
+    @Nullable
+    default AE getStorageStack(int slot) {
+        return getInterfaceLogic().getStorageAsAEStack(slot);
+    }
+
+    @Override
+    default void setStorageForClientSync(int slot, @Nullable AE stack) {
+        getInterfaceLogic().setStorageFromAEStack(slot, stack);
+    }
+
+    @Override
     default boolean isInFilter(@Nonnull K key) {
         return getInterfaceLogic().isInFilter(key);
     }

@@ -103,7 +103,7 @@ public class GuiEssentiaInterface extends AbstractResourceInterfaceGui<IEssentia
         return new EssentiaTankSlot<>(
             this.host, displaySlot, displaySlot, x, y,
             () -> this.container.currentPage * SLOTS_PER_PAGE,
-            () -> this.container.maxSlotSize
+            () -> getEffectiveMaxSlotSizeForDisplay(displaySlot)
         );
     }
 

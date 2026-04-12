@@ -17,6 +17,7 @@ import appeng.api.parts.IPart;
 import appeng.util.Platform;
 
 import com.cells.Tags;
+import com.cells.config.CellsConfig;
 
 
 /**
@@ -26,7 +27,9 @@ public enum CellsPartType {
     IMPORT_INTERFACE("import_interface", PartImportInterface.class),
     FLUID_IMPORT_INTERFACE("import_fluid_interface", PartFluidImportInterface.class),
     EXPORT_INTERFACE("export_interface", PartExportInterface.class),
-    FLUID_EXPORT_INTERFACE("export_fluid_interface", PartFluidExportInterface.class);
+    FLUID_EXPORT_INTERFACE("export_fluid_interface", PartFluidExportInterface.class),
+    COMBINED_IMPORT_INTERFACE("import_combined_interface", PartCombinedImportInterface.class),
+    COMBINED_EXPORT_INTERFACE("export_combined_interface", PartCombinedExportInterface.class);
 
     private final String id;
     private final Class<? extends IPart> partClass;
@@ -56,7 +59,8 @@ public enum CellsPartType {
 
     @SideOnly(Side.CLIENT)
     private static ModelResourceLocation modelFromBaseName(String baseName) {
-        return new ModelResourceLocation(new ResourceLocation(Tags.MODID, "part/" + baseName), "inventory");
+        String suffix = CellsConfig.useFixedInterfaceTextures ? "_fixed" : "";
+        return new ModelResourceLocation(new ResourceLocation(Tags.MODID, "part/" + baseName + suffix), "inventory");
     }
 
     @SideOnly(Side.CLIENT)

@@ -3,7 +3,6 @@ package com.cells.integration.mekanismenergistics;
 import javax.annotation.Nullable;
 
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.capabilities.Capability;
 
 import appeng.items.parts.PartModels;
@@ -12,8 +11,8 @@ import appeng.parts.PartModel;
 import mekanism.api.gas.GasStack;
 import mekanism.common.capabilities.Capabilities;
 
-import com.cells.Tags;
 import com.cells.parts.AbstractInterfacePart;
+import com.cells.parts.PartModelsHelper;
 
 
 /**
@@ -27,17 +26,16 @@ public class PartGasImportInterface extends AbstractInterfacePart<GasInterfaceLo
         implements IGasInterfaceHost, GasInterfaceLogic.Host {
 
     private static final String prefix = "part/import_interface/gas/";
-
-    public static final ResourceLocation MODEL_BASE = new ResourceLocation(Tags.MODID, prefix + "base");
-
-    @PartModels
-    public static final PartModel MODELS_OFF = new PartModel(MODEL_BASE, new ResourceLocation(Tags.MODID, prefix + "off"));
+    private static final Object[] MODELS = PartModelsHelper.createInterfaceModels(prefix);
 
     @PartModels
-    public static final PartModel MODELS_ON = new PartModel(MODEL_BASE, new ResourceLocation(Tags.MODID, prefix + "on"));
+    public static final PartModel MODELS_OFF = (PartModel) MODELS[1];
 
     @PartModels
-    public static final PartModel MODELS_HAS_CHANNEL = new PartModel(MODEL_BASE, new ResourceLocation(Tags.MODID, prefix + "has_channel"));
+    public static final PartModel MODELS_ON = (PartModel) MODELS[2];
+
+    @PartModels
+    public static final PartModel MODELS_HAS_CHANNEL = (PartModel) MODELS[3];
 
     public PartGasImportInterface(final ItemStack is) {
         super(is);

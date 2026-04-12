@@ -40,12 +40,13 @@ import com.jaquadro.minecraft.storagedrawers.api.capabilities.IItemRepository;
 /**
  * /inspectSlot [resource1] [resource2] ...
  * <p>
- * Inspects the block the player is looking at, queries the first available capability
- * in priority order (IItemRepository → IItemHandler → IFluidHandler → IGasHandler → IAspectContainer),
- * and displays each slot's content, current/capacity, and simulated insertion results for any
- * supplied resource arguments.
+ * Inspects the block the player is looking at, queries ALL available capabilities
+ * and displays each one's slots/tanks sequentially, separated by blank lines.
  * <p>
- * Supports 0 or more resource arguments. Tab-completion adapts to the detected capability type.
+ * Capability order: IItemRepository → IItemHandler → IFluidHandler → IGasHandler → IAspectContainer.
+ * <p>
+ * Supports 0 or more resource arguments. Tab-completion offers all resource types
+ * that are applicable to the detected capabilities.
  * All output is localized via TextComponentTranslation.
  */
 public class InspectSlotCommand extends CommandBase {
@@ -74,9 +75,6 @@ public class InspectSlotCommand extends CommandBase {
         return 0;
     }
 
-    // Flag prefix for bypassing IItemRepository and forcing IItemHandler inspection
-    private static final String FLAG_HANDLER = "--handler";
-
     // ================================= Execution =================================
 
     @Override
@@ -87,18 +85,6 @@ public class InspectSlotCommand extends CommandBase {
         }
 
         EntityPlayerMP player = (EntityPlayerMP) sender.getCommandSenderEntity();
-
-        // Check for --handler flag and strip it from args
-        boolean forceItemHandler = false;
-        List<String> filteredArgs = new ArrayList<>();
-        for (String arg : args) {
-            if (FLAG_HANDLER.equalsIgnoreCase(arg)) {
-                forceItemHandler = true;
-            } else {
-                filteredArgs.add(arg);
-            }
-        }
-        String[] resourceArgs = filteredArgs.toArray(new String[0]);
 
         // Ray trace from the player's eyes
         RayTraceResult hit = rayTrace(player);
@@ -121,53 +107,55 @@ public class InspectSlotCommand extends CommandBase {
         sender.sendMessage(new TextComponentTranslation("commands.cells.inspect_slots.header",
                 pos.getX(), pos.getY(), pos.getZ()));
 
-        // Try capabilities in priority order.
-        // NOTE: Most AE2 tiles expose IItemHandler from AEBaseInvTile (even fluid/gas/essentia
-        // interfaces), so we MUST check the more-specific capabilities first to avoid
-        // incorrectly detecting everything as an item handler.
+        // Try ALL capabilities sequentially. Each detected capability section is shown
+        // separated by a blank line. This way blocks that expose multiple capabilities
+        // (e.g. a Combined Interface with items + fluids + gas) show everything at once.
+        boolean anyFound = false;
 
         // 1. IItemRepository (slotless bulk storage, e.g. Storage Drawers)
-        //    Can be bypassed with --handler flag to force IItemHandler inspection instead.
-        if (!forceItemHandler
-                && Capabilities.ITEM_REPOSITORY_CAPABILITY != null
+        if (Capabilities.ITEM_REPOSITORY_CAPABILITY != null
                 && te.hasCapability(Capabilities.ITEM_REPOSITORY_CAPABILITY, hitFace)) {
             IItemRepository repo = te.getCapability(Capabilities.ITEM_REPOSITORY_CAPABILITY, hitFace);
             if (repo != null) {
-                inspectItemRepository(sender, repo, resourceArgs);
-                return;
+                if (anyFound) sender.sendMessage(new TextComponentTranslation(""));
+                inspectItemRepository(sender, repo, args);
+                anyFound = true;
             }
         }
 
-        // 2. IFluidHandler (before IItemHandler to avoid AE2 tile misdetection)
-        if (te.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, hitFace)) {
-            IFluidHandler handler = te.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, hitFace);
-            if (handler != null) {
-                inspectFluidHandler(sender, handler, resourceArgs);
-                return;
-            }
-        }
-
-        // 3. IGasHandler (Mekanism, before IItemHandler for the same reason)
-        if (Platform.isModLoaded(MOD_MEKANISM)) {
-            if (tryInspectGas(sender, te, hitFace, resourceArgs)) return;
-        }
-
-        // 4. IAspectContainer (Thaumcraft essentia, not a Forge capability, uses instanceof)
-        if (Loader.isModLoaded(MOD_THAUMCRAFT)) {
-            if (tryInspectEssentia(sender, te, resourceArgs)) return;
-        }
-
-        // 5. IItemHandler (standard Forge item capability, checked last because
-        //    AEBaseInvTile exposes this for ALL tiles, even non-item ones)
+        // 2. IItemHandler (standard Forge item capability)
         if (te.hasCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, hitFace)) {
             IItemHandler handler = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, hitFace);
             if (handler != null && handler.getSlots() > 0) {
-                inspectItemHandler(sender, handler, resourceArgs);
-                return;
+                if (anyFound) sender.sendMessage(new TextComponentTranslation(""));
+                inspectItemHandler(sender, handler, args);
+                anyFound = true;
             }
         }
 
-        sender.sendMessage(new TextComponentTranslation("commands.cells.inspect_slots.no_capability"));
+        // 3. IFluidHandler
+        if (te.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, hitFace)) {
+            IFluidHandler handler = te.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, hitFace);
+            if (handler != null) {
+                if (anyFound) sender.sendMessage(new TextComponentTranslation(""));
+                inspectFluidHandler(sender, handler, args);
+                anyFound = true;
+            }
+        }
+
+        // 4. IGasHandler (Mekanism)
+        if (Platform.isModLoaded(MOD_MEKANISM)) {
+            if (tryInspectGas(sender, te, hitFace, args, anyFound)) anyFound = true;
+        }
+
+        // 5. IAspectContainer (Thaumcraft essentia, not a Forge capability, uses instanceof)
+        if (Loader.isModLoaded(MOD_THAUMCRAFT)) {
+            if (tryInspectEssentia(sender, te, args, anyFound)) anyFound = true;
+        }
+
+        if (!anyFound) {
+            sender.sendMessage(new TextComponentTranslation("commands.cells.inspect_slots.no_capability"));
+        }
     }
 
     // ================================= Ray Trace =================================
@@ -358,15 +346,18 @@ public class InspectSlotCommand extends CommandBase {
 
     /**
      * Try to inspect IGasHandler tanks. Returns true if the TE has a gas capability.
+     *
+     * @param anyPrevious Whether a previous capability section was already printed (for blank line separator)
      */
     @Optional.Method(modid = MOD_MEKANISM)
-    private boolean tryInspectGas(ICommandSender sender, TileEntity te, EnumFacing face, String[] args) {
+    private boolean tryInspectGas(ICommandSender sender, TileEntity te, EnumFacing face, String[] args, boolean anyPrevious) {
         if (!te.hasCapability(mekanism.common.capabilities.Capabilities.GAS_HANDLER_CAPABILITY, face)) return false;
 
         mekanism.api.gas.IGasHandler handler = te.getCapability(
                 mekanism.common.capabilities.Capabilities.GAS_HANDLER_CAPABILITY, face);
         if (handler == null) return false;
 
+        if (anyPrevious) sender.sendMessage(new TextComponentTranslation(""));
         sender.sendMessage(new TextComponentTranslation("commands.cells.inspect_slots.type.gas_handler"));
 
         // Parse gas arguments for insertion simulation
@@ -425,13 +416,16 @@ public class InspectSlotCommand extends CommandBase {
     /**
      * Try to inspect IAspectContainer essentia. Returns true if the TE is an essentia container.
      * Essentia does NOT use Forge capabilities, it's an instanceof check.
+     *
+     * @param anyPrevious Whether a previous capability section was already printed (for blank line separator)
      */
     @Optional.Method(modid = MOD_THAUMCRAFT)
-    private boolean tryInspectEssentia(ICommandSender sender, TileEntity te, String[] args) {
+    private boolean tryInspectEssentia(ICommandSender sender, TileEntity te, String[] args, boolean anyPrevious) {
         if (!(te instanceof thaumcraft.api.aspects.IAspectContainer)) return false;
 
         thaumcraft.api.aspects.IAspectContainer container = (thaumcraft.api.aspects.IAspectContainer) te;
 
+        if (anyPrevious) sender.sendMessage(new TextComponentTranslation(""));
         sender.sendMessage(new TextComponentTranslation("commands.cells.inspect_slots.type.essentia_container"));
 
         thaumcraft.api.aspects.AspectList aspects = container.getAspects();
@@ -497,52 +491,48 @@ public class InspectSlotCommand extends CommandBase {
         EnumFacing hitFace = hit.sideHit;
         String lastArg = args.length > 0 ? args[args.length - 1].toLowerCase() : "";
 
-        // Offer --handler flag as a completion only when the target supports IItemRepository
-        if (Capabilities.ITEM_REPOSITORY_CAPABILITY != null
-                && te.hasCapability(Capabilities.ITEM_REPOSITORY_CAPABILITY, hitFace)
-                && FLAG_HANDLER.startsWith(lastArg)) {
-            List<String> flagCompletions = new ArrayList<>();
-            flagCompletions.add(FLAG_HANDLER);
-            // Also include resource completions if applicable
-            flagCompletions.addAll(getResourceCompletions(te, hitFace, lastArg));
-            return flagCompletions;
-        }
-
         return getResourceCompletions(te, hitFace, lastArg);
     }
 
     /**
-     * Get resource completions based on the detected capability type.
-     * Priority matches execute(): IItemRepository > IFluidHandler > IGasHandler > IAspectContainer > IItemHandler.
+     * Get resource completions for ALL detected capability types.
+     * Since the command now shows all capabilities, tab-complete should offer
+     * resources from every applicable type (items, fluids, gases, essentia).
      */
     private List<String> getResourceCompletions(TileEntity te, EnumFacing hitFace, String lastArg) {
-        // Check for --handler flag among existing args (force IItemHandler mode)
-        // Tab completion context doesn't have full args, so just offer based on capability priority
+        List<String> completions = new ArrayList<>();
 
+        // Item completions (IItemRepository or IItemHandler)
+        boolean hasItems = false;
         if (Capabilities.ITEM_REPOSITORY_CAPABILITY != null
                 && te.hasCapability(Capabilities.ITEM_REPOSITORY_CAPABILITY, hitFace)) {
-            return getItemCompletions(lastArg);
+            hasItems = true;
+        }
+        if (!hasItems && te.hasCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, hitFace)) {
+            hasItems = true;
+        }
+        if (hasItems) {
+            completions.addAll(getItemCompletions(lastArg));
         }
 
+        // Fluid completions
         if (te.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, hitFace)) {
-            return getFluidCompletions(lastArg);
+            completions.addAll(getFluidCompletions(lastArg));
         }
 
+        // Gas completions (Mekanism)
         if (Platform.isModLoaded(MOD_MEKANISM)) {
             List<String> gasCompletions = getGasCompletions(te, hitFace, lastArg);
-            if (gasCompletions != null) return gasCompletions;
+            if (gasCompletions != null) completions.addAll(gasCompletions);
         }
 
+        // Essentia completions (Thaumcraft)
         if (Loader.isModLoaded(MOD_THAUMCRAFT)) {
             List<String> essentiaCompletions = getEssentiaCompletions(te, lastArg);
-            if (essentiaCompletions != null) return essentiaCompletions;
+            if (essentiaCompletions != null) completions.addAll(essentiaCompletions);
         }
 
-        if (te.hasCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, hitFace)) {
-            return getItemCompletions(lastArg);
-        }
-
-        return Collections.emptyList();
+        return completions;
     }
 
     /**

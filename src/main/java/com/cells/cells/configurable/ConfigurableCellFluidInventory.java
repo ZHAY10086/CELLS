@@ -146,7 +146,7 @@ public class ConfigurableCellFluidInventory extends AbstractConfigurableCellInve
                 totalNbtSize += fluidSize;
             }
 
-            // Only set the parent tag reference when adding a new fluid — the compound may
+            // Only set the parent tag reference when adding a new fluid, the compound may
             // not be in the parent yet (first fluid ever). For updates/removals, the compound
             // is already referenced from the parent and modifications are reflected automatically.
             tagCompound.setTag(NBT_FLUID_TYPE, fluidsTag);

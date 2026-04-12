@@ -1,7 +1,5 @@
 package com.cells.blocks.interfacebase.item;
 
-import java.io.ByteArrayOutputStream;
-import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -17,7 +15,6 @@ import io.netty.buffer.ByteBuf;
 
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.EnumFacing;
@@ -25,6 +22,7 @@ import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.Constants;
+import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.IItemHandlerModifiable;
@@ -35,6 +33,7 @@ import appeng.api.storage.IMEInventory;
 import appeng.api.storage.channels.IItemStorageChannel;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.capabilities.Capabilities;
+import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.util.item.AEItemStack;
 
 import com.jaquadro.minecraft.storagedrawers.api.capabilities.IItemRepository;
@@ -84,6 +83,21 @@ public class ItemInterfaceLogic extends AbstractResourceInterfaceLogic<ItemStack
         this.storageHandler = new ArrayItemHandler(STORAGE_SLOTS, false);
 
         // Create appropriate external handler based on direction
+        if (host.isExport()) {
+            this.externalHandler = new ExportStorageHandler(this);
+        } else {
+            this.externalHandler = new FilteredStorageHandler(this);
+        }
+    }
+
+    /**
+     * Constructor with a shared upgrade inventory for combined interfaces.
+     */
+    public ItemInterfaceLogic(Host host, AppEngInternalInventory sharedUpgradeInventory) {
+        super(host, ItemStack.class, sharedUpgradeInventory);
+
+        this.storageHandler = new ArrayItemHandler(STORAGE_SLOTS, false);
+
         if (host.isExport()) {
             this.externalHandler = new ExportStorageHandler(this);
         } else {
@@ -519,45 +533,27 @@ public class ItemInterfaceLogic extends AbstractResourceInterfaceLogic<ItemStack
     // ============================== Item-specific stream serialization ==============================
 
     /**
-     * Items use compressed NBT for stream serialization since they can have complex NBT data.
-     * Length-prefixed so the reader can always consume the correct number of bytes.
+     * Items use uncompressed NBT via ByteBufUtils for stream serialization.
+     * This is a "somewhat" hot path, so GZip is overkill
      */
     @Override
     protected void writeResourceToStream(ItemStack resource, ByteBuf data) {
-        try {
-            NBTTagCompound tag = resource.writeToNBT(new NBTTagCompound());
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            CompressedStreamTools.writeCompressed(tag, baos);
-            byte[] nbtBytes = baos.toByteArray();
-
-            data.writeInt(nbtBytes.length);
-            data.writeBytes(nbtBytes);
-        } catch (Exception e) {
-            // Write zero-length marker on error so the reader stays in sync
-            data.writeInt(0);
-        }
+        NBTTagCompound tag = resource.writeToNBT(new NBTTagCompound());
+        ByteBufUtils.writeTag(data, tag);
     }
 
     /**
-     * Read a compressed-NBT-encoded ItemStack from the stream.
+     * Read an NBT-encoded ItemStack from the stream.
      * @return The item, or null if data is corrupted or empty.
      */
     @Override
     @Nullable
     protected ItemStack readResourceFromStream(ByteBuf data) {
-        int nbtLen = data.readInt();
-        if (nbtLen <= 0) return null;
+        NBTTagCompound tag = ByteBufUtils.readTag(data);
+        if (tag == null) return null;
 
-        byte[] nbtBytes = new byte[nbtLen];
-        data.readBytes(nbtBytes);
-
-        try {
-            NBTTagCompound tag = CompressedStreamTools.readCompressed(new ByteArrayInputStream(nbtBytes));
-            ItemStack stack = new ItemStack(tag);
-            return stack.isEmpty() ? null : stack;
-        } catch (Exception e) {
-            return null;
-        }
+        ItemStack stack = new ItemStack(tag);
+        return stack.isEmpty() ? null : stack;
     }
 
     // ============================== Item-specific NBT format ==============================
@@ -769,7 +765,15 @@ public class ItemInterfaceLogic extends AbstractResourceInterfaceLogic<ItemStack
 
         @Override
         public int getSlotLimit(int slot) {
-            return logic.inventoryManager.getMaxSlotSizeInt();
+            // Slot 0 is the dummy slot, use global max
+            if (slot <= 0) return logic.inventoryManager.getMaxSlotSizeInt();
+
+            // Map external slot to internal storage slot for per-slot override
+            int filterIndex = slot - 1;
+            if (filterIndex >= logic.getFilterSlotList().size()) return logic.inventoryManager.getMaxSlotSizeInt();
+
+            int storageSlot = logic.getFilterSlotList().get(filterIndex);
+            return (int) Math.min(logic.inventoryManager.getEffectiveMaxSlotSize(storageSlot), Integer.MAX_VALUE);
         }
 
         @Override
@@ -876,7 +880,10 @@ public class ItemInterfaceLogic extends AbstractResourceInterfaceLogic<ItemStack
 
         @Override
         public int getSlotLimit(int slot) {
-            return logic.inventoryManager.getMaxSlotSizeInt();
+            if (slot < 0 || slot >= logic.getFilterSlotList().size()) return logic.inventoryManager.getMaxSlotSizeInt();
+
+            int storageSlot = logic.getFilterSlotList().get(slot);
+            return (int) Math.min(logic.inventoryManager.getEffectiveMaxSlotSize(storageSlot), Integer.MAX_VALUE);
         }
 
         @Override
@@ -1032,7 +1039,8 @@ public class ItemInterfaceLogic extends AbstractResourceInterfaceLogic<ItemStack
 
         @Override
         public int getSlotLimit(int slot) {
-            return isGhostSlot ? 1 : inventoryManager.getMaxSlotSizeInt();
+            if (isGhostSlot) return 1;
+            return (int) Math.min(inventoryManager.getEffectiveMaxSlotSize(slot), Integer.MAX_VALUE);
         }
     }
 }

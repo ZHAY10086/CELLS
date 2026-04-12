@@ -11,7 +11,6 @@ import net.minecraft.inventory.IContainerListener;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHand;
-import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.items.IItemHandler;
@@ -20,6 +19,8 @@ import appeng.container.AEBaseContainer;
 import appeng.container.slot.AppEngSlot;
 import appeng.container.guisync.GuiSync;
 import appeng.util.Platform;
+
+import com.cells.gui.overlay.ServerMessageHelper;
 
 
 /**
@@ -248,8 +249,9 @@ public class ContainerConfigurableCell extends AEBaseContainer {
         // TODO: allow if we have enough components for all cells in the stack
         //       Or the exact number for swap (e.g. swap 10 components into stack of 10 cells)
         if (isStacked) {
-            if (!player.world.isRemote) {
-                player.sendMessage(new TextComponentTranslation("message.cells.configurable_cell.split_stack"));
+            if (!player.world.isRemote && player instanceof EntityPlayerMP) {
+                ServerMessageHelper.warning(
+                    (EntityPlayerMP) player, "message.cells.configurable_cell.split_stack");
             }
 
             // Return current cursor unchanged for transaction validation
@@ -368,8 +370,9 @@ public class ContainerConfigurableCell extends AEBaseContainer {
         // Blocked for stacked cells
         // TODO: allow if we have enough components for all cells in the stack
         if (isStacked) {
-            if (!player.world.isRemote) {
-                player.sendMessage(new TextComponentTranslation("message.cells.configurable_cell.split_stack"));
+            if (!player.world.isRemote && player instanceof EntityPlayerMP) {
+                ServerMessageHelper.warning(
+                    (EntityPlayerMP) player, "message.cells.configurable_cell.split_stack");
             }
             return ItemStack.EMPTY;
         }
@@ -470,8 +473,9 @@ public class ContainerConfigurableCell extends AEBaseContainer {
             // Block insertion on stacked cells - return stack to reject
             // TODO: allow if we have enough components for all cells in the stack
             if (cellStack.getCount() > 1) {
-                if (!simulate && !player.world.isRemote) {
-                    player.sendMessage(new TextComponentTranslation("message.cells.configurable_cell.split_stack"));
+                if (!simulate && !player.world.isRemote && player instanceof EntityPlayerMP) {
+                    ServerMessageHelper.warning(
+                        (EntityPlayerMP) player, "message.cells.configurable_cell.split_stack");
                 }
                 return stack;
             }

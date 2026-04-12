@@ -139,9 +139,10 @@ public abstract class AbstractResourceTankSlot<R, H> extends GuiCustomSlot {
 
         drawResourceContent(mc, mouseX, mouseY, partialTicks, resource);
 
-        // Render stack size in corner (consistent across all tank types)
+        // Render stack size with capacity in corner (current/max format)
         if (this.fontRenderer != null) {
-            ResourceRenderer.renderStackSize(this.fontRenderer, getResourceAmount(resource), this.xPos(), this.yPos());
+            long capacity = this.maxSlotSizeSupplier.getAsLong();
+            ResourceRenderer.renderStackSizeWithCapacity(this.fontRenderer, getResourceAmount(resource), capacity, this.xPos(), this.yPos());
         }
     }
 

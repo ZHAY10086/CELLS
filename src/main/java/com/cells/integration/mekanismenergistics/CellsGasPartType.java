@@ -17,6 +17,7 @@ import appeng.api.parts.IPart;
 import appeng.util.Platform;
 
 import com.cells.Tags;
+import com.cells.config.CellsConfig;
 import com.cells.parts.PartModelsHelper;
 
 
@@ -57,7 +58,8 @@ public enum CellsGasPartType {
 
     @SideOnly(Side.CLIENT)
     private static ModelResourceLocation modelFromBaseName(String baseName) {
-        return new ModelResourceLocation(new ResourceLocation(Tags.MODID, "part/" + baseName), "inventory");
+        String suffix = CellsConfig.useFixedInterfaceTextures ? "_fixed" : "";
+        return new ModelResourceLocation(new ResourceLocation(Tags.MODID, "part/" + baseName + suffix), "inventory");
     }
 
     @SideOnly(Side.CLIENT)

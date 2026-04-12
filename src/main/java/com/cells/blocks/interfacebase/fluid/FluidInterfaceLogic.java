@@ -29,6 +29,7 @@ import appeng.api.storage.IMEInventory;
 import appeng.api.storage.channels.IFluidStorageChannel;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.fluids.util.AEFluidStack;
+import appeng.tile.inventory.AppEngInternalInventory;
 
 import com.cells.items.ItemRecoveryContainer;
 import com.cells.util.FluidStackKey;
@@ -56,6 +57,19 @@ public class FluidInterfaceLogic extends AbstractResourceInterfaceLogic<FluidSta
         super(host, FluidStack.class);
 
         // Create appropriate external handler based on direction
+        if (host.isExport()) {
+            this.externalHandler = new ExportFluidHandler(this);
+        } else {
+            this.externalHandler = new FilteredFluidHandler(this);
+        }
+    }
+
+    /**
+     * Constructor with a shared upgrade inventory for combined interfaces.
+     */
+    public FluidInterfaceLogic(Host host, AppEngInternalInventory sharedUpgradeInventory) {
+        super(host, FluidStack.class, sharedUpgradeInventory);
+
         if (host.isExport()) {
             this.externalHandler = new ExportFluidHandler(this);
         } else {
@@ -333,10 +347,11 @@ public class FluidInterfaceLogic extends AbstractResourceInterfaceLogic<FluidSta
         public IFluidTankProperties[] getTankProperties() {
             List<IFluidTankProperties> props = new ArrayList<>();
 
-            int capacity = logic.inventoryManager.getMaxSlotSizeInt();
-
             for (int slot : logic.getFilterSlotList()) {
                 final int s = slot;
+                // Per-slot effective capacity (may differ from global maxSlotSize if overridden)
+                final int slotCapacity = (int) Math.min(
+                    logic.inventoryManager.getEffectiveMaxSlotSize(slot), Integer.MAX_VALUE);
 
                 FluidStackKey filterKey = logic.getFilterKey(slot);
 
@@ -357,7 +372,7 @@ public class FluidInterfaceLogic extends AbstractResourceInterfaceLogic<FluidSta
 
                     @Override
                     public int getCapacity() {
-                        return capacity;
+                        return slotCapacity;
                     }
 
                     @Override
@@ -420,10 +435,11 @@ public class FluidInterfaceLogic extends AbstractResourceInterfaceLogic<FluidSta
         public IFluidTankProperties[] getTankProperties() {
             List<IFluidTankProperties> props = new ArrayList<>();
 
-            int capacity = logic.inventoryManager.getMaxSlotSizeInt();
-
             for (int slot : logic.getFilterSlotList()) {
                 final int s = slot;
+                // Per-slot effective capacity (may differ from global maxSlotSize if overridden)
+                final int slotCapacity = (int) Math.min(
+                    logic.inventoryManager.getEffectiveMaxSlotSize(slot), Integer.MAX_VALUE);
 
                 FluidStackKey filterKey = logic.getFilterKey(slot);
 
@@ -444,7 +460,7 @@ public class FluidInterfaceLogic extends AbstractResourceInterfaceLogic<FluidSta
 
                     @Override
                     public int getCapacity() {
-                        return capacity;
+                        return slotCapacity;
                     }
 
                     @Override

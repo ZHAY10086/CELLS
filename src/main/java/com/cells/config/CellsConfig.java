@@ -1,6 +1,8 @@
 package com.cells.config;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.List;
 
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
@@ -31,6 +33,12 @@ public class CellsConfig {
     public static final String CATEGORY_IDLE_DRAIN = "idle_drain";
     public static final String CATEGORY_ENABLED = "enabled_cells";
     public static final String CATEGORY_INTERFACES = "interfaces";
+
+    public static final String CATEGORY_HIDDEN = "hidden";
+
+    static public final List<String> hiddenCategories = Arrays.asList(
+        CATEGORY_HIDDEN
+    );
 
     private static Configuration config;
 
@@ -109,6 +117,9 @@ public class CellsConfig {
     /** Minimum polling rate for interfaces (0 = allow adaptive) */
     public static int interfaceMinPollingRate = 0;
 
+    /** Use fixed (non-animated) textures for interface blocks and parts. Requires restart. */
+    public static boolean useFixedInterfaceTextures = true;
+
     /** Essentia Creative Cell fix */
     public static boolean enableEssentiaCreativeCellFix = true;
 
@@ -139,12 +150,22 @@ public class CellsConfig {
     public static void loadConfig() {
         // Category language keys
         config.getCategory(CATEGORY_GENERAL).setLanguageKey(Tags.MODID + ".config.category.general");
+        config.getCategory(CATEGORY_CELLS).setLanguageKey(Tags.MODID + ".config.category.cells");
         config.getCategory(CATEGORY_IDLE_DRAIN).setLanguageKey(Tags.MODID + ".config.category.idle_drain");
         config.getCategory(CATEGORY_ENABLED).setLanguageKey(Tags.MODID + ".config.category.enabled_cells");
+        config.getCategory(CATEGORY_INTERFACES).setLanguageKey(Tags.MODID + ".config.category.interfaces");
+
+        config.addCustomCategoryComment(CATEGORY_GENERAL, "General settings for cell behavior");
+        config.addCustomCategoryComment(CATEGORY_CELLS, "Misc settings for cells.");
+        config.addCustomCategoryComment(CATEGORY_IDLE_DRAIN,
+            "Idle power drain settings (AE power per tick). Higher values = more power consumption.");
+        config.addCustomCategoryComment(CATEGORY_ENABLED,
+            "Enable or disable specific cell types. Disabled cells will not be registered.");
+        config.addCustomCategoryComment(CATEGORY_INTERFACES,
+            "Settings for resource interfaces (Fluid, Gas, Essentia, Item import/export interfaces).");
+
 
         // General category
-        config.addCustomCategoryComment(CATEGORY_GENERAL, "General settings for cell behavior");
-
         Property p = config.get(CATEGORY_GENERAL,
             "hdItemMaxTypes", 63,
             "Maximum item types for hyper-density item storage cells (1-16384)", 1, 16384
@@ -158,84 +179,6 @@ public class CellsConfig {
         );
         p.setLanguageKey(Tags.MODID + ".config.hdFluidMaxTypes");
         hdFluidMaxTypes = p.getInt();
-
-        // Idle drain category
-        config.addCustomCategoryComment(CATEGORY_IDLE_DRAIN,
-            "Idle power drain settings (AE power per tick). Higher values = more power consumption.");
-
-        p = config.get(CATEGORY_IDLE_DRAIN,
-            "compactingIdleDrain", 6.0D,
-            "Idle drain for compacting cells", 0.0D, 100.0D
-        );
-        p.setLanguageKey(Tags.MODID + ".config.compactingIdleDrain");
-        compactingIdleDrain = p.getDouble();
-
-        p = config.get(CATEGORY_IDLE_DRAIN,
-            "hdIdleDrain", 10.0D,
-            "Idle drain for hyper-density cells", 0.0D, 100.0D
-        );
-        p.setLanguageKey(Tags.MODID + ".config.hdIdleDrain");
-        hdIdleDrain = p.getDouble();
-
-        p = config.get(CATEGORY_IDLE_DRAIN,
-            "hdCompactingIdleDrain", 20.0D,
-            "Idle drain for hyper-density compacting cells", 0.0D, 100.0D
-        );
-        p.setLanguageKey(Tags.MODID + ".config.hdCompactingIdleDrain");
-        hdCompactingIdleDrain = p.getDouble();
-
-        p = config.get(CATEGORY_IDLE_DRAIN,
-            "fluidHdIdleDrain", 10.0D,
-            "Idle drain for fluid hyper-density cells", 0.0D, 100.0D
-        );
-        p.setLanguageKey(Tags.MODID + ".config.fluidHdIdleDrain");
-        fluidHdIdleDrain = p.getDouble();
-
-        p = config.get(CATEGORY_IDLE_DRAIN,
-            "configurableCellIdleDrain", 3.0D,
-            "Idle drain for configurable cells", 0.0D, 100.0D
-        );
-        p.setLanguageKey(Tags.MODID + ".config.configurableCellIdleDrain");
-        configurableCellIdleDrain = p.getDouble();
-
-        // Enabled cells category
-        config.addCustomCategoryComment(CATEGORY_ENABLED,
-            "Enable or disable specific cell types. Disabled cells will not be registered.");
-
-        p = config.get(CATEGORY_ENABLED,
-            "enableCompactingCells", true,
-            "Enable compacting storage cells"
-        );
-        p.setLanguageKey(Tags.MODID + ".config.enableCompactingCells");
-        enableCompactingCells = p.getBoolean();
-
-        p = config.get(CATEGORY_ENABLED,
-            "enableHDCells", true,
-            "Enable hyper-density storage cells"
-        );
-        p.setLanguageKey(Tags.MODID + ".config.enableHDCells");
-        enableHDCells = p.getBoolean();
-
-        p = config.get(CATEGORY_ENABLED,
-            "enableHDCompactingCells", true,
-            "Enable hyper-density compacting storage cells"
-        );
-        p.setLanguageKey(Tags.MODID + ".config.enableHDCompactingCells");
-        enableHDCompactingCells = p.getBoolean();
-
-        p = config.get(CATEGORY_ENABLED,
-            "enableFluidHDCells", true,
-            "Enable fluid hyper-density storage cells"
-        );
-        p.setLanguageKey(Tags.MODID + ".config.enableFluidHDCells");
-        enableFluidHDCells = p.getBoolean();
-
-        p = config.get(CATEGORY_ENABLED,
-            "enableConfigurableCells", true,
-            "Enable configurable storage cells"
-        );
-        p.setLanguageKey(Tags.MODID + ".config.enableConfigurableCells");
-        enableConfigurableCells = p.getBoolean();
 
         // General: configurable cell max types per channel
         p = config.get(CATEGORY_GENERAL,
@@ -322,20 +265,86 @@ public class CellsConfig {
         enableNbtSizeTooltip = p.getBoolean();
 
         // Cells category
-        config.getCategory(CATEGORY_CELLS).setLanguageKey(Tags.MODID + ".config.category.cells");
-        config.addCustomCategoryComment(CATEGORY_CELLS, "Misc settings for cells.");
-
         p = config.get(CATEGORY_CELLS,
             "enableEssentiaCreativeCellFix", true,
-            "Enable the fix for the Essentia Creative Cell that makes it report only Max Int instead of Max Long / 2. This prevents deltas from overflowing and not reporting the right amounts. Disable Thaumic Energistics support long in your version."
+            "Enable the fix for the Essentia Creative Cell that makes it report only Max Int instead of Max Long / 2. This prevents deltas from overflowing and not reporting the right amounts. Disable this config if Thaumic Energistics support long in your version."
         );
         p.setLanguageKey(Tags.MODID + ".config.enableEssentiaCreativeCellFix");
         enableEssentiaCreativeCellFix = p.getBoolean();
 
+        // Idle drain category
+        p = config.get(CATEGORY_IDLE_DRAIN,
+            "compactingIdleDrain", 6.0D,
+            "Idle drain for compacting cells", 0.0D, 100.0D
+        );
+        p.setLanguageKey(Tags.MODID + ".config.compactingIdleDrain");
+        compactingIdleDrain = p.getDouble();
+
+        p = config.get(CATEGORY_IDLE_DRAIN,
+            "hdIdleDrain", 10.0D,
+            "Idle drain for hyper-density cells", 0.0D, 100.0D
+        );
+        p.setLanguageKey(Tags.MODID + ".config.hdIdleDrain");
+        hdIdleDrain = p.getDouble();
+
+        p = config.get(CATEGORY_IDLE_DRAIN,
+            "hdCompactingIdleDrain", 20.0D,
+            "Idle drain for hyper-density compacting cells", 0.0D, 100.0D
+        );
+        p.setLanguageKey(Tags.MODID + ".config.hdCompactingIdleDrain");
+        hdCompactingIdleDrain = p.getDouble();
+
+        p = config.get(CATEGORY_IDLE_DRAIN,
+            "fluidHdIdleDrain", 10.0D,
+            "Idle drain for fluid hyper-density cells", 0.0D, 100.0D
+        );
+        p.setLanguageKey(Tags.MODID + ".config.fluidHdIdleDrain");
+        fluidHdIdleDrain = p.getDouble();
+
+        p = config.get(CATEGORY_IDLE_DRAIN,
+            "configurableCellIdleDrain", 3.0D,
+            "Idle drain for configurable cells", 0.0D, 100.0D
+        );
+        p.setLanguageKey(Tags.MODID + ".config.configurableCellIdleDrain");
+        configurableCellIdleDrain = p.getDouble();
+
+        // Enabled cells category
+        p = config.get(CATEGORY_ENABLED,
+            "enableCompactingCells", true,
+            "Enable compacting storage cells"
+        );
+        p.setLanguageKey(Tags.MODID + ".config.enableCompactingCells");
+        enableCompactingCells = p.getBoolean();
+
+        p = config.get(CATEGORY_ENABLED,
+            "enableHDCells", true,
+            "Enable hyper-density storage cells"
+        );
+        p.setLanguageKey(Tags.MODID + ".config.enableHDCells");
+        enableHDCells = p.getBoolean();
+
+        p = config.get(CATEGORY_ENABLED,
+            "enableHDCompactingCells", true,
+            "Enable hyper-density compacting storage cells"
+        );
+        p.setLanguageKey(Tags.MODID + ".config.enableHDCompactingCells");
+        enableHDCompactingCells = p.getBoolean();
+
+        p = config.get(CATEGORY_ENABLED,
+            "enableFluidHDCells", true,
+            "Enable fluid hyper-density storage cells"
+        );
+        p.setLanguageKey(Tags.MODID + ".config.enableFluidHDCells");
+        enableFluidHDCells = p.getBoolean();
+
+        p = config.get(CATEGORY_ENABLED,
+            "enableConfigurableCells", true,
+            "Enable configurable storage cells"
+        );
+        p.setLanguageKey(Tags.MODID + ".config.enableConfigurableCells");
+        enableConfigurableCells = p.getBoolean();
+
         // Interfaces category
-        config.getCategory(CATEGORY_INTERFACES).setLanguageKey(Tags.MODID + ".config.category.interfaces");
-        config.addCustomCategoryComment(CATEGORY_INTERFACES,
-            "Settings for resource interfaces (Fluid, Gas, Essentia, Item import/export interfaces).");
 
         // Use String to handle Long.MAX_VALUE precisely (double loses precision above 2^53)
         p = config.get(CATEGORY_INTERFACES,
@@ -358,6 +367,14 @@ public class CellsConfig {
         );
         p.setLanguageKey(Tags.MODID + ".config.interfaceMinPollingRate");
         interfaceMinPollingRate = p.getInt();
+
+        p = config.get(CATEGORY_INTERFACES,
+            "useFixedInterfaceTextures", true,
+            "Use fixed (non-animated) textures for interface blocks and parts. " +
+            "Requires a game restart to take effect."
+        );
+        p.setLanguageKey(Tags.MODID + ".config.useFixedInterfaceTextures");
+        useFixedInterfaceTextures = p.getBoolean();
 
         // Save if config was created or changed
         if (config.hasChanged()) config.save();

@@ -81,7 +81,7 @@ public class FluidHyperDensityCellInventory implements ICellInventory<IAEFluidSt
     private final Map<FluidStackKey, Integer> fluidNbtSizes = new HashMap<>();
     private int totalNbtSize = 0;
 
-    // Cached immutable capacity components — computed once at construction to avoid
+    // Cached immutable capacity components, computed once at construction to avoid
     // repeated virtual dispatch through cellType/channel on every inject/extract call.
     private final long cachedDisplayBytes;
     private final long cachedMultiplier;
@@ -368,7 +368,7 @@ public class FluidHyperDensityCellInventory implements ICellInventory<IAEFluidSt
                 totalNbtSize += fluidSize;
             }
 
-            // Only set the parent tag reference when adding a new fluid — the compound may
+            // Only set the parent tag reference when adding a new fluid, the compound may
             // not be in the parent yet (first fluid ever). For updates/removals, the compound
             // is already referenced from the parent and modifications are reflected automatically.
             tagCompound.setTag(NBT_FLUID_TYPE, fluidsTag);

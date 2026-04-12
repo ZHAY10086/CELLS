@@ -1,0 +1,8 @@
+{
+    "parent": "block/cube_bottom_top",
+    "textures": {
+        "top": "cells:blocks/export_interface/essentia/front_fixed",
+        "side": "cells:blocks/export_interface/essentia/side_fixed",
+        "bottom": "cells:blocks/export_interface/essentia/front_fixed"
+    }
+}

@@ -1,0 +1,8 @@
+{
+    "parent": "cells:part/part_item_base",
+    "textures": {
+        "sides": "cells:parts/export_interface/essentia/sides",
+        "back": "cells:parts/export_interface/essentia/back",
+        "front": "cells:blocks/export_interface/essentia/front_fixed"
+    }
+}

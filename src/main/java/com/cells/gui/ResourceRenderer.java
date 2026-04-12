@@ -203,16 +203,19 @@ public final class ResourceRenderer {
      * Render a stack size in the corner of a slot, using the same scaling as FluidStackSizeRenderer.
      * Works with any numeric stack size (for gas, essentia, or other resources).
      * <p>
+     * Allows an optional max slot size to be rendered to the top-left corner.
+     * <p>
      * Disables depth testing so text renders on top of slot items. GUIs that use this
      * should re-render the held item afterward to ensure proper layering (see
      * {@code AbstractResourceInterfaceGui.renderHeldItemOnCursor}).
      *
      * @param fontRenderer The font renderer
      * @param stackSize The stack size to render
+     * @param maxSize The maximum capacity
      * @param xPos The x position of the slot
      * @param yPos The y position of the slot
      */
-    public static void renderStackSize(FontRenderer fontRenderer, long stackSize, int xPos, int yPos) {
+    public static void renderStackSizeWithCapacity(FontRenderer fontRenderer, long stackSize, long maxSize, int xPos, int yPos) {
         if (stackSize <= 0) return;
 
         // Use the same scale factor as FluidStackSizeRenderer (small font for compactness)
@@ -231,9 +234,18 @@ public final class ResourceRenderer {
         GlStateManager.pushMatrix();
         GlStateManager.scale(scaleFactor, scaleFactor, scaleFactor);
 
+        // Content (bottom right)
         final int X = (int) (((float) xPos + offset + 16.0f - fontRenderer.getStringWidth(stackSizeText) * scaleFactor) * inverseScaleFactor);
         final int Y = (int) (((float) yPos + offset + 16.0f - 7.0f * scaleFactor) * inverseScaleFactor);
         fontRenderer.drawStringWithShadow(stackSizeText, X, Y, 0xFFFFFF);
+
+        if (maxSize > 0) {
+            // Capacity (top left)
+            String maxSizeText = ReadableNumberConverter.INSTANCE.toSlimReadableForm(maxSize);
+            final int maxX = (int) (((float) xPos + 1) * inverseScaleFactor);
+            final int maxY = (int) (((float) yPos + 1) * inverseScaleFactor);
+            fontRenderer.drawStringWithShadow(maxSizeText, maxX, maxY, 0xFFFF55);
+        }
 
         GlStateManager.popMatrix();
         GlStateManager.enableLighting();
@@ -241,6 +253,19 @@ public final class ResourceRenderer {
         GlStateManager.enableBlend();
 
         fontRenderer.setUnicodeFlag(unicodeFlag);
+    }
+
+    /**
+     * Render a stack size in the corner of a slot, using the same scaling as FluidStackSizeRenderer.
+     * Works with any numeric stack size (for gas, essentia, or other resources).
+     *
+     * @param fontRenderer The font renderer
+     * @param stackSize The current amount
+     * @param xPos The x position of the slot
+     * @param yPos The y position of the slot
+     */
+    public static void renderStackSize(FontRenderer fontRenderer, long stackSize, int xPos, int yPos) {
+        renderStackSizeWithCapacity(fontRenderer, stackSize, -1, xPos, yPos);
     }
 
     // ==================== Shared Helpers ====================

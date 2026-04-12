@@ -95,6 +95,25 @@ public interface IFilterableInterfaceHost<T, K> extends IInterfaceHost {
      */
     boolean isStorageEmpty(int slot);
 
+    /**
+     * Get storage data as an AE stack for container-level sync.
+     * The returned stack contains resource identity AND amount.
+     *
+     * @param slot The slot index (0-based, across all pages)
+     * @return An AE stack with identity and amount, or null if the slot is empty
+     */
+    @Nullable
+    T getStorageStack(int slot);
+
+    /**
+     * Set storage from an AE stack received via container sync.
+     * Used on the client side when receiving storage updates from the server.
+     *
+     * @param slot  The slot index (0-based, across all pages)
+     * @param stack The AE stack containing identity and amount, or null to clear
+     */
+    void setStorageForClientSync(int slot, @Nullable T stack);
+
     // ================================= Key Operations =================================
 
     /**

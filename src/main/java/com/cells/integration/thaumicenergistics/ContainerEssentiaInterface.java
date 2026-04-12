@@ -195,7 +195,7 @@ public class ContainerEssentiaInterface
         if (filterEssentia != null && filterEssentia.getStack().getAspect() != aspect) return false;
 
         // Calculate how much we can insert into the slot
-        int capacity = (int) Math.min(this.host.getMaxSlotSize(), Integer.MAX_VALUE);
+        int capacity = (int) Math.min(this.host.getEffectiveMaxSlotSize(slotIndex), Integer.MAX_VALUE);
         EssentiaStack currentSlotEssentia = this.host.getEssentiaInSlot(slotIndex);
 
         // If slot has essentia, it must match

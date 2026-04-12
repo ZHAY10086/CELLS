@@ -16,6 +16,7 @@ import net.minecraftforge.fml.common.Loader;
 
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.fluids.util.AEFluidStack;
 import appeng.util.item.AEItemStack;
 
@@ -191,7 +192,10 @@ public enum ResourceType {
 
         long amount = buf.readLong();
 
-        FluidStack fluid = FluidRegistry.getFluidStack(fluidName, (int) amount);
+        // FluidRegistry.getFluidStack takes an int amount, but we store longs.
+        // Pass 1 as a dummy, we only need the FluidStack for identity (fluid type + NBT).
+        // The real amount is restored on the IAEFluidStack below.
+        FluidStack fluid = FluidRegistry.getFluidStack(fluidName, 1);
         if (fluid == null) return null;
 
         // Read NBT if present
@@ -208,10 +212,34 @@ public enum ResourceType {
             }
         }
 
-        return AEFluidStack.fromFluidStack(fluid);
+        IAEFluidStack result = AEFluidStack.fromFluidStack(fluid);
+        if (result != null) result.setStackSize(amount);
+
+        return result;
     }
 
     // ================================= Availability Checks =================================
+
+    /**
+     * Deep-copy a stack object for caching purposes.
+     * All supported stack types (IAEItemStack, IAEFluidStack, IAEGasStack, IAEEssentiaStack)
+     * extend IAEStack, which provides a copy() method.
+     *
+     * @param stack The stack to copy, or null
+     * @return A deep copy of the stack, or null if the input was null
+     */
+    @Nullable
+    @SuppressWarnings("rawtypes")
+    public static Object copyStack(@Nullable Object stack) {
+        if (stack == null) return null;
+
+        if (stack instanceof IAEStack) {
+            return ((IAEStack) stack).copy();
+        }
+
+        // Fallback: return as-is (should not happen for known types)
+        return stack;
+    }
 
     /**
      * Check if this resource type is available (mod loaded).

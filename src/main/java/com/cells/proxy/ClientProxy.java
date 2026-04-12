@@ -12,6 +12,7 @@ import com.cells.client.ComponentItemColors;
 import com.cells.client.ComponentTooltipHandler;
 import com.cells.client.KeyBindings;
 import com.cells.client.MemoryCardInteractionHandler;
+import com.cells.client.OverlayEventHandler;
 import com.cells.items.ItemRecoveryContainer;
 
 
@@ -34,6 +35,9 @@ public class ClientProxy extends CommonProxy {
 
         // Register component tooltip handler for configurable cell compatibility
         MinecraftForge.EVENT_BUS.register(new ComponentTooltipHandler());
+
+        // Register HUD overlay renderer for feedback messages
+        MinecraftForge.EVENT_BUS.register(new OverlayEventHandler());
 
         // Register item color handlers
         registerItemColors();

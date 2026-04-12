@@ -1,0 +1,24 @@
+{
+    "type": "forge:ore_shapeless",
+    "conditions": [
+        {
+            "type": "cells:mod_not_loaded",
+            "modid": "mekeng"
+        },
+        {
+            "type": "cells:mod_not_loaded",
+            "modid": "thaumicenergistics"
+        }
+    ],
+    "ingredients": [
+        {
+            "item": "cells:export_interface"
+        },
+        {
+            "item": "cells:export_fluid_interface"
+        }
+    ],
+    "result": {
+        "item": "cells:export_combined_interface"
+    }
+}

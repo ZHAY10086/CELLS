@@ -1,5 +1,6 @@
 package com.cells.blocks.interfacebase.managers;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -15,10 +16,10 @@ import io.netty.buffer.ByteBuf;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
@@ -31,8 +32,9 @@ import appeng.api.storage.data.IAEStack;
 import appeng.me.GridAccessException;
 import appeng.me.helpers.AENetworkProxy;
 
-import com.cells.config.CellsConfig;
 import com.cells.blocks.interfacebase.AbstractResourceInterfaceLogic;
+import com.cells.config.CellsConfig;
+import com.cells.gui.overlay.ServerMessageHelper;
 
 
 /**
@@ -135,9 +137,6 @@ public class InterfaceInventoryManager<R, AE extends IAEStack<AE>, K> {
         /** Mark the host as dirty and save. */
         void markDirtyAndSave();
 
-        /** Mark the host for a network (client) update. */
-        void markForNetworkUpdate();
-
         /** Wake up the interface if in adaptive polling mode. */
         void wakeUpIfAdaptive();
 
@@ -167,16 +166,34 @@ public class InterfaceInventoryManager<R, AE extends IAEStack<AE>, K> {
     private final ResourceOps<R, AE, K> ops;
     private final Callbacks callbacks;
 
-    /**
-     * Direct references to the parent logic's arrays.
-     * These are NOT copies, modifications here are visible to the parent and subclasses.
-     */
+    /** Filter array - stores the filter resource for each slot. */
     private final R[] filters;
+
+    /**
+     * Storage array - stores resource IDENTITY only (type + NBT, not amount).
+     * The actual amounts are stored in the parallel {@link #amounts} array.
+     * This separation allows amounts to exceed Integer.MAX_VALUE while still
+     * using native resource types that have int-based amount fields.
+     */
     private final R[] storage;
+
+    /**
+     * Parallel amounts array - stores the actual amount for each storage slot.
+     * This is separate from storage[] because native resource types (FluidStack,
+     * GasStack, ItemStack) have int-based amount fields that cannot exceed ~2.1B.
+     * By storing amounts separately as long, we can store up to ~9.2 quintillion.
+     */
     private final long[] amounts;
 
     /** Maximum amount per slot. Managed by the parent logic (get/set via accessor). */
     private long maxSlotSize;
+
+    /**
+     * Per-slot size overrides. When a slot has an override, it replaces the global
+     * maxSlotSize for that slot only. Absent entries use the global maxSlotSize.
+     * Stored alongside filters in NBT and synced to the client.
+     */
+    private final Map<Integer, Long> maxSlotSizeOverrides = new HashMap<>();
 
     // ============================== Derived data structures ==============================
     // All maps/sets are private. External access goes through accessor methods.
@@ -211,14 +228,16 @@ public class InterfaceInventoryManager<R, AE extends IAEStack<AE>, K> {
      */
     private final Set<Integer> orphanedSlots = new HashSet<>();
 
+    @SuppressWarnings("unchecked")
     public InterfaceInventoryManager(ResourceOps<R, AE, K> ops, Callbacks callbacks,
-                                     R[] filters, R[] storage, long[] amounts,
-                                     long maxSlotSize) {
+                                     Class<R> resourceClass, long maxSlotSize) {
         this.ops = ops;
         this.callbacks = callbacks;
-        this.filters = filters;
-        this.storage = storage;
-        this.amounts = amounts;
+
+        // Create arrays for filters and storage
+        this.filters = (R[]) Array.newInstance(resourceClass, FILTER_SLOTS);
+        this.storage = (R[]) Array.newInstance(resourceClass, STORAGE_SLOTS);
+        this.amounts = new long[STORAGE_SLOTS];
         this.maxSlotSize = this.validateMaxSlotSize(maxSlotSize);
     }
 
@@ -261,6 +280,72 @@ public class InterfaceInventoryManager<R, AE extends IAEStack<AE>, K> {
         }
 
         return this.maxSlotSize;
+    }
+
+    // ============================== Per-slot size overrides ==============================
+
+    /**
+     * Get the effective max size for a specific slot.
+     * Returns the per-slot override if set, otherwise the global maxSlotSize.
+     *
+     * @param slot The slot index
+     * @return The effective max size for this slot
+     */
+    public long getEffectiveMaxSlotSize(int slot) {
+        return this.maxSlotSizeOverrides.getOrDefault(slot, this.maxSlotSize);
+    }
+
+    /**
+     * Set a per-slot size override. This replaces the global maxSlotSize for
+     * this slot only (visually, network IO, capabilities).
+     *
+     * @param slot The slot index
+     * @param size The override size (will be validated/clamped)
+     * @return The validated override size
+     */
+    public long setMaxSlotSizeOverride(int slot, long size) {
+        long validated = this.validateMaxSlotSize(size);
+        long oldEffective = getEffectiveMaxSlotSize(slot);
+        this.maxSlotSizeOverrides.put(slot, validated);
+
+        this.callbacks.markDirtyAndSave();
+
+        if (this.callbacks.isExport()) {
+            if (oldEffective > validated) this.returnOverflowToNetwork();
+            if (oldEffective < validated) this.callbacks.wakeUpIfAdaptive();
+        }
+
+        return validated;
+    }
+
+    /**
+     * Get the per-slot size override, or -1 if no override is set.
+     *
+     * @param slot The slot index
+     * @return The override size, or -1 if using global maxSlotSize
+     */
+    public long getMaxSlotSizeOverride(int slot) {
+        Long override = this.maxSlotSizeOverrides.get(slot);
+        return override != null ? override : -1;
+    }
+
+    /**
+     * Clear the per-slot size override, reverting to the global maxSlotSize.
+     *
+     * @param slot The slot index
+     */
+    public void clearMaxSlotSizeOverride(int slot) {
+        if (this.maxSlotSizeOverrides.remove(slot) != null) {
+            this.callbacks.markDirtyAndSave();
+        }
+    }
+
+    /**
+     * Get an unmodifiable view of all size overrides.
+     * Used for container sync.
+     */
+    public Map<Integer, Long> getmaxSlotSizeOverrides() {
+        return Collections.unmodifiableMap(this.maxSlotSizeOverrides);
     }
 
     // ============================== Accessor methods for encapsulated data ==============================
@@ -337,6 +422,56 @@ public class InterfaceInventoryManager<R, AE extends IAEStack<AE>, K> {
     public R getStorageIdentity(int slot) {
         if (slot < 0 || slot >= STORAGE_SLOTS) return null;
         return this.storage[slot];
+    }
+
+    /**
+     * Get storage data as an AE stack for container-level sync.
+     * The returned stack contains the resource identity AND the correct amount
+     * (via {@code setStackSize}), so a single AE stack captures everything
+     * needed to reproduce the slot on the client.
+     *
+     * @return An AE stack with identity and amount, or null if the slot is empty
+     */
+    @Nullable
+    public AE getStorageAsAEStack(int slot) {
+        if (slot < 0 || slot >= STORAGE_SLOTS) return null;
+
+        R identity = this.storage[slot];
+        if (identity == null) return null;
+
+        long amount = this.amounts[slot];
+        if (amount <= 0) return null;
+
+        AE aeStack = this.ops.toAEStack(identity);
+        aeStack.setStackSize(amount);
+        return aeStack;
+    }
+
+    /**
+     * Set storage from an AE stack received via container sync.
+     * Used on the client side when receiving storage updates from the server.
+     * <p>
+     * This bypasses the normal server-side callbacks (markDirtyAndSave, wakeUpIfAdaptive)
+     * since client-side storage is display-only and doesn't need persistence or grid interaction.
+     *
+     * @param slot    The storage slot index
+     * @param aeStack The AE stack containing identity and amount, or null to clear
+     */
+    public void setStorageFromAEStack(int slot, @Nullable AE aeStack) {
+        if (slot < 0 || slot >= STORAGE_SLOTS) return;
+
+        if (aeStack == null || aeStack.getStackSize() <= 0) {
+            // Clear the slot entirely (no identity preservation on client sync)
+            this.storage[slot] = null;
+            this.amounts[slot] = 0;
+            updateStorageKeyForSlot(slot, null);
+            return;
+        }
+
+        R nativeResource = this.ops.fromAEStack(aeStack);
+        this.storage[slot] = this.ops.copyAsIdentity(nativeResource);
+        this.amounts[slot] = aeStack.getStackSize();
+        updateStorageKeyForSlot(slot, this.storage[slot]);
     }
 
     /**
@@ -546,7 +681,6 @@ public class InterfaceInventoryManager<R, AE extends IAEStack<AE>, K> {
 
         this.refreshFilterMap();
         this.callbacks.markDirtyAndSave();
-        this.callbacks.markForNetworkUpdate();
     }
 
     /**
@@ -626,12 +760,14 @@ public class InterfaceInventoryManager<R, AE extends IAEStack<AE>, K> {
         this.refreshFilterMap();
 
         // Notify player about skipped filters
-        if (player != null && !skippedFilters.isEmpty()) {
+        if (player instanceof EntityPlayerMP && !skippedFilters.isEmpty()) {
             String filters = skippedFilters.stream()
                 .map(this.ops::getLocalizedName)
                 .reduce((a, b) -> a + "\n- " + b)
                 .orElse("");
-            player.sendMessage(new TextComponentTranslation("message.cells.filters_not_added", skippedFilters.size(), filters));
+            ServerMessageHelper.warning(
+                (EntityPlayerMP) player, "message.cells.filters_not_added",
+                String.valueOf(skippedFilters.size()), filters);
         }
     }
 
@@ -771,8 +907,9 @@ public class InterfaceInventoryManager<R, AE extends IAEStack<AE>, K> {
             return -removed; // Return negative to indicate removal
         }
 
-        // Clamp to max slot size
-        if (newAmount > this.maxSlotSize) newAmount = this.maxSlotSize;
+        // Clamp to effective slot size (per-slot override or global)
+        long effectiveMax = getEffectiveMaxSlotSize(slot);
+        if (newAmount > effectiveMax) newAmount = effectiveMax;
 
         long actualDelta = newAmount - currentAmount;
         this.amounts[slot] = newAmount;
@@ -836,8 +973,7 @@ public class InterfaceInventoryManager<R, AE extends IAEStack<AE>, K> {
         // Rebuild filter map since storage changed
         this.refreshFilterMap();
 
-        // Trigger network update to sync storage to clients
-        this.callbacks.markForNetworkUpdate();
+        this.callbacks.markDirtyAndSave();
 
         // Wake up to process the new content (import will push to network)
         this.callbacks.wakeUpIfAdaptive();
@@ -865,7 +1001,7 @@ public class InterfaceInventoryManager<R, AE extends IAEStack<AE>, K> {
         }
 
         long currentAmount = this.amounts[slot];
-        long spaceAvailable = this.maxSlotSize - currentAmount;
+        long spaceAvailable = getEffectiveMaxSlotSize(slot) - currentAmount;
         if (spaceAvailable <= 0) return 0;
 
         // Input amount is int (from external APIs), but we store as long
@@ -881,7 +1017,6 @@ public class InterfaceInventoryManager<R, AE extends IAEStack<AE>, K> {
         }
 
         this.callbacks.markDirtyAndSave();
-        this.callbacks.markForNetworkUpdate();
         this.callbacks.wakeUpIfAdaptive();
 
         // Return int for external API compatibility (always fits since input was int)
@@ -908,7 +1043,7 @@ public class InterfaceInventoryManager<R, AE extends IAEStack<AE>, K> {
         }
 
         long currentAmount = this.amounts[slot];
-        long spaceAvailable = this.maxSlotSize - currentAmount;
+        long spaceAvailable = getEffectiveMaxSlotSize(slot) - currentAmount;
         if (spaceAvailable <= 0) return 0;
 
         long toInsert = Math.min(amount, spaceAvailable);
@@ -921,7 +1056,6 @@ public class InterfaceInventoryManager<R, AE extends IAEStack<AE>, K> {
         }
 
         this.callbacks.markDirtyAndSave();
-        this.callbacks.markForNetworkUpdate();
         this.callbacks.wakeUpIfAdaptive();
 
         return toInsert;
@@ -963,7 +1097,6 @@ public class InterfaceInventoryManager<R, AE extends IAEStack<AE>, K> {
             if (this.amounts[slot] <= 0) this.clearSlot(slot);
 
             this.callbacks.markDirtyAndSave();
-            this.callbacks.markForNetworkUpdate();
 
             // Wake up to request more resources (export replenishes)
             this.callbacks.wakeUpIfAdaptive();
@@ -999,7 +1132,7 @@ public class InterfaceInventoryManager<R, AE extends IAEStack<AE>, K> {
 
         // Insert into matching slot using parallel amounts array
         long currentAmount = this.amounts[slot];
-        long space = this.maxSlotSize - currentAmount;
+        long space = getEffectiveMaxSlotSize(slot) - currentAmount;
 
         // Slot full - void overflow if upgrade installed, reject otherwise
         if (space <= 0) return hasOverflowUpgrade ? inputAmount : 0;
@@ -1016,7 +1149,6 @@ public class InterfaceInventoryManager<R, AE extends IAEStack<AE>, K> {
             }
 
             this.callbacks.markDirtyAndSave();
-            this.callbacks.markForNetworkUpdate();
 
             // Wake up to import resources
             this.callbacks.wakeUpIfAdaptive();
@@ -1140,7 +1272,7 @@ public class InterfaceInventoryManager<R, AE extends IAEStack<AE>, K> {
         if (this.callbacks.isExport()) {
             // Check if any configured slot needs resources
             for (int i : this.filterSlotList) {
-                if (this.amounts[i] < this.maxSlotSize) return true;
+                if (this.amounts[i] < getEffectiveMaxSlotSize(i)) return true;
             }
         } else {
             // Check if any filtered slot has resources to import
@@ -1186,7 +1318,7 @@ public class InterfaceInventoryManager<R, AE extends IAEStack<AE>, K> {
             // Not connected to grid
         }
 
-        if (didWork) this.callbacks.markForNetworkUpdate();
+        if (didWork) this.callbacks.markDirtyAndSave();
 
         return didWork;
     }
@@ -1216,7 +1348,7 @@ public class InterfaceInventoryManager<R, AE extends IAEStack<AE>, K> {
                 // Skip orphaned slots (identity doesn't match filter)
                 if (this.orphanedSlots.contains(slot)) continue;
 
-                long space = this.maxSlotSize - currentAmount;
+                long space = getEffectiveMaxSlotSize(slot) - currentAmount;
                 if (space <= 0) continue;
 
                 // Request resources from network (AE2 uses long natively)
@@ -1242,7 +1374,7 @@ public class InterfaceInventoryManager<R, AE extends IAEStack<AE>, K> {
             // Not connected to grid
         }
 
-        if (didWork) this.callbacks.markForNetworkUpdate();
+        if (didWork) this.callbacks.markDirtyAndSave();
 
         return didWork;
     }
@@ -1293,7 +1425,7 @@ public class InterfaceInventoryManager<R, AE extends IAEStack<AE>, K> {
             this.amounts[slot] = notInserted;
         }
 
-        this.callbacks.markForNetworkUpdate();
+        this.callbacks.markDirtyAndSave();
     }
 
     /**
@@ -1322,10 +1454,11 @@ public class InterfaceInventoryManager<R, AE extends IAEStack<AE>, K> {
         for (int slot : this.getNonEmptyStorageSlots()) {
             R identity = this.storage[slot];
             long amount = this.amounts[slot];
-            if (amount <= this.maxSlotSize) continue;
+            long slotMax = getEffectiveMaxSlotSize(slot);
+            if (amount <= slotMax) continue;
 
             // Has overflow - return excess to network
-            long overflow = amount - this.maxSlotSize;
+            long overflow = amount - slotMax;
             long notInserted = insertIntoNetwork(identity, overflow);
 
             // Reduce slot by what was successfully returned
@@ -1336,7 +1469,7 @@ public class InterfaceInventoryManager<R, AE extends IAEStack<AE>, K> {
             }
         }
 
-        if (didWork) this.callbacks.markForNetworkUpdate();
+        if (didWork) this.callbacks.markDirtyAndSave();
     }
 
     // ============================== Drop collection ==============================
@@ -1370,21 +1503,68 @@ public class InterfaceInventoryManager<R, AE extends IAEStack<AE>, K> {
     // ============================== NBT serialization ==============================
 
     /**
-     * Read max slot size from NBT.
+     * Read max slot size from NBT using the given key.
      * Sets the field directly without triggering markDirtyAndSave or overflow returns,
      * since the host/world may not be initialized yet during chunk loading (NPE on parts).
+     *
+     * @param data The NBT compound to read from
+     * @param key  The NBT key to use (e.g., "maxSlotSize" or "itemMaxSlotSize")
      */
-    public void readFromNBT(NBTTagCompound data) {
-        if (data.hasKey("maxSlotSize")) {
-            this.maxSlotSize = this.validateMaxSlotSize(data.getLong("maxSlotSize"));
+    public void readFromNBT(NBTTagCompound data, String key) {
+        if (data.hasKey(key)) {
+            this.maxSlotSize = this.validateMaxSlotSize(data.getLong(key));
+        }
+
+        // Read per-slot size overrides (stored as companion compound "<key>Overrides")
+        String overridesKey = key + "Overrides";
+        if (data.hasKey(overridesKey, Constants.NBT.TAG_COMPOUND)) {
+            this.maxSlotSizeOverrides.clear();
+            NBTTagCompound overrides = data.getCompoundTag(overridesKey);
+            for (String slotKey : overrides.getKeySet()) {
+                try {
+                    int slot = Integer.parseInt(slotKey);
+                    if (slot >= 0 && slot < STORAGE_SLOTS) {
+                        this.maxSlotSizeOverrides.put(slot, this.validateMaxSlotSize(overrides.getLong(slotKey)));
+                    }
+                } catch (NumberFormatException ignored) {
+                }
+            }
         }
     }
 
     /**
-     * Write max slot size to NBT.
+     * Read max slot size from NBT using the default "maxSlotSize" key.
+     * Used by standalone (non-combined) interfaces.
+     */
+    public void readFromNBT(NBTTagCompound data) {
+        readFromNBT(data, "maxSlotSize");
+    }
+
+    /**
+     * Write max slot size to NBT using the given key.
+     *
+     * @param data The NBT compound to write to
+     * @param key  The NBT key to use (e.g., "maxSlotSize" or "itemMaxSlotSize")
+     */
+    public void writeToNBT(NBTTagCompound data, String key) {
+        data.setLong(key, this.maxSlotSize);
+
+        // Write per-slot size overrides (stored as companion compound "<key>Overrides")
+        if (!this.maxSlotSizeOverrides.isEmpty()) {
+            NBTTagCompound overrides = new NBTTagCompound();
+            for (Map.Entry<Integer, Long> entry : this.maxSlotSizeOverrides.entrySet()) {
+                overrides.setLong(String.valueOf(entry.getKey()), entry.getValue());
+            }
+            data.setTag(key + "Overrides", overrides);
+        }
+    }
+
+    /**
+     * Write max slot size to NBT using the default "maxSlotSize" key.
+     * Used by standalone (non-combined) interfaces.
      */
     public void writeToNBT(NBTTagCompound data) {
-        data.setLong("maxSlotSize", this.maxSlotSize);  
+        writeToNBT(data, "maxSlotSize");
     }
 
     /**
@@ -1501,10 +1681,8 @@ public class InterfaceInventoryManager<R, AE extends IAEStack<AE>, K> {
 
     /**
      * Write storage data to a ByteBuf stream for client sync.
-     * Only iterates occupied slots, via slotToStorageKeyMap.
      */
     public void writeStorageToStream(ByteBuf data) {
-        // getNonEmptyStorageSlots returns non-null, >0 slots
         List<Integer> slots = this.getNonEmptyStorageSlots();
 
         data.writeShort(slots.size());
@@ -1539,7 +1717,6 @@ public class InterfaceInventoryManager<R, AE extends IAEStack<AE>, K> {
 
     /**
      * Write filter data to a ByteBuf stream for client sync.
-     * Uses filterSlotList to iterate only occupied filter slots.
      */
     public void writeFiltersToStream(ByteBuf data) {
         // filterSlotList contains exactly the slots with non-null filters (maintained by refreshFilterMap)

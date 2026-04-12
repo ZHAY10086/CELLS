@@ -1,12 +1,9 @@
 package com.cells.blocks.interfacebase;
 
-import java.io.IOException;
 import java.util.List;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-
-import io.netty.buffer.ByteBuf;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -68,7 +65,8 @@ public abstract class AbstractInterfaceTile<L extends IInterfaceLogic> extends A
     // Storage is managed by the logic and serialized via writeToStream/readFromStream.
     private final AppEngInternalInventory dummyInventory = new AppEngInternalInventory(this, 0, 0);
 
-    // Debounce: getTotalWorldTime is two field reads + a long compare,
+    // Debounce for markDirtyAndSave
+    // getTotalWorldTime is two field reads + a long compare,
     // markChunkDirty is two chunk map lookups + a boolean write.
     private long lastSaveTick = -1;
 
@@ -118,11 +116,6 @@ public abstract class AbstractInterfaceTile<L extends IInterfaceLogic> extends A
     }
 
     @Override
-    public void markForNetworkUpdate() {
-        this.markForUpdate();
-    }
-
-    @Override
     @Nullable
     public World getHostWorld() {
         return this.world;
@@ -162,6 +155,26 @@ public abstract class AbstractInterfaceTile<L extends IInterfaceLogic> extends A
     @Override
     public long setMaxSlotSize(long size) {
         return this.logic.setMaxSlotSize(size);
+    }
+
+    @Override
+    public long getEffectiveMaxSlotSize(int slot) {
+        return this.logic.getEffectiveMaxSlotSize(slot);
+    }
+
+    @Override
+    public long setMaxSlotSizeOverride(int slot, long size) {
+        return this.logic.setMaxSlotSizeOverride(slot, size);
+    }
+
+    @Override
+    public long getMaxSlotSizeOverride(int slot) {
+        return this.logic.getMaxSlotSizeOverride(slot);
+    }
+
+    @Override
+    public void clearMaxSlotSizeOverride(int slot) {
+        this.logic.clearMaxSlotSizeOverride(slot);
     }
 
     @Override
@@ -259,21 +272,6 @@ public abstract class AbstractInterfaceTile<L extends IInterfaceLogic> extends A
         this.logic.uploadSettings(compound, player);
     }
 
-    @Override
-    protected boolean readFromStream(final ByteBuf data) throws IOException {
-        boolean changed = super.readFromStream(data);
-        changed |= this.logic.readStorageFromStream(data);
-        changed |= this.logic.readFiltersFromStream(data);
-        return changed;
-    }
-
-    @Override
-    protected void writeToStream(final ByteBuf data) throws IOException {
-        super.writeToStream(data);
-        this.logic.writeStorageToStream(data);
-        this.logic.writeFiltersToStream(data);
-    }
-
     @Nonnull
     @Override
     public IItemHandler getInternalInventory() {
@@ -310,6 +308,18 @@ public abstract class AbstractInterfaceTile<L extends IInterfaceLogic> extends A
 
     public DimensionalCoord getLocation() {
         return new DimensionalCoord(this);
+    }
+
+    // ============================== Grid lifecycle ==============================
+
+    @Override
+    public void onReady() {
+        super.onReady();
+
+        // Re-scan the capability cache now that all TEs are in the world and the
+        // grid proxy is ready. During readFromNBT, adjacent TEs may not have been
+        // loaded yet, leaving the push/pull card's cache empty.
+        this.logic.onGridReady();
     }
 
     // ============================== Grid events ==============================

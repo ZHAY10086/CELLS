@@ -29,6 +29,7 @@ import appeng.tile.inventory.AppEngInternalInventory;
 import mezz.jei.api.gui.IGhostIngredientHandler.Target;
 
 import com.cells.Tags;
+import com.cells.blocks.combinedinterface.ICombinedInterfaceHost;
 import com.cells.client.KeyBindings;
 import com.cells.gui.DynamicTooltipTabButton;
 import com.cells.gui.GuiClearFiltersButton;
@@ -43,6 +44,7 @@ import com.cells.network.CellsNetworkHandler;
 import com.cells.network.packets.PacketChangePage;
 import com.cells.network.packets.PacketClearFilters;
 import com.cells.network.packets.PacketOpenGui;
+import com.cells.network.packets.PacketOpenSlotOverrideGui;
 import com.cells.util.PollingRateUtils;
 
 
@@ -141,6 +143,24 @@ public abstract class AbstractResourceInterfaceGui<H extends IInterfaceHost, C e
     protected abstract void prevPage();
 
     /**
+     * Get the effective max slot size for a display slot, accounting for per-slot overrides.
+     * Uses the container's ISizeOverrideContainer implementation if available,
+     * falling back to the global max slot size.
+     *
+     * @param displaySlot The display slot index (0-35 within the current page)
+     * @return The effective slot size (per-slot override or global)
+     */
+    protected long getEffectiveMaxSlotSizeForDisplay(int displaySlot) {
+        int actualSlot = displaySlot + getCurrentPage() * SLOTS_PER_PAGE;
+
+        if (this.container instanceof ISizeOverrideContainer) {
+            return ((ISizeOverrideContainer) this.container).getEffectiveMaxSlotSize(actualSlot);
+        }
+
+        return getMaxSlotSize();
+    }
+
+    /**
      * Create a filter slot for the given display index.
      * Override in subclasses to return the appropriate filter slot type.
      *
@@ -179,6 +199,20 @@ public abstract class AbstractResourceInterfaceGui<H extends IInterfaceHost, C e
 
                 // Create filter slot
                 GuiCustomSlot filterSlot = createFilterSlotForIndex(displaySlot, xPos, filterY);
+
+                // Wire up right-click handler for per-slot size override
+                if (filterSlot instanceof AbstractResourceFilterSlot) {
+                    final int displayIndex = displaySlot;
+                    ((AbstractResourceFilterSlot<?>) filterSlot).setRightClickHandler(() -> {
+                        // Compute absolute slot from display index + page offset
+                        int absoluteSlot = displayIndex + getCurrentPage() * SLOTS_PER_PAGE;
+                        BlockPos pos = this.host.getHostPos();
+                        CellsNetworkHandler.INSTANCE.sendToServer(
+                            new PacketOpenSlotOverrideGui(pos, absoluteSlot, this.host.getPartSide())
+                        );
+                    });
+                }
+
                 this.guiSlots.add(filterSlot);
 
                 // Create tank/storage slot
@@ -200,6 +234,15 @@ public abstract class AbstractResourceInterfaceGui<H extends IInterfaceHost, C e
      * Get the GUI ID for the polling rate configuration screen.
      */
     protected abstract int getPollingRateGuiId();
+
+    /**
+     * Get the type name used for unit localization (e.g. "item", "fluid", "gas", "essentia").
+     * <p>
+     * Defaults to {@code this.host.getTypeName()}, which works for single-type interfaces.
+     */
+    protected String getUnitTypeName() {
+        return this.host.getTypeName();
+    }
 
     /**
      * Handle quick-add keybind. Override in subclasses to implement type-specific behavior.
@@ -249,20 +292,26 @@ public abstract class AbstractResourceInterfaceGui<H extends IInterfaceHost, C e
     public void initGui() {
         super.initGui();
 
-        String unit = I18n.format("cells.unit." + this.host.getTypeName());
+        // Clear custom AE2 slots to prevent accumulation on GUI rebuild (e.g. window resize, tab switch).
+        this.guiSlots.clear();
+
         String direction = this.host.isExport() ? "export" : "import";
 
         // Create type-specific resource slots
         createResourceSlots();
 
         // Config button to open max slot size configuration screen
+        // Unit is resolved dynamically to allow for dynamic type
         this.configButton = new DynamicTooltipTabButton(
             this.guiLeft + 154,
             this.guiTop,
             2 + 4 * 16,
-            () -> I18n.format("cells.max_slot_size.title") + "\n\n"
-                + I18n.format("cells.slot_size", String.format("%,d", this.getMaxSlotSize()), unit) + "\n"
-                + I18n.format("cells.max_slot_size.tooltip", unit),
+            () -> {
+                String unit = I18n.format("cells.unit." + this.getUnitTypeName());
+                return I18n.format("cells.max_slot_size.title") + "\n\n"
+                    + I18n.format("cells.slot_size", String.format("%,d", this.getMaxSlotSize()), unit) + "\n"
+                    + I18n.format("cells.max_slot_size.tooltip", unit);
+            },
             this.itemRender
         );
         this.buttonList.add(this.configButton);
@@ -545,15 +594,24 @@ public abstract class AbstractResourceInterfaceGui<H extends IInterfaceHost, C e
 
     /**
      * Scans the host's upgrade inventory for an installed Pull/Push card.
+     * Handles both single-type hosts (IFilterableInterfaceHost) and combined hosts
+     * (ICombinedInterfaceHost), which cannot implement IFilterableInterfaceHost due
+     * to Java's type erasure on its generic parameters.
      *
      * @return The card ItemStack, or {@link ItemStack#EMPTY} if none is installed.
      */
     @SuppressWarnings("rawtypes")
     private ItemStack findPullPushCard() {
-        if (!(this.host instanceof IFilterableInterfaceHost)) return ItemStack.EMPTY;
+        AppEngInternalInventory upgradeInv = null;
 
-        AppEngInternalInventory upgradeInv =
-            ((IFilterableInterfaceHost) this.host).getUpgradeInventory();
+        if (this.host instanceof IFilterableInterfaceHost) {
+            upgradeInv = ((IFilterableInterfaceHost) this.host).getUpgradeInventory();
+        } else if (this.host instanceof ICombinedInterfaceHost) {
+            // Combined hosts share one upgrade inventory across all logics, accessible via any logic
+            upgradeInv = ((ICombinedInterfaceHost) this.host).getItemLogic().getUpgradeInventory();
+        }
+
+        if (upgradeInv == null) return ItemStack.EMPTY;
 
         for (int i = 0; i < upgradeInv.getSlots(); i++) {
             ItemStack stack = upgradeInv.getStackInSlot(i);

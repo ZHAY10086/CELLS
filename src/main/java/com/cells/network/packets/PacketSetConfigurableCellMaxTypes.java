@@ -4,12 +4,12 @@ import io.netty.buffer.ByteBuf;
 
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Container;
-import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 import com.cells.cells.configurable.ContainerConfigurableCell;
+import com.cells.gui.overlay.ServerMessageHelper;
 
 
 /**
@@ -48,7 +48,7 @@ public class PacketSetConfigurableCellMaxTypes implements IMessage {
                 if (container instanceof ContainerConfigurableCell) {
                     String err = ((ContainerConfigurableCell) container).setUserMaxTypes(message.maxTypes);
                     // Send error message back to player
-                    if (err != null) player.sendMessage(new TextComponentTranslation(err));
+                    if (err != null) ServerMessageHelper.error(player, err);
                 }
             });
 

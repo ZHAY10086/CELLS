@@ -7,6 +7,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 
@@ -56,6 +57,12 @@ public abstract class AbstractResourceFilterSlot<R> extends GuiCustomSlot implem
 
     protected final int slot;
 
+    /**
+     * Optional callback invoked on right-click.
+     * When set, right-click opens the per-slot size override GUI instead of clearing.
+     */
+    private Runnable rightClickHandler;
+
     protected AbstractResourceFilterSlot(int slot, int x, int y) {
         super(slot, x, y);
         this.slot = slot;
@@ -66,6 +73,14 @@ public abstract class AbstractResourceFilterSlot<R> extends GuiCustomSlot implem
      */
     public int getSlot() {
         return this.slot;
+    }
+
+    /**
+     * Set the right-click handler. When set, right-click invokes this instead of clearing.
+     * Used by the GUI to open the per-slot size override GUI.
+     */
+    public void setRightClickHandler(Runnable handler) {
+        this.rightClickHandler = handler;
     }
 
     // ==================== Abstract methods - implement these ====================
@@ -138,14 +153,19 @@ public abstract class AbstractResourceFilterSlot<R> extends GuiCustomSlot implem
 
     @Override
     public void slotClicked(ItemStack clickStack, int mouseButton) {
-        // Right-click or empty hand always clears
-        if (clickStack.isEmpty() || mouseButton == 1) {
-            setResource(null);
+        // Right-click: open per-slot size override GUI if handler is set
+        if (mouseButton == 1) {
+            if (this.rightClickHandler != null) this.rightClickHandler.run();
             return;
         }
 
-        // Left-click with resource container sets the filter
+        // Left-click: set or clear filter
         if (mouseButton == 0) {
+            if (clickStack.isEmpty()) {
+                setResource(null);
+                return;
+            }
+
             R resource = extractResourceFromStack(clickStack);
             if (resource != null) setResource(resource);
         }
@@ -156,7 +176,16 @@ public abstract class AbstractResourceFilterSlot<R> extends GuiCustomSlot implem
         R resource = getResource();
         if (resource == null) return null;
 
-        return getResourceDisplayName(resource);
+        String name = getResourceDisplayName(resource);
+
+        // Add click hints
+        name += "\n\n§7" + I18n.format("cells.filter_slot.hint.left_click");
+
+        if (this.rightClickHandler != null) {
+            name += "\n§7" + I18n.format("cells.filter_slot.hint.right_click");
+        }
+
+        return name;
     }
 
     @Override

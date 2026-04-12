@@ -19,6 +19,7 @@ import net.minecraftforge.common.capabilities.Capability;
 import appeng.api.AEApi;
 import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.storage.IMEInventory;
+import appeng.tile.inventory.AppEngInternalInventory;
 
 import mekanism.api.gas.Gas;
 import mekanism.api.gas.GasRegistry;
@@ -54,10 +55,23 @@ public class GasInterfaceLogic extends AbstractResourceInterfaceLogic<GasStack, 
     /** External handler exposed via capabilities. */
     private final IGasHandler externalHandler;
 
-    public GasInterfaceLogic(Host host) {
+    public GasInterfaceLogic(AbstractResourceInterfaceLogic.Host host) {
         super(host, GasStack.class);
 
         // Create appropriate external handler based on direction
+        if (host.isExport()) {
+            this.externalHandler = new ExportGasHandler(this);
+        } else {
+            this.externalHandler = new FilteredGasHandler(this);
+        }
+    }
+
+    /**
+     * Constructor with a shared upgrade inventory for combined interfaces.
+     */
+    public GasInterfaceLogic(AbstractResourceInterfaceLogic.Host host, AppEngInternalInventory sharedUpgradeInventory) {
+        super(host, GasStack.class, sharedUpgradeInventory);
+
         if (host.isExport()) {
             this.externalHandler = new ExportGasHandler(this);
         } else {
@@ -342,10 +356,11 @@ public class GasInterfaceLogic extends AbstractResourceInterfaceLogic<GasStack, 
         public GasTankInfo[] getTankInfo() {
             List<GasTankInfo> infos = new ArrayList<>();
 
-            final int capacity = logic.inventoryManager.getMaxSlotSizeInt();
-
             for (int slot : logic.getFilterSlotList()) {
                 final int s = slot;
+                // Per-slot effective capacity (may differ from global maxSlotSize if overridden)
+                final int slotCapacity = (int) Math.min(
+                    logic.inventoryManager.getEffectiveMaxSlotSize(slot), Integer.MAX_VALUE);
 
                 infos.add(new GasTankInfo() {
                     @Override
@@ -369,7 +384,7 @@ public class GasInterfaceLogic extends AbstractResourceInterfaceLogic<GasStack, 
 
                     @Override
                     public int getMaxGas() {
-                        return capacity;
+                        return slotCapacity;
                     }
                 });
             }
@@ -423,10 +438,11 @@ public class GasInterfaceLogic extends AbstractResourceInterfaceLogic<GasStack, 
         public GasTankInfo[] getTankInfo() {
             List<GasTankInfo> infos = new ArrayList<>();
 
-            final int capacity = logic.inventoryManager.getMaxSlotSizeInt();
-
             for (int slot : logic.getFilterSlotList()) {
                 final int s = slot;
+                // Per-slot effective capacity (may differ from global maxSlotSize if overridden)
+                final int slotCapacity = (int) Math.min(
+                    logic.inventoryManager.getEffectiveMaxSlotSize(slot), Integer.MAX_VALUE);
 
                 infos.add(new GasTankInfo() {
                     @Override
@@ -450,7 +466,7 @@ public class GasInterfaceLogic extends AbstractResourceInterfaceLogic<GasStack, 
 
                     @Override
                     public int getMaxGas() {
-                        return capacity;
+                        return slotCapacity;
                     }
                 });
             }

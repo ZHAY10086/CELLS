@@ -198,7 +198,6 @@ public class ContainerItemInterface
                 player.inventory.setItemStack(toExtract);
                 this.updateHeld(player);
                 this.host.refreshFilterMap();
-                this.host.markForNetworkUpdate();
             }
             // Import mode: can't extract, do nothing
             return true;
@@ -217,7 +216,7 @@ public class ContainerItemInterface
 
         if (stored.isEmpty()) {
             // Empty slot: insert held item
-            int maxInsert = (int) Math.min(insertAmount, this.host.getMaxSlotSize());
+            int maxInsert = (int) Math.min(insertAmount, this.host.getEffectiveMaxSlotSize(storageSlot));
             ItemStack toInsert = held.copy();
             toInsert.setCount(maxInsert);
             storage.setStackInSlot(storageSlot, toInsert);
@@ -225,7 +224,7 @@ public class ContainerItemInterface
             if (held.isEmpty()) player.inventory.setItemStack(ItemStack.EMPTY);
             this.updateHeld(player);
             this.host.refreshFilterMap();
-            this.host.markForNetworkUpdate();
+
             return true;
         }
 
@@ -237,7 +236,7 @@ public class ContainerItemInterface
         // Same item: merge (respecting halfStack = single item insertion)
         // Use host.getStoredAmount() for accurate long-based space calculation
         long currentAmount = this.host.getStoredAmount(storageSlot);
-        long space = this.host.getMaxSlotSize() - currentAmount;
+        long space = this.host.getEffectiveMaxSlotSize(storageSlot) - currentAmount;
         int toTransfer = (int) Math.min(insertAmount, Math.min(space, Integer.MAX_VALUE));
         if (toTransfer > 0) {
             // Use adjustStoredAmount for proper long handling
@@ -246,7 +245,6 @@ public class ContainerItemInterface
             if (held.isEmpty()) player.inventory.setItemStack(ItemStack.EMPTY);
             this.updateHeld(player);
             this.host.refreshFilterMap();
-            this.host.markForNetworkUpdate();
         }
 
         return true;
@@ -308,8 +306,8 @@ public class ContainerItemInterface
         }
 
         this.host.refreshFilterMap();
-        this.host.markForNetworkUpdate();
         this.detectAndSendChanges();
+
         return true;
     }
 

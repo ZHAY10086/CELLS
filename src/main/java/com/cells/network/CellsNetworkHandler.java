@@ -8,6 +8,7 @@ import com.cells.Tags;
 import com.cells.network.packets.PacketChangePage;
 import com.cells.network.packets.PacketClearFilters;
 import com.cells.network.packets.PacketOpenGui;
+import com.cells.network.packets.PacketOverlayMessage;
 import com.cells.network.packets.PacketSaveMemoryCardWithFilters;
 import com.cells.network.packets.PacketSetConfigurableCellCapacity;
 import com.cells.network.packets.PacketSetConfigurableCellMaxTypes;
@@ -16,8 +17,13 @@ import com.cells.network.packets.PacketSetPollingRate;
 import com.cells.network.packets.PacketSetPullPushKeepQuantity;
 import com.cells.network.packets.PacketSetPullPushQuantity;
 import com.cells.network.packets.PacketSetPullPushRate;
+import com.cells.network.packets.PacketsetMaxSlotSizeOverride;
+import com.cells.network.packets.PacketOpenSlotOverrideGui;
+import com.cells.network.packets.PacketSwitchTab;
+import com.cells.network.packets.PacketSyncSlotSizeOverride;
 import com.cells.network.sync.PacketQuickAddFilter;
 import com.cells.network.sync.PacketResourceSlot;
+import com.cells.network.sync.PacketStorageSync;
 
 
 /**
@@ -51,5 +57,21 @@ public class CellsNetworkHandler {
 
         // Unified quick-add packet (handles quick-add for ALL resource types)
         INSTANCE.registerMessage(PacketQuickAddFilter.Handler.class, PacketQuickAddFilter.class, packetId++, Side.SERVER);
+
+        // Storage sync packet (server→client: syncs storage identity + amount per slot)
+        INSTANCE.registerMessage(PacketStorageSync.ClientHandler.class, PacketStorageSync.class, packetId++, Side.CLIENT);
+
+        // Tab switching for combined interface
+        INSTANCE.registerMessage(PacketSwitchTab.Handler.class, PacketSwitchTab.class, packetId++, Side.SERVER);
+
+        // Server→client overlay messages (displayed above hotbar alongside chat messages)
+        INSTANCE.registerMessage(PacketOverlayMessage.ClientHandler.class, PacketOverlayMessage.class, packetId++, Side.CLIENT);
+
+        // Per-slot size override: client→server to set, server→client to sync
+        INSTANCE.registerMessage(PacketsetMaxSlotSizeOverride.Handler.class, PacketsetMaxSlotSizeOverride.class, packetId++, Side.SERVER);
+        INSTANCE.registerMessage(PacketSyncSlotSizeOverride.ClientHandler.class, PacketSyncSlotSizeOverride.class, packetId++, Side.CLIENT);
+
+        // Open per-slot size override GUI (stores slot index + opens MaxSlotSize GUI)
+        INSTANCE.registerMessage(PacketOpenSlotOverrideGui.Handler.class, PacketOpenSlotOverrideGui.class, packetId++, Side.SERVER);
     }
 }
