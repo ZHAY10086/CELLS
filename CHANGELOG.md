@@ -8,6 +8,11 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Semantic Versioning: https://semver.org/spec/v2.0.0.html
 
 
+## [0.5.14-beta2] - 2026-04-13
+### Fixed
+- Fix crash with push card and Thaumatorium when no recipe is set.
+
+
 ## [0.5.14-beta] - 2026-04-12
 ### Fixed
 - Fix some fields missing from the in-game config.

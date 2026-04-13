@@ -880,8 +880,18 @@ public class EssentiaInterfaceLogic extends AbstractResourceInterfaceLogic<Essen
 
         if (!container.doesContainerAccept(aspect)) return 0;
 
-        // addToContainer returns the leftover amount that could NOT be added
-        int leftover = container.addToContainer(aspect, maxAmount);
-        return maxAmount - leftover;
+        // Workaround for Thaumcraft bug: TileThaumatorium.addToContainer() NPEs
+        // when currentRecipe is null because it calls currentRecipe.getAspects()
+        // before null-checking. doesContainerAccept() is hardcoded to return true,
+        // so it provides no safety.
+        // See: Nividica/ThaumicEnergistics#361, Azanor/thaumcraft-beta#1604
+        try {
+            // addToContainer returns the leftover amount that could NOT be added
+            int leftover = container.addToContainer(aspect, maxAmount);
+            return maxAmount - leftover;
+        } catch (NullPointerException e) {
+            // Thaumatorium (or similar) has no recipe set, silently reject the essentia
+            return 0;
+        }
     }
 }
