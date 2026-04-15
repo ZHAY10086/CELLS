@@ -12,12 +12,14 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import appeng.api.implementations.items.IMemoryCard;
 import appeng.api.parts.IPartHost;
 
+import com.cells.blocks.combinedinterface.TileCombinedExportInterface;
+import com.cells.blocks.combinedinterface.TileCombinedImportInterface;
 import com.cells.blocks.exportinterface.TileExportInterface;
 import com.cells.blocks.fluidexportinterface.TileFluidExportInterface;
 import com.cells.blocks.fluidimportinterface.TileFluidImportInterface;
 import com.cells.blocks.importinterface.TileImportInterface;
-import com.cells.integration.mekanismenergistics.TileGasExportInterface;
-import com.cells.integration.mekanismenergistics.TileGasImportInterface;
+import com.cells.integration.mekanismenergistics.MekanismEnergisticsIntegration;
+import com.cells.integration.thaumicenergistics.ThaumicEnergisticsIntegration;
 
 
 /**
@@ -45,7 +47,7 @@ public class MemoryCardServerHandler {
 
         BlockPos pos = event.getPos();
 
-        // Check if this is one of our interfaces (Item, Fluid, or Gas)
+        // Check if this is one of our interfaces (Item, Fluid, Gas, or Essentia)
         TileEntity te = event.getWorld().getTileEntity(pos);
         if (te == null) return;
 
@@ -53,8 +55,10 @@ public class MemoryCardServerHandler {
             || (te instanceof TileFluidImportInterface)
             || (te instanceof TileExportInterface)
             || (te instanceof TileFluidExportInterface)
-            || (te instanceof TileGasImportInterface)
-            || (te instanceof TileGasExportInterface)
+            || (te instanceof TileCombinedImportInterface)
+            || (te instanceof TileCombinedExportInterface)
+            || MekanismEnergisticsIntegration.isTileGasInterface(te)
+            || ThaumicEnergisticsIntegration.isTileEssentiaInterface(te)
             || (te instanceof IPartHost);  // Parts are handled via IPartHost
 
         if (!isOurInterface) return;

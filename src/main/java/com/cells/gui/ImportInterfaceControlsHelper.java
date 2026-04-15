@@ -47,6 +47,7 @@ public class ImportInterfaceControlsHelper {
         lines.add("");
 
         // Memory card section
+        lines.add(I18n.format("cells.controls.memory_card"));
         lines.add(I18n.format("cells.controls.memory_card_sneak"));
 
         String filterKey = KeyBindings.MEMORY_CARD_INCLUDE_FILTERS.isBound()

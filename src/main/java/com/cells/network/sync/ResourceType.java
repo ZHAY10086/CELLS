@@ -72,10 +72,10 @@ public enum ResourceType {
                 writeFluid(buf, (IAEFluidStack) resource);
                 break;
             case GAS:
-                GasSerializationHelper.write(buf, resource);
+                if (GAS.isAvailable()) GasSerializationHelper.write(buf, resource);
                 break;
             case ESSENTIA:
-                EssentiaSerializationHelper.write(buf, resource);
+                if (ESSENTIA.isAvailable()) EssentiaSerializationHelper.write(buf, resource);
                 break;
         }
     }
@@ -94,9 +94,9 @@ public enum ResourceType {
             case FLUID:
                 return readFluid(buf);
             case GAS:
-                return GasSerializationHelper.read(buf);
+                return GAS.isAvailable() ? GasSerializationHelper.read(buf) : null;
             case ESSENTIA:
-                return EssentiaSerializationHelper.read(buf);
+                return ESSENTIA.isAvailable() ? EssentiaSerializationHelper.read(buf) : null;
             default:
                 return null;
         }

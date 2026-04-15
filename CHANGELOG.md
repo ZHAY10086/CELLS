@@ -8,6 +8,29 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Semantic Versioning: https://semver.org/spec/v2.0.0.html
 
 
+## [0.6.0-alpha] - 2026-04-30
+### Added
+- Add the Subnet Proxy (front/back), 2 parts that allow to create a unidirectional subnet (passthrough) with optional filtering. The filtering is done in pages, with each capacity card allowing for an additional page of 63 filters. All 4 types are combined in the filter, with a button to cycle which type should be encoded on drag-and-drop/shift-click/quick-add. The Subnet Proxy will only expose the content of the network it is connected to (no showing looping content).
+- Add a config to set the number of upgrade slots for Subnet Proxies (1-24).
+
+
+## [0.5.16-beta] - 2026-04-20
+### Added
+- Add IO Interfaces for all types (but combined). These interfaces combine Import and Export as 2 inventories (avoiding interferences).
+
+
+## [0.5.15-beta] - 2026-04-15
+### Fixed
+- Fix Memory Card not saving filters of Essentia Interfaces.
+- Fix Combined Interface crashing on opening when Mekanism/Thaumcraft wasn't there.
+
+### Added
+- Add a line in Interfaces' Controls Help to clarify Memory Card use.
+
+### Changed
+- Re-texture Push/Pull cards slightly.
+
+
 ## [0.5.14-beta2] - 2026-04-13
 ### Fixed
 - Fix crash with push card and Thaumatorium when no recipe is set.

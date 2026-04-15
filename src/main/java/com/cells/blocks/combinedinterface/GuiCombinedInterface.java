@@ -26,18 +26,16 @@ import appeng.client.gui.widgets.GuiCustomSlot;
 import appeng.fluids.util.AEFluidStack;
 
 import com.cells.blocks.interfacebase.AbstractResourceInterfaceGui;
-import com.cells.blocks.interfacebase.IInterfaceLogic;
-import com.cells.blocks.interfacebase.IResourceInterfaceLogic;
 import com.cells.gui.CellsGuiHandler;
 import com.cells.gui.QuickAddHelper;
-import com.cells.gui.slots.EssentiaFilterSlot;
-import com.cells.gui.slots.EssentiaTankSlot;
 import com.cells.gui.slots.FluidFilterSlot;
 import com.cells.gui.slots.FluidTankSlot;
-import com.cells.gui.slots.GasFilterSlot;
-import com.cells.gui.slots.GasTankSlot;
 import com.cells.gui.slots.ItemFilterSlot;
 import com.cells.gui.slots.ItemStorageSlot;
+import com.cells.integration.mekanismenergistics.CombinedGuiGasHelper;
+import com.cells.integration.mekanismenergistics.MekanismEnergisticsIntegration;
+import com.cells.integration.thaumicenergistics.CombinedGuiEssentiaHelper;
+import com.cells.integration.thaumicenergistics.ThaumicEnergisticsIntegration;
 import com.cells.network.CellsNetworkHandler;
 import com.cells.network.packets.PacketSwitchTab;
 import com.cells.network.sync.PacketQuickAddFilter;
@@ -171,27 +169,23 @@ public class GuiCombinedInterface
                 );
 
             case GAS: {
-                IInterfaceLogic gasLogic = this.host.getGasLogic();
-                if (gasLogic instanceof IResourceInterfaceLogic) {
-                    IResourceInterfaceLogic rawLogic = (IResourceInterfaceLogic) gasLogic;
-                    return new GasFilterSlot(
-                        slot -> (com.mekeng.github.common.me.data.IAEGasStack) rawLogic.getFilter(slot),
-                        displaySlot, x, y,
+                if (MekanismEnergisticsIntegration.isModLoaded()) {
+                    GuiCustomSlot gasSlot = CombinedGuiGasHelper.createGasFilterSlot(
+                        this.host, displaySlot, x, y,
                         () -> this.container.currentPage * SLOTS_PER_PAGE
                     );
+                    if (gasSlot != null) return gasSlot;
                 }
                 break;
             }
 
             case ESSENTIA: {
-                IInterfaceLogic essentiaLogic = this.host.getEssentiaLogic();
-                if (essentiaLogic instanceof IResourceInterfaceLogic) {
-                    IResourceInterfaceLogic rawLogic = (IResourceInterfaceLogic) essentiaLogic;
-                    return new EssentiaFilterSlot(
-                        slot -> (thaumicenergistics.api.storage.IAEEssentiaStack) rawLogic.getFilter(slot),
-                        displaySlot, x, y,
+                if (ThaumicEnergisticsIntegration.isModLoaded()) {
+                    GuiCustomSlot essentiaSlot = CombinedGuiEssentiaHelper.createEssentiaFilterSlot(
+                        this.host, displaySlot, x, y,
                         () -> this.container.currentPage * SLOTS_PER_PAGE
                     );
+                    if (essentiaSlot != null) return essentiaSlot;
                 }
                 break;
             }
@@ -228,33 +222,38 @@ public class GuiCombinedInterface
             }
 
             case GAS: {
-                GasTankHostAdapter gasAdapter = new GasTankHostAdapter(this.host);
-                return new GasTankSlot<>(
-                    gasAdapter, displaySlot, displaySlot, x, y,
-                    () -> this.container.currentPage * SLOTS_PER_PAGE,
-                    () -> getEffectiveMaxSlotSizeForDisplay(displaySlot)
-                );
+                if (MekanismEnergisticsIntegration.isModLoaded()) {
+                    return CombinedGuiGasHelper.createGasTankSlot(
+                        this.host, displaySlot, x, y,
+                        () -> this.container.currentPage * SLOTS_PER_PAGE,
+                        () -> getEffectiveMaxSlotSizeForDisplay(displaySlot)
+                    );
+                }
+                break;
             }
 
             case ESSENTIA: {
-                EssentiaTankHostAdapter essentiaAdapter = new EssentiaTankHostAdapter(this.host);
-                return new EssentiaTankSlot<>(
-                    essentiaAdapter, displaySlot, displaySlot, x, y,
-                    () -> this.container.currentPage * SLOTS_PER_PAGE,
-                    () -> getEffectiveMaxSlotSizeForDisplay(displaySlot)
-                );
+                if (ThaumicEnergisticsIntegration.isModLoaded()) {
+                    return CombinedGuiEssentiaHelper.createEssentiaTankSlot(
+                        this.host, displaySlot, x, y,
+                        () -> this.container.currentPage * SLOTS_PER_PAGE,
+                        () -> getEffectiveMaxSlotSizeForDisplay(displaySlot)
+                    );
+                }
+                break;
             }
 
             case ITEM:
-            default: {
-                ItemStorageHostAdapter itemAdapter = new ItemStorageHostAdapter(this.host);
-                return new ItemStorageSlot<>(
-                    itemAdapter, displaySlot, displaySlot, x, y,
-                    () -> this.container.currentPage * SLOTS_PER_PAGE,
-                    () -> getEffectiveMaxSlotSizeForDisplay(displaySlot)
-                );
-            }
+            default: break;
         }
+
+        // Fallback: if gas/essentia logic was unexpectedly null, use item storage slots
+        ItemStorageHostAdapter itemAdapter = new ItemStorageHostAdapter(this.host);
+        return new ItemStorageSlot<>(
+            itemAdapter, displaySlot, displaySlot, x, y,
+            () -> this.container.currentPage * SLOTS_PER_PAGE,
+            () -> getEffectiveMaxSlotSizeForDisplay(displaySlot)
+        );
     }
 
     // ================================= Init =================================
@@ -347,11 +346,17 @@ public class GuiCombinedInterface
             }
 
             case GAS: {
-                return handleGasQuickAdd(hoveredSlot);
+                if (MekanismEnergisticsIntegration.isModLoaded()) {
+                    return CombinedGuiGasHelper.handleGasQuickAdd(hoveredSlot);
+                }
+                break;
             }
 
             case ESSENTIA: {
-                return handleEssentiaQuickAdd(hoveredSlot);
+                if (ThaumicEnergisticsIntegration.isModLoaded()) {
+                    return CombinedGuiEssentiaHelper.handleEssentiaQuickAdd(hoveredSlot);
+                }
+                break;
             }
 
             default:
@@ -359,52 +364,6 @@ public class GuiCombinedInterface
         }
 
         return false;
-    }
-
-    /**
-     * Handle gas quick-add. Isolated with @Optional.Method to prevent class loading
-     * issues when MekanismEnergistics is not present.
-     */
-    @Optional.Method(modid = "mekeng")
-    private boolean handleGasQuickAdd(Slot hoveredSlot) {
-        mekanism.api.gas.GasStack gas = QuickAddHelper.getGasUnderCursor(hoveredSlot);
-
-        if (gas != null) {
-            CellsNetworkHandler.INSTANCE.sendToServer(new PacketQuickAddFilter(
-                ResourceType.GAS,
-                com.mekeng.github.common.me.data.impl.AEGasStack.of(gas))
-            );
-            return true;
-        }
-
-        if (QuickAddHelper.hasAnythingUnderCursor(hoveredSlot)) {
-            QuickAddHelper.sendNoValidError("gas");
-        }
-
-        return true;
-    }
-
-    /**
-     * Handle essentia quick-add. Isolated with @Optional.Method to prevent class loading
-     * issues when ThaumicEnergistics is not present.
-     */
-    @Optional.Method(modid = "thaumicenergistics")
-    private boolean handleEssentiaQuickAdd(Slot hoveredSlot) {
-        thaumicenergistics.api.EssentiaStack essentia = QuickAddHelper.getEssentiaUnderCursor(hoveredSlot);
-
-        if (essentia != null) {
-            CellsNetworkHandler.INSTANCE.sendToServer(new PacketQuickAddFilter(
-                ResourceType.ESSENTIA,
-                thaumicenergistics.integration.appeng.AEEssentiaStack.fromEssentiaStack(essentia)
-            ));
-            return true;
-        }
-
-        if (QuickAddHelper.hasAnythingUnderCursor(hoveredSlot)) {
-            QuickAddHelper.sendNoValidError("essentia");
-        }
-
-        return true;
     }
 
     // ================================= Helpers =================================
@@ -645,96 +604,4 @@ public class GuiCombinedInterface
         }
     }
 
-    /**
-     * Adapter that wraps the combined host's gas logic to satisfy GasTankSlot.IGasTankHost.
-     * Delegates gas tank data through the IInterfaceLogic using raw-typed access,
-     * since the combined host only exposes gas logic via the untyped IInterfaceLogic interface.
-     */
-    @Optional.Interface(iface = "com.cells.gui.slots.GasTankSlot$IGasTankHost", modid = "mekeng")
-    private static class GasTankHostAdapter implements GasTankSlot.IGasTankHost {
-        private final ICombinedInterfaceHost host;
-
-        GasTankHostAdapter(ICombinedInterfaceHost host) {
-            this.host = host;
-        }
-
-        @Override
-        @Optional.Method(modid = "mekeng")
-        public mekanism.api.gas.GasStack getGasInTank(int tankIndex) {
-            IInterfaceLogic logic = this.host.getGasLogic();
-            if (logic == null) return null;
-
-            // GasInterfaceLogic exposes getGasInTank; access via cast
-            if (logic instanceof com.cells.integration.mekanismenergistics.GasInterfaceLogic) {
-                return ((com.cells.integration.mekanismenergistics.GasInterfaceLogic) logic).getGasInTank(tankIndex);
-            }
-
-            return null;
-        }
-
-        @Override
-        public long getGasAmount(int tankIndex) {
-            IInterfaceLogic logic = this.host.getGasLogic();
-            if (logic instanceof IResourceInterfaceLogic) {
-                return ((IResourceInterfaceLogic<?, ?>) logic).getSlotAmount(tankIndex);
-            }
-            return 0;
-        }
-
-        @Override
-        public String getTypeName() {
-            return "gas";
-        }
-
-        @Override
-        public boolean isExport() {
-            return this.host.isExport();
-        }
-    }
-
-    /**
-     * Adapter that wraps the combined host's essentia logic to satisfy EssentiaTankSlot.IEssentiaTankHost.
-     * Delegates essentia slot data through the IInterfaceLogic using raw-typed access.
-     */
-    @Optional.Interface(iface = "com.cells.gui.slots.EssentiaTankSlot$IEssentiaTankHost", modid = "thaumicenergistics")
-    private static class EssentiaTankHostAdapter implements EssentiaTankSlot.IEssentiaTankHost {
-        private final ICombinedInterfaceHost host;
-
-        EssentiaTankHostAdapter(ICombinedInterfaceHost host) {
-            this.host = host;
-        }
-
-        @Override
-        @Optional.Method(modid = "thaumicenergistics")
-        public thaumicenergistics.api.EssentiaStack getEssentiaInSlot(int slotIndex) {
-            IInterfaceLogic logic = this.host.getEssentiaLogic();
-            if (logic == null) return null;
-
-            // EssentiaInterfaceLogic exposes getEssentiaInSlot; access via cast
-            if (logic instanceof com.cells.integration.thaumicenergistics.EssentiaInterfaceLogic) {
-                return ((com.cells.integration.thaumicenergistics.EssentiaInterfaceLogic) logic).getEssentiaInSlot(slotIndex);
-            }
-
-            return null;
-        }
-
-        @Override
-        public long getEssentiaAmount(int slotIndex) {
-            IInterfaceLogic logic = this.host.getEssentiaLogic();
-            if (logic instanceof IResourceInterfaceLogic) {
-                return ((IResourceInterfaceLogic<?, ?>) logic).getSlotAmount(slotIndex);
-            }
-            return 0;
-        }
-
-        @Override
-        public String getTypeName() {
-            return "essentia";
-        }
-
-        @Override
-        public boolean isExport() {
-            return this.host.isExport();
-        }
-    }
 }

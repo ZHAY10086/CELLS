@@ -2,12 +2,15 @@ package com.cells.integration.thaumicenergistics;
 
 import java.util.List;
 
+import net.minecraft.client.resources.I18n;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.items.IItemHandler;
+import net.minecraft.tileentity.TileEntity;
 
 import appeng.api.AEApi;
+import appeng.api.parts.IPart;
 import appeng.api.storage.ICellInventory;
 import appeng.api.storage.ICellInventoryHandler;
 import appeng.api.storage.ISaveProvider;
@@ -19,8 +22,6 @@ import com.cells.cells.common.INBTSizeProvider;
 import com.cells.cells.configurable.ComponentInfo;
 import com.cells.config.CellsConfig;
 import com.cells.util.NBTSizeHelper;
-
-import net.minecraft.client.resources.I18n;
 
 
 /**
@@ -116,6 +117,20 @@ public final class ThaumicEnergisticsIntegration {
             }
         }
 
+        /**
+         * Check if the given TileEntity is an essentia import or export interface tile.
+         */
+        static boolean isTileEssentiaInterface(TileEntity te) {
+            return te instanceof TileEssentiaImportInterface || te instanceof TileEssentiaExportInterface;
+        }
+
+        /**
+         * Check if the given IPart is an essentia import or export interface part.
+         */
+        static boolean isPartEssentiaInterface(IPart part) {
+            return part instanceof PartEssentiaImportInterface || part instanceof PartEssentiaExportInterface;
+        }
+
         static void addCellInformation(ItemStack cellStack, List<String> tooltip) {
             try {
                 IStorageChannel<thaumicenergistics.api.storage.IAEEssentiaStack> essentiaChannel =
@@ -176,5 +191,33 @@ public final class ThaumicEnergisticsIntegration {
         if (!isModLoaded()) return;
 
         EssentiaIntegrationImpl.addCellInformation(cellStack, tooltip);
+    }
+
+    /**
+     * Check if the given TileEntity is an essentia import or export interface tile.
+     * Safe to call even if Thaumic Energistics is not loaded.
+     */
+    public static boolean isTileEssentiaInterface(TileEntity te) {
+        if (!isModLoaded()) return false;
+
+        try {
+            return EssentiaIntegrationImpl.isTileEssentiaInterface(te);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * Check if the given IPart is an essentia import or export interface part.
+     * Safe to call even if Thaumic Energistics is not loaded.
+     */
+    public static boolean isPartEssentiaInterface(IPart part) {
+        if (!isModLoaded()) return false;
+
+        try {
+            return EssentiaIntegrationImpl.isPartEssentiaInterface(part);
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

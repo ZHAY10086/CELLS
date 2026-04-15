@@ -20,16 +20,18 @@ import appeng.api.parts.IPart;
 import appeng.api.parts.IPartHost;
 import appeng.api.parts.SelectedPart;
 
+import com.cells.blocks.combinedinterface.TileCombinedImportInterface;
+import com.cells.blocks.combinedinterface.TileCombinedExportInterface;
 import com.cells.blocks.exportinterface.TileExportInterface;
 import com.cells.blocks.fluidexportinterface.TileFluidExportInterface;
 import com.cells.blocks.fluidimportinterface.TileFluidImportInterface;
 import com.cells.blocks.importinterface.TileImportInterface;
-import com.cells.integration.mekanismenergistics.PartGasExportInterface;
-import com.cells.integration.mekanismenergistics.PartGasImportInterface;
-import com.cells.integration.mekanismenergistics.TileGasExportInterface;
-import com.cells.integration.mekanismenergistics.TileGasImportInterface;
+import com.cells.integration.mekanismenergistics.MekanismEnergisticsIntegration;
+import com.cells.integration.thaumicenergistics.ThaumicEnergisticsIntegration;
 import com.cells.network.CellsNetworkHandler;
 import com.cells.network.packets.PacketSaveMemoryCardWithFilters;
+import com.cells.parts.PartCombinedImportInterface;
+import com.cells.parts.PartCombinedExportInterface;
 import com.cells.parts.PartExportInterface;
 import com.cells.parts.PartFluidExportInterface;
 import com.cells.parts.PartFluidImportInterface;
@@ -71,10 +73,12 @@ public class MemoryCardInteractionHandler {
         EnumFacing partSide = null;
         boolean isImportExportInterface = false;
 
-        // Check if it's a direct Import/Export Interface tile (Item, Fluid, or Gas)
+        // Check if it's a direct Import/Export Interface tile (Item, Fluid, Gas, or Essentia)
         if (te instanceof TileImportInterface || te instanceof TileFluidImportInterface
             || te instanceof TileExportInterface || te instanceof TileFluidExportInterface
-            || te instanceof TileGasImportInterface || te instanceof TileGasExportInterface) {
+            || te instanceof TileCombinedImportInterface || te instanceof TileCombinedExportInterface
+            || MekanismEnergisticsIntegration.isTileGasInterface(te)
+            || ThaumicEnergisticsIntegration.isTileEssentiaInterface(te)) {
             isImportExportInterface = true;
         }
         // Check if it's a part host containing an Import Interface part
@@ -88,10 +92,12 @@ public class MemoryCardInteractionHandler {
                 SelectedPart selectedPart = host.selectPart(rayTrace.hitVec.subtract(pos.getX(), pos.getY(), pos.getZ()));
                 if (selectedPart.part != null) {
                     IPart part = selectedPart.part;
-                    // Check if the part is an Import/Export Interface (Item, Fluid, or Gas)
+                    // Check if the part is an Import/Export Interface (Item, Fluid, Gas, or Essentia)
                     if (part instanceof PartImportInterface || part instanceof PartFluidImportInterface
                         || part instanceof PartExportInterface || part instanceof PartFluidExportInterface
-                        || part instanceof PartGasImportInterface || part instanceof PartGasExportInterface) {
+                        || part instanceof PartCombinedImportInterface || part instanceof PartCombinedExportInterface
+                        || MekanismEnergisticsIntegration.isPartGasInterface(part)
+                        || ThaumicEnergisticsIntegration.isPartEssentiaInterface(part)) {
                         isImportExportInterface = true;
                         partSide = selectedPart.side.getFacing();
                     }

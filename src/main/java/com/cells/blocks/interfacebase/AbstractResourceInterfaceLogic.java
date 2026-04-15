@@ -1116,12 +1116,14 @@ public abstract class AbstractResourceInterfaceLogic<R, AE extends IAEStack<AE>,
 
     /**
      * Download settings to NBT for memory cards.
+     * Uses type-prefixed keys (e.g., "itemMaxSlotSize", "fluidPollingRate") so that
+     * combined interfaces can merge all logics into one compound without collisions.
      */
     public NBTTagCompound downloadSettings() {
         NBTTagCompound output = new NBTTagCompound();
 
-        this.inventoryManager.writeToNBT(output);
-        this.tickScheduler.writeToNBT(output);
+        this.inventoryManager.writeToNBT(output, getMaxSlotSizeNBTKey());
+        this.tickScheduler.writeToNBT(output, getPollingRateNBTKey());
 
         return output;
     }
@@ -1148,12 +1150,26 @@ public abstract class AbstractResourceInterfaceLogic<R, AE extends IAEStack<AE>,
 
     /**
      * Upload settings from NBT (memory card or dismantle).
+     * Reads type-prefixed keys first (e.g., "itemMaxSlotSize"), falling back to
+     * unprefixed keys ("maxSlotSize") for backward compatibility with old cards.
      */
     public void uploadSettings(NBTTagCompound compound, EntityPlayer player) {
         if (compound == null) return;
 
-        this.inventoryManager.readFromNBT(compound);
-        this.tickScheduler.readFromNBT(compound, player);
+        // Prefer type-prefixed keys; fall back to legacy unprefixed keys
+        String maxSlotSizeKey = getMaxSlotSizeNBTKey();
+        if (compound.hasKey(maxSlotSizeKey)) {
+            this.inventoryManager.readFromNBT(compound, maxSlotSizeKey);
+        } else {
+            this.inventoryManager.readFromNBT(compound);
+        }
+
+        String pollingRateKey = getPollingRateNBTKey();
+        if (compound.hasKey(pollingRateKey)) {
+            this.tickScheduler.readFromNBT(compound, pollingRateKey, player);
+        } else {
+            this.tickScheduler.readFromNBT(compound, player);
+        }
 
         // Merge upgrades FIRST (capacity cards enable extra pages for filters)
         this.upgradeManager.readFromNBT(compound);
