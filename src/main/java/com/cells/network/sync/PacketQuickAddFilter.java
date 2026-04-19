@@ -4,6 +4,7 @@ import io.netty.buffer.ByteBuf;
 
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Container;
+import net.minecraft.util.text.TextComponentTranslation;
 
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
@@ -87,7 +88,7 @@ public class PacketQuickAddFilter implements IMessage {
                 if (quickAddContainer.getQuickAddResourceType() != message.type) {
                     ServerMessageHelper.error(player,
                         "message.cells.not_valid_content",
-                        quickAddContainer.getTypeLocalizationKey()
+                        new TextComponentTranslation(quickAddContainer.getTypeLocalizationKey())
                     );
                     return;
                 }
@@ -96,7 +97,7 @@ public class PacketQuickAddFilter implements IMessage {
                 if (message.resource == null) {
                     ServerMessageHelper.error(player,
                         "message.cells.not_valid_content",
-                        quickAddContainer.getTypeLocalizationKey()
+                        new TextComponentTranslation(quickAddContainer.getTypeLocalizationKey())
                     );
                     return;
                 }

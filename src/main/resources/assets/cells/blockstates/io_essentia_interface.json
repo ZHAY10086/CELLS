@@ -1,0 +1,5 @@
+{
+    "variants": {
+        "normal": { "model": "cells:io_essentia_interface" }
+    }
+}

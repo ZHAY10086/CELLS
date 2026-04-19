@@ -397,6 +397,10 @@ tile.cells.export_interface.gas.name=Gas Export Interface
 tile.cells.export_interface.essentia.name=Essentia Export Interface
 tile.cells.import_interface.combined.name=Universal Import Interface
 tile.cells.export_interface.combined.name=Universal Export Interface
+tile.cells.io_interface.name=I/O Interface
+tile.cells.io_interface.fluid.name=Fluid I/O Interface
+tile.cells.io_interface.gas.name=Gas I/O Interface
+tile.cells.io_interface.essentia.name=Essentia I/O Interface
 
 item.cells.part.import_interface.name=Import Interface
 item.cells.part.import_fluid_interface.name=Fluid Import Interface
@@ -408,6 +412,10 @@ item.cells.part.export_gas_interface.name=Gas Export Interface
 item.cells.part.export_essentia_interface.name=Essentia Export Interface
 item.cells.part.import_combined_interface.name=Universal Import Interface
 item.cells.part.export_combined_interface.name=Universal Export Interface
+item.cells.part.io_item_interface.name=I/O Interface
+item.cells.part.io_fluid_interface.name=Fluid I/O Interface
+item.cells.part.io_gas_interface.name=Gas I/O Interface
+item.cells.part.io_essentia_interface.name=Essentia I/O Interface
 
 # Interface GUI titles (format: cells.{direction}_interface.{type}.title)
 cells.import_interface.item.title=Import Interface
@@ -436,6 +444,14 @@ tooltip.cells.export_interface.essentia.info=Exposes essentia from the ME networ
 tooltip.cells.export_interface.essentia.part.info=Exposes essentia from the ME network through filtered slots.
 tooltip.cells.import_interface.combined.info=Imports items, fluids, gas, and essentia into the ME network through a single block. Use tabs to switch between resource types.
 tooltip.cells.export_interface.combined.info=Exposes items, fluids, gas, and essentia from the ME network through a single block. Use tabs to switch between resource types.
+tooltip.cells.io_interface.info=Imports/Exposes items to/from the ME network through a single block. Does not support crafting. Automatic I/O is done though Push/Pull Cards.
+tooltip.cells.io_interface.fluid.info=Imports/Exposes fluids to/from the ME network through a single block. Automatic I/O is done though Push/Pull Cards.
+tooltip.cells.io_interface.gas.info=Imports/Exposes gas to/from the ME network through a single block. Automatic I/O is done though Push/Pull Cards.
+tooltip.cells.io_interface.essentia.info=Imports/Exposes essentia to/from the ME network through a single block. Automatic I/O is done though Push/Pull Cards.
+
+# IO Interface direction tab labels
+cells.direction.import=Import
+cells.direction.export=Export
 
 # Essentia part warning (parts cannot participate in tube network)
 tooltip.cells.essentia_part.no_tubes=§eThis part can only be used with Push/Pull card. Use the full block for more interactions.
@@ -568,3 +584,21 @@ commands.cells.inspect_slots.unknown_item=§cUnknown item: %s
 commands.cells.inspect_slots.unknown_fluid=§cUnknown fluid: %s
 commands.cells.inspect_slots.unknown_gas=§cUnknown gas: %s
 commands.cells.inspect_slots.unknown_aspect=§cUnknown aspect: %s
+
+# Subnet Proxy
+item.cells.part.subnet_proxy_back.name=ME Subnet Proxy (Back)
+item.cells.part.subnet_proxy_front.name=ME Subnet Proxy (Front)
+item.cells.part.subnet_proxy_back.tooltip=Place the front part on the back part to create a Subnet, which allows connecting multiple ME networks together.
+item.cells.part.subnet_proxy_front.tooltip=Place the back part on the front part to create a Subnet, which allows connecting multiple ME networks together.
+item.cells.part.subnet_proxy_direction.tooltip=Content flows from the back part to the front part. Make sure to place them in the correct orientation.
+gui.cells.subnet_proxy.title=Subnet Proxy
+gui.cells.subnet_proxy.filter_mode=Filter Mode: %s
+gui.cells.subnet_proxy.filter_mode.description=When adding a filter, it will be converted to this type.
+chat.cells.subnet_proxy.need_front=The back part needs to be placed on a front part.
+chat.cells.subnet_proxy.need_back=The front part needs to be placed on a back part.
+cells.config.subnetProxyUpgradeSlots=Subnet Proxy Upgrade Slots
+cells.config.subnetProxyUpgradeSlots.tooltip=Number of upgrade slots for the Subnet Proxy (1-24)
+cells.config.subnetProxyMinTickRate=Subnet Proxy Min Tick Rate
+cells.config.subnetProxyMinTickRate.tooltip=Minimum tick rate for the Subnet Proxy (lower = more responsive, 1-200)
+cells.config.subnetProxyMaxTickRate=Subnet Proxy Max Tick Rate
+cells.config.subnetProxyMaxTickRate.tooltip=Maximum tick rate for the Subnet Proxy when idle (1-1200)

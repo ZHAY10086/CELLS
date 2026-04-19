@@ -32,6 +32,10 @@ import com.cells.blocks.combinedinterface.BlockCombinedImportInterface;
 import com.cells.blocks.combinedinterface.BlockCombinedExportInterface;
 import com.cells.blocks.combinedinterface.TileCombinedImportInterface;
 import com.cells.blocks.combinedinterface.TileCombinedExportInterface;
+import com.cells.blocks.iointerface.BlockItemIOInterface;
+import com.cells.blocks.iointerface.BlockFluidIOInterface;
+import com.cells.blocks.iointerface.TileItemIOInterface;
+import com.cells.blocks.iointerface.TileFluidIOInterface;
 import com.cells.config.CellsConfig;
 import com.cells.integration.mekanismenergistics.GasBlockRegistry;
 import com.cells.integration.mekanismenergistics.MekanismEnergisticsIntegration;
@@ -47,6 +51,8 @@ public class BlockRegistry {
     public static BlockFluidExportInterface FLUID_EXPORT_INTERFACE;
     public static BlockCombinedImportInterface COMBINED_IMPORT_INTERFACE;
     public static BlockCombinedExportInterface COMBINED_EXPORT_INTERFACE;
+    public static BlockItemIOInterface ITEM_IO_INTERFACE;
+    public static BlockFluidIOInterface FLUID_IO_INTERFACE;
 
     public static void init() {
         // Block construction is deferred to registry events
@@ -63,6 +69,8 @@ public class BlockRegistry {
         FLUID_EXPORT_INTERFACE = new BlockFluidExportInterface();
         COMBINED_IMPORT_INTERFACE = new BlockCombinedImportInterface();
         COMBINED_EXPORT_INTERFACE = new BlockCombinedExportInterface();
+        ITEM_IO_INTERFACE = new BlockItemIOInterface();
+        FLUID_IO_INTERFACE = new BlockFluidIOInterface();
 
         event.getRegistry().register(IMPORT_INTERFACE);
         event.getRegistry().register(FLUID_IMPORT_INTERFACE);
@@ -70,6 +78,8 @@ public class BlockRegistry {
         event.getRegistry().register(FLUID_EXPORT_INTERFACE);
         event.getRegistry().register(COMBINED_IMPORT_INTERFACE);
         event.getRegistry().register(COMBINED_EXPORT_INTERFACE);
+        event.getRegistry().register(ITEM_IO_INTERFACE);
+        event.getRegistry().register(FLUID_IO_INTERFACE);
 
         // Register tile entities
         GameRegistry.registerTileEntity(TileImportInterface.class,
@@ -84,6 +94,10 @@ public class BlockRegistry {
             new ResourceLocation(Tags.MODID, "import_combined_interface"));
         GameRegistry.registerTileEntity(TileCombinedExportInterface.class,
             new ResourceLocation(Tags.MODID, "export_combined_interface"));
+        GameRegistry.registerTileEntity(TileItemIOInterface.class,
+            new ResourceLocation(Tags.MODID, "io_item_interface"));
+        GameRegistry.registerTileEntity(TileFluidIOInterface.class,
+            new ResourceLocation(Tags.MODID, "io_fluid_interface"));
 
         // Register tile-to-item mappings for Network Tool display
         // Without this, tiles won't show up in the Network Tool GUI
@@ -99,6 +113,10 @@ public class BlockRegistry {
             new BlockStackSrc(COMBINED_IMPORT_INTERFACE, 0, ActivityState.Enabled));
         AEBaseTile.registerTileItem(TileCombinedExportInterface.class,
             new BlockStackSrc(COMBINED_EXPORT_INTERFACE, 0, ActivityState.Enabled));
+        AEBaseTile.registerTileItem(TileItemIOInterface.class,
+            new BlockStackSrc(ITEM_IO_INTERFACE, 0, ActivityState.Enabled));
+        AEBaseTile.registerTileItem(TileFluidIOInterface.class,
+            new BlockStackSrc(FLUID_IO_INTERFACE, 0, ActivityState.Enabled));
 
         // Register gas interface blocks if MekanismEnergistics is loaded
         if (MekanismEnergisticsIntegration.isModLoaded()) {
@@ -119,6 +137,8 @@ public class BlockRegistry {
         event.getRegistry().register(createItemBlock(FLUID_EXPORT_INTERFACE));
         event.getRegistry().register(createItemBlock(COMBINED_IMPORT_INTERFACE));
         event.getRegistry().register(createItemBlock(COMBINED_EXPORT_INTERFACE));
+        event.getRegistry().register(createItemBlock(ITEM_IO_INTERFACE));
+        event.getRegistry().register(createItemBlock(FLUID_IO_INTERFACE));
 
         // Register gas interface items if MekanismEnergistics is loaded
         if (MekanismEnergisticsIntegration.isModLoaded()) {
@@ -147,6 +167,8 @@ public class BlockRegistry {
         registerBlockModel(FLUID_EXPORT_INTERFACE);
         registerBlockModel(COMBINED_IMPORT_INTERFACE);
         registerBlockModel(COMBINED_EXPORT_INTERFACE);
+        registerBlockModel(ITEM_IO_INTERFACE);
+        registerBlockModel(FLUID_IO_INTERFACE);
 
         // Register gas interface models if MekanismEnergistics is loaded
         if (MekanismEnergisticsIntegration.isModLoaded()) {

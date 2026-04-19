@@ -1,6 +1,8 @@
 package com.cells.network.sync;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.annotation.Nullable;
 
@@ -256,5 +258,27 @@ public enum ResourceType {
             default:
                 return false;
         }
+    }
+
+    /**
+     * Get a ResourceType from its ordinal value.
+     * Returns ITEM if the ordinal is out of range.
+     */
+    public static ResourceType fromOrdinal(int ordinal) {
+        ResourceType[] values = values();
+        if (ordinal >= 0 && ordinal < values.length) return values[ordinal];
+        return ITEM;
+    }
+
+    /**
+     * Get all ResourceTypes whose backing mod is currently loaded.
+     * Always includes ITEM and FLUID; GAS and ESSENTIA depend on mod presence.
+     */
+    public static ResourceType[] getAvailableTypes() {
+        List<ResourceType> list = new ArrayList<>();
+        for (ResourceType type : values()) {
+            if (type.isAvailable()) list.add(type);
+        }
+        return list.toArray(new ResourceType[0]);
     }
 }

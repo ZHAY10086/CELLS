@@ -14,6 +14,7 @@ import mezz.jei.api.JEIPlugin;
 import mezz.jei.api.IIngredientListOverlay;
 import mezz.jei.api.IBookmarkOverlay;
 import mezz.jei.api.recipe.IRecipeCategoryRegistration;
+import mezz.jei.config.Constants;
 
 import com.cells.ItemRegistry;
 import com.cells.config.CellsConfig;
@@ -55,6 +56,11 @@ public class CellsJEIPlugin implements IModPlugin {
 
         // Register cell view feature
         if (enableCellView) registry.addRecipeRegistryPlugin(new CellViewRegistryPlugin());
+
+        // Register Subnet Proxy recipe transfer handler (universal: works with any recipe category)
+        SubnetProxyRecipeTransferHandler transferHandler = new SubnetProxyRecipeTransferHandler();
+        registry.getRecipeTransferRegistry().addRecipeTransferHandler(
+            transferHandler, Constants.UNIVERSAL_RECIPE_TRANSFER_UID);
     }
 
     @Override

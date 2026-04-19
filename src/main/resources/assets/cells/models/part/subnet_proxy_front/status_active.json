@@ -1,0 +1,21 @@
+{
+    "ae2_uvl_marker": true,
+    "textures": {
+        "cable": "cells:parts/subnet_proxy/proxy_side_cable_active",
+        "side": "cells:parts/subnet_proxy/proxy_front_side_active",
+        "top": "cells:parts/subnet_proxy/proxy_front_top_active"
+    },
+    "elements": [
+        {
+            "from": [0, 0, 0],
+            "to": [16, 16, 5],
+            "faces": {
+                "south": { "texture": "#cable" },
+                "up":    { "texture": "#top" },
+                "down":  { "texture": "#side", "uv": [0, 0, 5, 16], "rotation": 270 },
+                "east":  { "texture": "#side", "uv": [0, 0, 5, 16], "rotation": 180 },
+                "west":  { "texture": "#side" }
+            }
+        }
+    ]
+}

@@ -21,6 +21,8 @@ import com.cells.network.packets.PacketsetMaxSlotSizeOverride;
 import com.cells.network.packets.PacketOpenSlotOverrideGui;
 import com.cells.network.packets.PacketSwitchTab;
 import com.cells.network.packets.PacketSyncSlotSizeOverride;
+import com.cells.network.packets.PacketChangeFilterMode;
+import com.cells.network.packets.PacketJEISubnetProxyFilter;
 import com.cells.network.sync.PacketQuickAddFilter;
 import com.cells.network.sync.PacketResourceSlot;
 import com.cells.network.sync.PacketStorageSync;
@@ -73,5 +75,11 @@ public class CellsNetworkHandler {
 
         // Open per-slot size override GUI (stores slot index + opens MaxSlotSize GUI)
         INSTANCE.registerMessage(PacketOpenSlotOverrideGui.Handler.class, PacketOpenSlotOverrideGui.class, packetId++, Side.SERVER);
+
+        // Subnet Proxy: filter mode cycling
+        INSTANCE.registerMessage(PacketChangeFilterMode.Handler.class, PacketChangeFilterMode.class, packetId++, Side.SERVER);
+
+        // Subnet Proxy: JEI recipe transfer batch filter add
+        INSTANCE.registerMessage(PacketJEISubnetProxyFilter.Handler.class, PacketJEISubnetProxyFilter.class, packetId++, Side.SERVER);
     }
 }

@@ -4,12 +4,17 @@ import io.netty.buffer.ByteBuf;
 
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Container;
+import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
+import appeng.tile.inventory.AppEngInternalInventory;
+
 import com.cells.blocks.interfacebase.item.ContainerItemInterface;
 import com.cells.blocks.interfacebase.fluid.ContainerFluidInterface;
+import com.cells.gui.subnetproxy.ContainerSubnetProxy;
+import com.cells.parts.subnetproxy.PartSubnetProxyFront;
 
 
 /**
@@ -45,6 +50,13 @@ public class PacketClearFilters implements IMessage {
                     ((ContainerItemInterface) container).clearFilters();
                 } else if (container instanceof ContainerFluidInterface) {
                     ((ContainerFluidInterface) container).clearFilters();
+                } else if (container instanceof ContainerSubnetProxy) {
+                    // Clear all filter slots in the Subnet Proxy config inventory
+                    PartSubnetProxyFront part = ((ContainerSubnetProxy) container).getPart();
+                    AppEngInternalInventory config = part.getConfigInventory();
+                    for (int i = 0; i < config.getSlots(); i++) {
+                        config.setStackInSlot(i, ItemStack.EMPTY);
+                    }
                 }
             });
 

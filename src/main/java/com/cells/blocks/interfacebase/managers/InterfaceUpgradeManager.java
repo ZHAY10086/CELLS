@@ -293,10 +293,36 @@ public class InterfaceUpgradeManager {
     // ============================== Serialization helpers ==============================
 
     /**
-     * Read upgrade inventory from NBT.
+     * Merge upgrades from a memory card's NBT into the current upgrade inventory.
+     * <p>
+     * Unlike a raw {@code readFromNBT} which replaces the entire inventory,
+     * this merges: for each upgrade in the source NBT, it is only added if
+     * the destination doesn't already contain one of that type (for unique
+     * upgrades like overflow, auto-pull/push, trash) and there is an empty slot.
      */
     public void readFromNBT(NBTTagCompound data) {
-        this.upgradeInventory.readFromNBT(data, "upgrades");
+        if (!data.hasKey("upgrades")) return;
+
+        // Read source upgrades from NBT into a temporary inventory
+        AppEngInternalInventory temp = new AppEngInternalInventory(null, UPGRADE_SLOTS, 1);
+        temp.readFromNBT(data, "upgrades");
+
+        for (int i = 0; i < temp.getSlots(); i++) {
+            ItemStack sourceStack = temp.getStackInSlot(i);
+            if (sourceStack.isEmpty()) continue;
+
+            // Only add if this upgrade is valid for the current state
+            // (isValidUpgrade already checks for duplicates of unique cards)
+            if (!this.isValidUpgrade(sourceStack)) continue;
+
+            // Find the first empty slot in the destination
+            for (int j = 0; j < this.upgradeInventory.getSlots(); j++) {
+                if (this.upgradeInventory.getStackInSlot(j).isEmpty()) {
+                    this.upgradeInventory.setStackInSlot(j, sourceStack.copy());
+                    break;
+                }
+            }
+        }
     }
 
     /**

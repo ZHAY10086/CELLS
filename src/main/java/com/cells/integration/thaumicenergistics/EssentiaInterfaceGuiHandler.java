@@ -13,6 +13,9 @@ import com.cells.blocks.interfacebase.ContainerPollingRate;
 import com.cells.blocks.interfacebase.GuiMaxSlotSize;
 import com.cells.blocks.interfacebase.GuiPollingRate;
 import com.cells.blocks.interfacebase.IInterfaceHost;
+import com.cells.blocks.iointerface.ContainerIOInterface;
+import com.cells.blocks.iointerface.GuiIOInterface;
+import com.cells.blocks.iointerface.IIOInterfaceHost;
 import com.cells.gui.GuiIdUtils;
 
 
@@ -30,12 +33,14 @@ public class EssentiaInterfaceGuiHandler implements IGuiHandler {
     public static final int GUI_ESSENTIA_EXPORT_INTERFACE = 401;
     public static final int GUI_ESSENTIA_MAX_SLOT_SIZE = 402;
     public static final int GUI_ESSENTIA_POLLING_RATE = 403;
+    public static final int GUI_ESSENTIA_IO_INTERFACE = 404;
 
     // Part-based GUI IDs (require side encoding)
     public static final int GUI_PART_ESSENTIA_IMPORT_INTERFACE = 500;
     public static final int GUI_PART_ESSENTIA_EXPORT_INTERFACE = 501;
     public static final int GUI_PART_ESSENTIA_MAX_SLOT_SIZE = 502;
     public static final int GUI_PART_ESSENTIA_POLLING_RATE = 503;
+    public static final int GUI_PART_ESSENTIA_IO_INTERFACE = 504;
 
     /**
      * Check if a GUI ID is for an essentia part (encoded with side, base >= 500).
@@ -49,12 +54,12 @@ public class EssentiaInterfaceGuiHandler implements IGuiHandler {
      * Check if a GUI ID belongs to this handler.
      */
     public static boolean isEssentiaInterfaceGuiId(int id) {
-        // Block GUIs: 400-403
-        if (id >= 400 && id <= 403) return true;
+        // Block GUIs: 400-404
+        if (id >= 400 && id <= 404) return true;
 
-        // Part GUIs: encoded with base 500-503
+        // Part GUIs: encoded with base 500-504
         int baseId = GuiIdUtils.getBaseGuiId(id);
-        return baseId >= 500 && baseId <= 503;
+        return baseId >= 500 && baseId <= 504;
     }
 
     @Override
@@ -91,6 +96,12 @@ public class EssentiaInterfaceGuiHandler implements IGuiHandler {
                         return new ContainerPollingRate(player.inventory, (IInterfaceHost) part);
                     }
                     break;
+
+                case GUI_PART_ESSENTIA_IO_INTERFACE:
+                    if (part instanceof IIOInterfaceHost) {
+                        return new ContainerIOInterface(player.inventory, part);
+                    }
+                    break;
             }
 
             return null;
@@ -119,6 +130,12 @@ public class EssentiaInterfaceGuiHandler implements IGuiHandler {
             case GUI_ESSENTIA_POLLING_RATE:
                 if (tile instanceof IInterfaceHost) {
                     return new ContainerPollingRate(player.inventory, (IInterfaceHost) tile);
+                }
+                break;
+
+            case GUI_ESSENTIA_IO_INTERFACE:
+                if (tile instanceof IIOInterfaceHost) {
+                    return new ContainerIOInterface(player.inventory, tile);
                 }
                 break;
         }
@@ -160,6 +177,12 @@ public class EssentiaInterfaceGuiHandler implements IGuiHandler {
                         return new GuiPollingRate(player.inventory, (IInterfaceHost) part);
                     }
                     break;
+
+                case GUI_PART_ESSENTIA_IO_INTERFACE:
+                    if (part instanceof IIOInterfaceHost) {
+                        return new GuiIOInterface(player.inventory, part);
+                    }
+                    break;
             }
 
             return null;
@@ -188,6 +211,12 @@ public class EssentiaInterfaceGuiHandler implements IGuiHandler {
             case GUI_ESSENTIA_POLLING_RATE:
                 if (tile instanceof IInterfaceHost) {
                     return new GuiPollingRate(player.inventory, (IInterfaceHost) tile);
+                }
+                break;
+
+            case GUI_ESSENTIA_IO_INTERFACE:
+                if (tile instanceof IIOInterfaceHost) {
+                    return new GuiIOInterface(player.inventory, tile);
                 }
                 break;
         }

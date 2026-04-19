@@ -8,6 +8,8 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 
+import appeng.api.storage.data.IAEItemStack;
+
 
 /**
  * Lightweight, immutable key wrapper for hashing/comparing ItemStacks by
@@ -24,10 +26,10 @@ public final class ItemStackKey {
     // Cached hash code for performance (ItemStackKey is immutable)
     private Integer cachedHashCode = null;
 
-    private ItemStackKey(final Item item, final int meta, @Nullable final NBTTagCompound nbt) {
+    private ItemStackKey(final Item item, final int meta, @Nullable final NBTTagCompound nbt, final boolean copyNbt) {
         this.item = Objects.requireNonNull(item, "item");
         this.meta = meta;
-        this.nbt = (nbt == null) ? null : nbt.copy();
+        this.nbt = (nbt == null) ? null : (copyNbt ? nbt.copy() : nbt);
     }
 
     /**
@@ -41,7 +43,24 @@ public final class ItemStackKey {
         final int m = stack.getItemDamage();
         final NBTTagCompound tag = (stack.hasTagCompound()) ? stack.getTagCompound() : null;
 
-        return new ItemStackKey(it, m, tag);
+        return new ItemStackKey(it, m, tag, true);
+    }
+
+    /**
+     * Create a transient lookup key from an IAEItemStack <b>without copying NBT</b>.
+     * <p>
+     * The returned key borrows a reference to the definition stack's NBT tag.
+     * It is intended for short-lived {@code Set.contains()} lookups only,
+     * do NOT store it longer than the calling scope.
+     */
+    @Nullable
+    public static ItemStackKey ofLookup(@Nullable final IAEItemStack aeStack) {
+        if (aeStack == null) return null;
+
+        // getDefinition() returns a shared, unmodifiable stack: its NBT is safe
+        // to reference for the duration of a single contains() call.
+        final ItemStack def = aeStack.getDefinition();
+        return new ItemStackKey(def.getItem(), def.getItemDamage(), def.getTagCompound(), false);
     }
 
     /**

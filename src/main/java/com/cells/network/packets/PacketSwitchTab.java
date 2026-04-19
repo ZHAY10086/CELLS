@@ -9,12 +9,15 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 import com.cells.blocks.combinedinterface.ContainerCombinedInterface;
+import com.cells.blocks.iointerface.ContainerIOInterface;
 import com.cells.network.sync.ResourceType;
 
 
 /**
- * Packet to switch the active tab in a Combined Interface GUI.
- * The tab ordinal corresponds to a {@link ResourceType} enum value.
+ * Packet to switch the active tab in a Combined Interface or IO Interface GUI.
+ * <p>
+ * For combined interfaces, the ordinal maps to a {@link ResourceType} enum value.
+ * For IO interfaces, the ordinal maps to a direction tab index (0=import, 1=export).
  */
 public class PacketSwitchTab implements IMessage {
 
@@ -23,8 +26,14 @@ public class PacketSwitchTab implements IMessage {
     public PacketSwitchTab() {
     }
 
+    /** Construct from a ResourceType (for combined interface). */
     public PacketSwitchTab(ResourceType tab) {
         this.tabOrdinal = tab.ordinal();
+    }
+
+    /** Construct from a raw tab index (for IO interface direction tabs). */
+    public PacketSwitchTab(int tabOrdinal) {
+        this.tabOrdinal = tabOrdinal;
     }
 
     @Override
@@ -51,6 +60,8 @@ public class PacketSwitchTab implements IMessage {
                     if (message.tabOrdinal >= 0 && message.tabOrdinal < types.length) {
                         ((ContainerCombinedInterface) container).switchTab(types[message.tabOrdinal]);
                     }
+                } else if (container instanceof ContainerIOInterface) {
+                    ((ContainerIOInterface) container).switchTab(message.tabOrdinal);
                 }
             });
 

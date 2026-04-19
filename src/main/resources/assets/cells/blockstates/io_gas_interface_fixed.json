@@ -1,0 +1,5 @@
+{
+    "variants": {
+        "normal": { "model": "cells:io_gas_interface_fixed" }
+    }
+}

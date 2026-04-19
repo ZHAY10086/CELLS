@@ -28,7 +28,8 @@ import com.cells.parts.PartModelsHelper;
  */
 public enum CellsGasPartType {
     GAS_IMPORT_INTERFACE("import_gas_interface", PartGasImportInterface.class),
-    GAS_EXPORT_INTERFACE("export_gas_interface", PartGasExportInterface.class);
+    GAS_EXPORT_INTERFACE("export_gas_interface", PartGasExportInterface.class),
+    GAS_IO_INTERFACE("io_gas_interface", PartGasIOInterface.class);
 
     private final String id;
     private final Class<? extends IPart> partClass;

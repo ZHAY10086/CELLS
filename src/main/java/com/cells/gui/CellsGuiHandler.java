@@ -25,6 +25,9 @@ import com.cells.blocks.interfacebase.item.IItemInterfaceHost;
 import com.cells.blocks.combinedinterface.ICombinedInterfaceHost;
 import com.cells.blocks.combinedinterface.ContainerCombinedInterface;
 import com.cells.blocks.combinedinterface.GuiCombinedInterface;
+import com.cells.blocks.iointerface.IIOInterfaceHost;
+import com.cells.blocks.iointerface.ContainerIOInterface;
+import com.cells.blocks.iointerface.GuiIOInterface;
 import com.cells.blocks.interfacebase.ContainerMaxSlotSize;
 import com.cells.blocks.interfacebase.ContainerPollingRate;
 import com.cells.blocks.interfacebase.GuiMaxSlotSize;
@@ -35,6 +38,7 @@ import com.cells.cells.creative.item.ContainerCreativeCell;
 import com.cells.cells.creative.item.GuiCreativeCell;
 import com.cells.cells.creative.fluid.ContainerCreativeFluidCell;
 import com.cells.cells.creative.fluid.GuiCreativeFluidCell;
+import com.cells.gui.subnetproxy.ContainerSubnetProxy;
 import com.cells.integration.mekanismenergistics.CreativeGasCellGuiHandler;
 import com.cells.integration.mekanismenergistics.GasInterfaceGuiHandler;
 import com.cells.integration.mekanismenergistics.MekanismEnergisticsIntegration;
@@ -43,6 +47,7 @@ import com.cells.integration.thaumicenergistics.EssentiaInterfaceGuiHandler;
 import com.cells.integration.thaumicenergistics.ThaumicEnergisticsIntegration;
 import com.cells.items.pullpush.ContainerPullPushCard;
 import com.cells.items.pullpush.GuiPullPushCard;
+import com.cells.parts.subnetproxy.PartSubnetProxyFront;
 
 
 /**
@@ -68,6 +73,8 @@ public class CellsGuiHandler implements IGuiHandler {
     public static final int GUI_PULL_PUSH_CARD_INTERFACE = 12;
     public static final int GUI_COMBINED_IMPORT_INTERFACE = 13;
     public static final int GUI_COMBINED_EXPORT_INTERFACE = 14;
+    public static final int GUI_ITEM_IO_INTERFACE = 15;
+    public static final int GUI_FLUID_IO_INTERFACE = 16;
 
     // Part-based GUI IDs (require side encoding)
     public static final int GUI_PART_IMPORT_INTERFACE = 100;
@@ -79,6 +86,9 @@ public class CellsGuiHandler implements IGuiHandler {
     public static final int GUI_PART_PULL_PUSH_CARD_INTERFACE = 106;
     public static final int GUI_PART_COMBINED_IMPORT_INTERFACE = 107;
     public static final int GUI_PART_COMBINED_EXPORT_INTERFACE = 108;
+    public static final int GUI_PART_ITEM_IO_INTERFACE = 109;
+    public static final int GUI_PART_FLUID_IO_INTERFACE = 110;
+    public static final int GUI_PART_SUBNET_PROXY = 111;
 
     // ================================= Per-slot override pending slot map =================================
 
@@ -281,6 +291,19 @@ public class CellsGuiHandler implements IGuiHandler {
                         return new ContainerCombinedInterface(player.inventory, part);
                     }
                     break;
+
+                case GUI_PART_ITEM_IO_INTERFACE:
+                case GUI_PART_FLUID_IO_INTERFACE:
+                    if (part instanceof IIOInterfaceHost) {
+                        return new ContainerIOInterface(player.inventory, part);
+                    }
+                    break;
+
+                case GUI_PART_SUBNET_PROXY:
+                    if (part instanceof PartSubnetProxyFront) {
+                        return new ContainerSubnetProxy(player.inventory, (PartSubnetProxyFront) part);
+                    }
+                    break;
             }
 
             return null;
@@ -358,6 +381,13 @@ public class CellsGuiHandler implements IGuiHandler {
             case GUI_COMBINED_EXPORT_INTERFACE:
                 if (tile instanceof ICombinedInterfaceHost) {
                     return new ContainerCombinedInterface(player.inventory, tile);
+                }
+                break;
+
+            case GUI_ITEM_IO_INTERFACE:
+            case GUI_FLUID_IO_INTERFACE:
+                if (tile instanceof IIOInterfaceHost) {
+                    return new ContainerIOInterface(player.inventory, tile);
                 }
                 break;
         }
@@ -458,6 +488,20 @@ public class CellsGuiHandler implements IGuiHandler {
                         return new GuiCombinedInterface(player.inventory, part);
                     }
                     break;
+
+                case GUI_PART_ITEM_IO_INTERFACE:
+                case GUI_PART_FLUID_IO_INTERFACE:
+                    if (part instanceof IIOInterfaceHost) {
+                        return new GuiIOInterface(player.inventory, part);
+                    }
+                    break;
+
+                case GUI_PART_SUBNET_PROXY:
+                    if (part instanceof com.cells.parts.subnetproxy.PartSubnetProxyFront) {
+                        return new com.cells.gui.subnetproxy.GuiSubnetProxy(
+                            player.inventory, (com.cells.parts.subnetproxy.PartSubnetProxyFront) part);
+                    }
+                    break;
             }
 
             return null;
@@ -535,6 +579,13 @@ public class CellsGuiHandler implements IGuiHandler {
             case GUI_COMBINED_EXPORT_INTERFACE:
                 if (tile instanceof ICombinedInterfaceHost) {
                     return new GuiCombinedInterface(player.inventory, tile);
+                }
+                break;
+
+            case GUI_ITEM_IO_INTERFACE:
+            case GUI_FLUID_IO_INTERFACE:
+                if (tile instanceof IIOInterfaceHost) {
+                    return new GuiIOInterface(player.inventory, tile);
                 }
                 break;
         }

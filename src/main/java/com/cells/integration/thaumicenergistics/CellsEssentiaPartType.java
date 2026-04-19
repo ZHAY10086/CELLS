@@ -28,7 +28,8 @@ import com.cells.parts.PartModelsHelper;
  */
 public enum CellsEssentiaPartType {
     ESSENTIA_IMPORT_INTERFACE("import_essentia_interface", PartEssentiaImportInterface.class, "tooltip.cells.import_interface.essentia.info"),
-    ESSENTIA_EXPORT_INTERFACE("export_essentia_interface", PartEssentiaExportInterface.class, "tooltip.cells.export_interface.essentia.part.info");
+    ESSENTIA_EXPORT_INTERFACE("export_essentia_interface", PartEssentiaExportInterface.class, "tooltip.cells.export_interface.essentia.part.info"),
+    ESSENTIA_IO_INTERFACE("io_essentia_interface", PartEssentiaIOInterface.class, null);
 
     private final String id;
     private final Class<? extends IPart> partClass;

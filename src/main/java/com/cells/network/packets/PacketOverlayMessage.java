@@ -86,8 +86,18 @@ public class PacketOverlayMessage implements IMessage {
         @Override
         public IMessage onMessage(PacketOverlayMessage message, MessageContext ctx) {
             Minecraft.getMinecraft().addScheduledTask(() -> {
-                // Resolve on client side so it uses the client's locale
-                String text = I18n.format(message.translationKey, (Object[]) message.args);
+                // Resolve args that are themselves translation keys (passed as raw keys
+                // by ServerMessageHelper for TextComponentTranslation arguments).
+                Object[] translatedArgs = new Object[message.args.length];
+                for (int i = 0; i < message.args.length; i++) {
+                    String arg = message.args[i];
+                    String translated = I18n.format(arg);
+                    // If I18n resolved to something different, use the translation;
+                    // otherwise keep the original (it was already a plain string)
+                    translatedArgs[i] = translated.equals(arg) ? arg : translated;
+                }
+
+                String text = I18n.format(message.translationKey, translatedArgs);
                 OverlayMessageRenderer.setMessage(text, message.type);
             });
 

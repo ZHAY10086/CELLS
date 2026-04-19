@@ -10,6 +10,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 import com.cells.blocks.interfacebase.AbstractContainerInterface;
 import com.cells.blocks.combinedinterface.ContainerCombinedInterface;
+import com.cells.gui.subnetproxy.ContainerSubnetProxy;
 
 
 /**
@@ -53,6 +54,8 @@ public class PacketChangePage implements IMessage {
                     ((AbstractContainerInterface<?, ?, ?>) container).setCurrentPage(message.page);
                 } else if (container instanceof ContainerCombinedInterface) {
                     ((ContainerCombinedInterface) container).setCurrentPage(message.page);
+                } else if (container instanceof ContainerSubnetProxy) {
+                    ((ContainerSubnetProxy) container).setCurrentPage(message.page);
                 }
             });
 

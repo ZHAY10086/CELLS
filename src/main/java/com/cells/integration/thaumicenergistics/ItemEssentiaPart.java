@@ -105,7 +105,7 @@ public class ItemEssentiaPart extends Item implements IPartItem<IPart> {
 
         // Add the block-style info tooltip for this part type
         CellsEssentiaPartType type = CellsEssentiaPartType.getById(stack.getItemDamage());
-        if (type != null) tooltip.add("§7" + I18n.format(type.getTooltipKey()));
+        if (type != null && type.getTooltipKey() != null) tooltip.add("§7" + I18n.format(type.getTooltipKey()));
 
         // Add warning about tube incompatibility (parts cannot interact with Thaumcraft tubes)
         tooltip.add(I18n.format("tooltip.cells.essentia_part.no_tubes"));

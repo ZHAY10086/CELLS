@@ -1,0 +1,14 @@
+{
+    "type": "forge:ore_shapeless",
+    "ingredients": [
+        {
+            "item": "cells:import_fluid_interface"
+        },
+        {
+            "item": "cells:export_fluid_interface"
+        }
+    ],
+    "result": {
+        "item": "cells:io_fluid_interface"
+    }
+}

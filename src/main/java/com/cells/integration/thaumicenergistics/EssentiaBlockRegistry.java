@@ -33,6 +33,7 @@ public final class EssentiaBlockRegistry {
 
     public static BlockEssentiaImportInterface ESSENTIA_IMPORT_INTERFACE;
     public static BlockEssentiaExportInterface ESSENTIA_EXPORT_INTERFACE;
+    public static BlockEssentiaIOInterface ESSENTIA_IO_INTERFACE;
     public static ItemEssentiaPart ESSENTIA_PART;
 
     private EssentiaBlockRegistry() {}
@@ -44,21 +45,27 @@ public final class EssentiaBlockRegistry {
     public static void registerBlocks(IForgeRegistry<Block> registry) {
         ESSENTIA_IMPORT_INTERFACE = new BlockEssentiaImportInterface();
         ESSENTIA_EXPORT_INTERFACE = new BlockEssentiaExportInterface();
+        ESSENTIA_IO_INTERFACE = new BlockEssentiaIOInterface();
 
         registry.register(ESSENTIA_IMPORT_INTERFACE);
         registry.register(ESSENTIA_EXPORT_INTERFACE);
+        registry.register(ESSENTIA_IO_INTERFACE);
 
         // Register tile entities
         GameRegistry.registerTileEntity(TileEssentiaImportInterface.class,
             new ResourceLocation(Tags.MODID, "import_essentia_interface"));
         GameRegistry.registerTileEntity(TileEssentiaExportInterface.class,
             new ResourceLocation(Tags.MODID, "export_essentia_interface"));
+        GameRegistry.registerTileEntity(TileEssentiaIOInterface.class,
+            new ResourceLocation(Tags.MODID, "io_essentia_interface"));
 
         // Register tile-to-item mappings for Network Tool display
         AEBaseTile.registerTileItem(TileEssentiaImportInterface.class,
             new BlockStackSrc(ESSENTIA_IMPORT_INTERFACE, 0, ActivityState.Enabled));
         AEBaseTile.registerTileItem(TileEssentiaExportInterface.class,
             new BlockStackSrc(ESSENTIA_EXPORT_INTERFACE, 0, ActivityState.Enabled));
+        AEBaseTile.registerTileItem(TileEssentiaIOInterface.class,
+            new BlockStackSrc(ESSENTIA_IO_INTERFACE, 0, ActivityState.Enabled));
     }
 
     /**
@@ -69,6 +76,7 @@ public final class EssentiaBlockRegistry {
         // Register block items
         registry.register(createItemBlock(ESSENTIA_IMPORT_INTERFACE));
         registry.register(createItemBlock(ESSENTIA_EXPORT_INTERFACE));
+        registry.register(createItemBlock(ESSENTIA_IO_INTERFACE));
 
         // Register essentia part item
         ESSENTIA_PART = new ItemEssentiaPart();
@@ -101,6 +109,7 @@ public final class EssentiaBlockRegistry {
     public static void registerModels() {
         registerBlockModel(ESSENTIA_IMPORT_INTERFACE);
         registerBlockModel(ESSENTIA_EXPORT_INTERFACE);
+        registerBlockModel(ESSENTIA_IO_INTERFACE);
 
         if (ESSENTIA_PART != null) ESSENTIA_PART.registerModels();
     }

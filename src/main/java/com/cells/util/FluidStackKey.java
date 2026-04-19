@@ -8,6 +8,8 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 
+import appeng.api.storage.data.IAEFluidStack;
+
 
 /**
  * Lightweight, immutable key wrapper for hashing/comparing FluidStacks by
@@ -23,9 +25,9 @@ public final class FluidStackKey {
     // Cached hash code for performance (FluidStackKey is immutable)
     private Integer cachedHashCode = null;
 
-    private FluidStackKey(final Fluid fluid, @Nullable final NBTTagCompound nbt) {
+    private FluidStackKey(final Fluid fluid, @Nullable final NBTTagCompound nbt, final boolean copyNbt) {
         this.fluid = Objects.requireNonNull(fluid, "fluid");
-        this.nbt = (nbt == null) ? null : nbt.copy();
+        this.nbt = (nbt == null) ? null : (copyNbt ? nbt.copy() : nbt);
     }
 
     /**
@@ -35,7 +37,22 @@ public final class FluidStackKey {
     public static FluidStackKey of(@Nullable final FluidStack stack) {
         if (stack == null || stack.getFluid() == null) return null;
 
-        return new FluidStackKey(stack.getFluid(), stack.tag);
+        return new FluidStackKey(stack.getFluid(), stack.tag, true);
+    }
+
+    /**
+     * Create a transient lookup key from an IAEFluidStack <b>without copying NBT</b>.
+     * <p>
+     * The returned key borrows a reference to the fluid stack's NBT tag.
+     * It is intended for short-lived {@code Set.contains()} lookups only,
+     * do NOT store it longer than the calling scope.
+     */
+    @Nullable
+    public static FluidStackKey ofLookup(@Nullable final IAEFluidStack aeStack) {
+        if (aeStack == null) return null;
+
+        final FluidStack fs = aeStack.getFluidStack();
+        return new FluidStackKey(fs.getFluid(), fs.tag, false);
     }
 
     public Fluid getFluid() {

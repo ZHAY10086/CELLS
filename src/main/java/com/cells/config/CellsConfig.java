@@ -120,6 +120,15 @@ public class CellsConfig {
     /** Use fixed (non-animated) textures for interface blocks and parts. Requires restart. */
     public static boolean useFixedInterfaceTextures = true;
 
+    /** Number of upgrade slots for the Subnet Proxy (1-24) */
+    public static int subnetProxyUpgradeSlots = 5;
+
+    /** Minimum tick rate for the Subnet Proxy (ticks between updates) */
+    public static int subnetProxyMinTickRate = 5;
+
+    /** Maximum tick rate for the Subnet Proxy (ticks between updates when idle) */
+    public static int subnetProxyMaxTickRate = 60;
+
     /** Essentia Creative Cell fix */
     public static boolean enableEssentiaCreativeCellFix = true;
 
@@ -375,6 +384,30 @@ public class CellsConfig {
         );
         p.setLanguageKey(Tags.MODID + ".config.useFixedInterfaceTextures");
         useFixedInterfaceTextures = p.getBoolean();
+
+        // Subnet Proxy settings
+        p = config.get(CATEGORY_GENERAL,
+            "subnetProxyUpgradeSlots", 5,
+            "Number of upgrade slots for the Subnet Proxy (1-24)", 1, 24
+        );
+        p.setLanguageKey(Tags.MODID + ".config.subnetProxyUpgradeSlots");
+        subnetProxyUpgradeSlots = p.getInt();
+
+        p = config.get(CATEGORY_GENERAL,
+            "subnetProxyMinTickRate", 5,
+            "Minimum tick rate for the Subnet Proxy in ticks (lower = more responsive, higher = less CPU). " +
+            "This is the fastest the proxy will poll for changes.", 1, 200
+        );
+        p.setLanguageKey(Tags.MODID + ".config.subnetProxyMinTickRate");
+        subnetProxyMinTickRate = p.getInt();
+
+        p = config.get(CATEGORY_GENERAL,
+            "subnetProxyMaxTickRate", 60,
+            "Maximum tick rate for the Subnet Proxy in ticks (idle interval). " +
+            "This is the slowest the proxy will poll when no changes are detected.", 1, 1200
+        );
+        p.setLanguageKey(Tags.MODID + ".config.subnetProxyMaxTickRate");
+        subnetProxyMaxTickRate = p.getInt();
 
         // Save if config was created or changed
         if (config.hasChanged()) config.save();
