@@ -397,6 +397,10 @@ tile.cells.export_interface.gas.name=气体输出接口
 tile.cells.export_interface.essentia.name=源质输出接口
 tile.cells.import_interface.combined.name=通用输入接口
 tile.cells.export_interface.combined.name=通用输出接口
+tile.cells.io_interface.name=I/O接口
+tile.cells.io_interface.fluid.name=流体I/O接口
+tile.cells.io_interface.gas.name=气体I/O接口
+tile.cells.io_interface.essentia.name=源质I/O接口
 
 item.cells.part.import_interface.name=输入接口
 item.cells.part.import_fluid_interface.name=流体输入接口
@@ -408,6 +412,10 @@ item.cells.part.export_gas_interface.name=气体输出接口
 item.cells.part.export_essentia_interface.name=源质输出接口
 item.cells.part.import_combined_interface.name=通用输入接口
 item.cells.part.export_combined_interface.name=通用输出接口
+item.cells.part.io_item_interface.name=I/O接口
+item.cells.part.io_fluid_interface.name=流体I/O接口
+item.cells.part.io_gas_interface.name=气体I/O接口
+item.cells.part.io_essentia_interface.name=源质I/O接口
 
 # Interface GUI titles (format: cells.{direction}_interface.{type}.title)
 cells.import_interface.item.title=输入接口
@@ -436,6 +444,14 @@ tooltip.cells.export_interface.essentia.info=通过过滤槽位从ME网络公开
 tooltip.cells.export_interface.essentia.part.info=通过过滤槽位从ME网络公开源质。
 tooltip.cells.import_interface.combined.info=通过单个方块将物品、流体、气体与源质输入至ME网络。使用标签页切换资源类型。
 tooltip.cells.export_interface.combined.info=通过单个方块从ME网络输出物品、流体、气体与源质。使用标签页切换资源类型。
+tooltip.cells.io_interface.info=通过单个方块向ME网络输入/输出物品。不支持合成。通过拉取/推送卡实现自动输入/输出。
+tooltip.cells.io_interface.fluid.info=通过单个方块向ME网络输入/输出流体。通过拉取/推送卡实现自动输入/输出。
+tooltip.cells.io_interface.gas.info=通过单个方块向ME网络输入/输出气体。通过拉取/推送卡实现自动输入/输出。
+tooltip.cells.io_interface.essentia.info=通过单个方块向ME网络输入/输出源质。通过拉取/推送卡实现自动输入/输出。
+
+# IO Interface direction tab labels
+cells.direction.import=输入
+cells.direction.export=输出
 
 # Essentia part warning (parts cannot participate in tube network)
 tooltip.cells.essentia_part.no_tubes=§e该部件仅能搭配推送/拉取卡使用。如需更多交互方式，请使用完整方块。
@@ -568,3 +584,21 @@ commands.cells.inspect_slots.unknown_item=§c未知物品：%s
 commands.cells.inspect_slots.unknown_fluid=§c未知流体：%s
 commands.cells.inspect_slots.unknown_gas=§c未知气体：%s
 commands.cells.inspect_slots.unknown_aspect=§c未知要素：%s
+
+# Subnet Proxy
+item.cells.part.subnet_proxy_back.name=ME子网络代理（后端）
+item.cells.part.subnet_proxy_front.name=ME子网络代理（前端）
+item.cells.part.subnet_proxy_back.tooltip=将前端部件放置在后端部件上以创建子网络，可将多个ME网络连接在一起。
+item.cells.part.subnet_proxy_front.tooltip=将后端部件放置在前端部件上以创建子网络，可将多个ME网络连接在一起。
+item.cells.part.subnet_proxy_direction.tooltip=内容从后端部件流向前端部件。请确保放置方向正确。
+gui.cells.subnet_proxy.title=子网络代理
+gui.cells.subnet_proxy.filter_mode=过滤模式：%s
+gui.cells.subnet_proxy.filter_mode.description=添加过滤器时，会转换为此类型。
+chat.cells.subnet_proxy.need_front=后端部件需要放置在前端部件上。
+chat.cells.subnet_proxy.need_back=前端部件需要放置在后端部件上。
+cells.config.subnetProxyUpgradeSlots=子网络代理升级槽位
+cells.config.subnetProxyUpgradeSlots.tooltip=子网络代理的升级槽位数量（1-24）
+cells.config.subnetProxyMinTickRate=子网络代理最小刷新速率
+cells.config.subnetProxyMinTickRate.tooltip=子网络代理的最小刷新速率（数值越低响应越快，1-200）
+cells.config.subnetProxyMaxTickRate=子网络代理最大刷新速率
+cells.config.subnetProxyMaxTickRate.tooltip=子网络代理待机时的最大刷新速率（1-1200）
