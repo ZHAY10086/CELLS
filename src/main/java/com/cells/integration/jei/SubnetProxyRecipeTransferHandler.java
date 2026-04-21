@@ -35,7 +35,7 @@ import com.cells.network.packets.PacketJEISubnetProxyFilter;
  * <p>
  * Unlike quick-add, this handler:
  * <ul>
- *   <li>Ignores the current filter mode — trusts AE2's type system
+ *   <li>Ignores the current filter mode, trusts AE2's type system
  *       (ItemStacks stay as items, FluidStacks → FluidDummyItem)</li>
  *   <li>Silently skips duplicates and full inventory (no error messages)</li>
  *   <li>Supports both item and fluid ingredients from any recipe category</li>

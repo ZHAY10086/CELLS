@@ -49,6 +49,7 @@ import com.cells.items.ItemRecoveryContainer;
 import com.cells.items.ItemTrashUnselectedCard;
 import com.cells.items.ItemAutoPullCard;
 import com.cells.items.ItemAutoPushCard;
+import com.cells.items.ItemInsertionCard;
 import com.cells.recipes.ConfigurableCellAssemblyRecipe;
 
 
@@ -83,6 +84,7 @@ public class ItemRegistry {
     public static ItemRecoveryContainer RECOVERY_CONTAINER;
     public static ItemAutoPullCard PULL_CARD;
     public static ItemAutoPushCard PUSH_CARD;
+    public static ItemInsertionCard INSERTION_CARD;
 
     public static void init() {
         // Initialize items based on config
@@ -129,6 +131,7 @@ public class ItemRegistry {
         DECOMPRESSION_TIER_CARD = new ItemDecompressionTierCard();
         PULL_CARD = new ItemAutoPullCard();
         PUSH_CARD = new ItemAutoPushCard();
+        INSERTION_CARD = new ItemInsertionCard();
 
         // Processor crafting materials
         COMPRESSED_CALCULATION_PRINT = new ItemCompressedCalculationPrint();
@@ -182,6 +185,7 @@ public class ItemRegistry {
         event.getRegistry().register(DECOMPRESSION_TIER_CARD);
         event.getRegistry().register(PULL_CARD);
         event.getRegistry().register(PUSH_CARD);
+        event.getRegistry().register(INSERTION_CARD);
         event.getRegistry().register(COMPRESSED_CALCULATION_PRINT);
         event.getRegistry().register(COMPRESSED_ENGINEERING_PRINT);
         event.getRegistry().register(COMPRESSED_LOGIC_PRINT);
@@ -223,6 +227,10 @@ public class ItemRegistry {
             makeModelLocation(PULL_CARD, "upgrades"));
         ModelLoader.setCustomModelResourceLocation(PUSH_CARD, 0,
             makeModelLocation(PUSH_CARD, "upgrades"));
+
+        // Insertion card lives under upgrades
+        ModelLoader.setCustomModelResourceLocation(INSERTION_CARD, 0,
+            makeModelLocation(INSERTION_CARD, "upgrades"));
 
         // Register equal distribution card models for each tier (upgrades)
         String[] equalDistTiers = EQUAL_DISTRIBUTION_CARD.getTierNames();

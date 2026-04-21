@@ -23,6 +23,8 @@ import com.cells.network.packets.PacketSwitchTab;
 import com.cells.network.packets.PacketSyncSlotSizeOverride;
 import com.cells.network.packets.PacketChangeFilterMode;
 import com.cells.network.packets.PacketJEISubnetProxyFilter;
+import com.cells.network.packets.PacketSetProxyPriority;
+import com.cells.network.packets.PacketOpenProxyPriority;
 import com.cells.network.sync.PacketQuickAddFilter;
 import com.cells.network.sync.PacketResourceSlot;
 import com.cells.network.sync.PacketStorageSync;
@@ -81,5 +83,11 @@ public class CellsNetworkHandler {
 
         // Subnet Proxy: JEI recipe transfer batch filter add
         INSTANCE.registerMessage(PacketJEISubnetProxyFilter.Handler.class, PacketJEISubnetProxyFilter.class, packetId++, Side.SERVER);
+
+        // Subnet Proxy: priority setting for insertion card
+        INSTANCE.registerMessage(PacketSetProxyPriority.Handler.class, PacketSetProxyPriority.class, packetId++, Side.SERVER);
+
+        // Subnet Proxy: open AE2 priority GUI
+        INSTANCE.registerMessage(PacketOpenProxyPriority.Handler.class, PacketOpenProxyPriority.class, packetId++, Side.SERVER);
     }
 }

@@ -10,12 +10,16 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## [0.6.0-alpha] - 2026-04-30
 ### Added
-- Add the Subnet Proxy (front/back), 2 parts that allow to create a unidirectional subnet (passthrough) with optional filtering. The filtering is done in pages, with each capacity card allowing for an additional page of 63 filters. All 4 types are combined in the filter, with a button to cycle which type should be encoded on drag-and-drop/shift-click/quick-add. The Subnet Proxy will only expose the content of the network it is connected to (no showing looping content).
+- Add the Subnet Proxy (front/back), 2 parts that allow to create a unidirectional subnet (passthrough) with optional filtering. The filtering is done in pages, with each capacity card allowing for an additional page of 63 filters. All 4 types are combined in the filter, with a button to cycle which type should be encoded on drag-and-drop/shift-click/quick-add. The Subnet Proxy will only expose the content of the network it is connected to (no showing looping content). The local content is propagated to the connected network + 1 level of subnet proxies, allowing for A -> B -> A -> C -> A setups where C is aware B without looping to A.
+- Subnet Proxy Insertion Card: when installed, the proxy also forwards matching items in the reverse direction (front-grid → back-grid), letting items inserted on the front side be pushed back into the back-grid storage if they pass the filter and priority routing.
 - Add a config to set the number of upgrade slots for Subnet Proxies (1-24).
 - Add IO Interfaces for all types (except combined). These interfaces combine Import and Export as 2 inventories (avoiding interferences).
+- Add an Essentia Container Blacklist config to specify tile entities by registry ID, preventing the Essentia Interface's Push/Pull card from interacting with buggy containers.
+- Add protective checks for possible null aspects from outside mods in the Essentia Interface, to prevent crashes. This should never happen if the other mods do their job properly, but Thaumcraft addons are known to be all kinds of janky.
 
 ### Fixed
 - Fix Memory Card wiping upgrades in the receiving interface when transferring data.
+- Fix Controls Help being able to go out of the screen when the screen is too small, causing a crash.
 
 
 ## [0.5.15-beta] - 2026-04-15

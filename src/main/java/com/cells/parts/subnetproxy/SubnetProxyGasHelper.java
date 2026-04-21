@@ -53,6 +53,27 @@ final class SubnetProxyGasHelper {
         return new SubnetProxyInventoryHandler<>(getChannel(), priority);
     }
 
+    /** Create a new SubnetProxyInsertionHandler for gas (front-grid &rarr; back-grid). */
+    static SubnetProxyInsertionHandler<IAEGasStack> createInsertionHandler() {
+        return new SubnetProxyInsertionHandler<>(getChannel());
+    }
+
+    /** True if the given AE2 storage channel is the gas channel. */
+    static boolean matchesChannel(IStorageChannel<?> ch) {
+        return ch == getChannel();
+    }
+
+    /** Wire the back-grid gas monitor + read-side filter into the insertion handler. */
+    static void wireInsertionHandler(
+            SubnetProxyInsertionHandler<IAEGasStack> insertion,
+            SubnetProxyInventoryHandler<IAEGasStack> read,
+            IStorageGrid backStorage,
+            int priority) {
+        insertion.setMonitor(backStorage.getInventory(getChannel()));
+        insertion.setFilter(read.getFilter());
+        insertion.setPriority(priority);
+    }
+
     /**
      * Collect local cell handlers from Grid A for the gas channel,
      * and update the handler's sources from the grid.
@@ -79,7 +100,6 @@ final class SubnetProxyGasHelper {
         }
 
         handler.setLocalCells(localGasCells);
-        handler.setMonitor(sg.getInventory(gasChannel));
     }
 
     /**
@@ -183,8 +203,38 @@ final class SubnetProxyGasHelper {
         handler.setLastSnapshot(null);
     }
 
-    /** Compute delta and forward to Grid B. */
-    static void computeAndForwardDelta(SubnetProxyInventoryHandler<IAEGasStack> handler,
+    /**
+     * Filter incoming gas deltas through the handler's predicate and forward
+     * matching entries to Grid B. Also updates the snapshot incrementally.
+     */
+    @SuppressWarnings("rawtypes")
+    static void forwardFilteredDeltas(Iterable changes,
+                                      SubnetProxyInventoryHandler<IAEGasStack> handler,
+                                      IStorageGrid gridB, IActionSource proxySource) {
+        Predicate<IAEGasStack> filter = handler.getFilter();
+        List<IAEGasStack> forwarded = new ArrayList<>();
+
+        for (Object raw : changes) {
+            IAEGasStack change = (IAEGasStack) raw;
+            if (filter == null || filter.test(change)) forwarded.add(change);
+        }
+
+        if (forwarded.isEmpty()) return;
+
+        gridB.postAlterationOfStoredItems(getChannel(), forwarded, proxySource);
+
+        // Update snapshot incrementally
+        IItemList<IAEGasStack> snapshot = handler.getLastSnapshot();
+        if (snapshot == null) {
+            snapshot = getChannel().createList();
+            handler.setLastSnapshot(snapshot);
+        }
+
+        for (IAEGasStack delta : forwarded) snapshot.add(delta);
+    }
+
+    /** Snapshot-based delta forwarding fallback for onListUpdate. */
+    static void snapshotDiffAndForward(SubnetProxyInventoryHandler<IAEGasStack> handler,
                                        IStorageGrid gridB, IActionSource proxySource) {
         IStorageChannel<IAEGasStack> channel = getChannel();
         IItemList<IAEGasStack> previous = handler.getLastSnapshot();

@@ -13,6 +13,7 @@ import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Optional;
@@ -22,6 +23,7 @@ import appeng.api.config.ActionItems;
 import appeng.api.config.Settings;
 import appeng.api.storage.channels.IItemStorageChannel;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.core.localization.GuiText;
 import appeng.container.interfaces.IJEIGhostIngredients;
 import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.widgets.GuiImgButton;
@@ -42,6 +44,7 @@ import com.cells.network.CellsNetworkHandler;
 import com.cells.network.packets.PacketChangePage;
 import com.cells.network.packets.PacketChangeFilterMode;
 import com.cells.network.packets.PacketClearFilters;
+import com.cells.network.packets.PacketOpenProxyPriority;
 import com.cells.network.sync.PacketQuickAddFilter;
 import com.cells.network.sync.ResourceType;
 import com.cells.parts.subnetproxy.PartSubnetProxyFront;
@@ -66,6 +69,7 @@ public class GuiSubnetProxy extends AEBaseGui implements IJEIGhostIngredients {
 
     private GuiImgButton clearBtn;
     private GuiTabButton filterModeBtn;
+    private GuiTabButton priorityBtn;
     private GuiPageNavigation pageNavigation;
 
     /** Tracks the last rendered filter mode ordinal for icon refresh */
@@ -110,7 +114,7 @@ public class GuiSubnetProxy extends AEBaseGui implements IJEIGhostIngredients {
         // Type cycling button: positioned top-right of the title
         // Uses GuiTabButton which renders an item icon with a tooltip
         this.filterModeBtn = new GuiTabButton(
-            this.guiLeft + 154, this.guiTop + 3,
+            this.guiLeft + this.xSize - 20 - 3, this.guiTop,
             getIconForResourceType(this.container.getFilterMode()),
             I18n.format("gui.cells.subnet_proxy.filter_mode"),
             this.itemRender
@@ -129,7 +133,7 @@ public class GuiSubnetProxy extends AEBaseGui implements IJEIGhostIngredients {
         // Page navigation arrows (same position as Import/Export Interface)
         this.pageNavigation = new GuiPageNavigation(
             3,
-            this.guiLeft + 181, this.guiTop + 3,
+            this.guiLeft + this.xSize + 6, this.guiTop + 3,
             () -> this.container.currentPage,
             () -> this.container.totalPages,
             () -> {
@@ -142,6 +146,13 @@ public class GuiSubnetProxy extends AEBaseGui implements IJEIGhostIngredients {
             }
         );
         this.buttonList.add(this.pageNavigation);
+
+        // Priority button: opens AE2's priority GUI for this proxy
+        this.priorityBtn = new GuiTabButton(
+            this.guiLeft + this.xSize - 20 - 4 - 20 - 3, this.guiTop,
+            2 + 4 * 16, GuiText.Priority.getLocal(), this.itemRender
+        );
+        this.buttonList.add(this.priorityBtn);
     }
 
     @Override
@@ -158,7 +169,7 @@ public class GuiSubnetProxy extends AEBaseGui implements IJEIGhostIngredients {
             // Recreate the button with the updated icon (GuiTabButton.myIcon is final)
             this.buttonList.remove(this.filterModeBtn);
             this.filterModeBtn = new GuiTabButton(
-                this.guiLeft + 154, this.guiTop + 3,
+                this.guiLeft + this.xSize - 20 - 3, this.guiTop,
                 getIconForResourceType(this.container.getFilterMode()),
                 I18n.format("gui.cells.subnet_proxy.filter_mode"),
                 this.itemRender
@@ -175,7 +186,7 @@ public class GuiSubnetProxy extends AEBaseGui implements IJEIGhostIngredients {
         }
 
         this.mc.getTextureManager().bindTexture(
-            new net.minecraft.util.ResourceLocation(Tags.MODID, "textures/guis/subnet_proxy.png"));
+            new ResourceLocation(Tags.MODID, "textures/guis/subnet_proxy.png"));
 
         // Main GUI background (left portion without upgrade area)
         this.drawTexturedModalRect(offsetX, offsetY, 0, 0, 211 - 34, this.ySize);
@@ -279,6 +290,9 @@ public class GuiSubnetProxy extends AEBaseGui implements IJEIGhostIngredients {
         } else if (btn == this.filterModeBtn) {
             // Cycle filter mode
             CellsNetworkHandler.INSTANCE.sendToServer(new PacketChangeFilterMode());
+        } else if (btn == this.priorityBtn) {
+            // Switch to AE2's priority GUI for this proxy
+            CellsNetworkHandler.INSTANCE.sendToServer(new PacketOpenProxyPriority());
         }
     }
 

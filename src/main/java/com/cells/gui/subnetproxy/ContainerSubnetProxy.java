@@ -92,6 +92,12 @@ public class ContainerSubnetProxy extends AEBaseContainer implements IOptionalSl
     @GuiSync(4)
     public int fuzzyMode = 0;
 
+    @GuiSync(5)
+    public int priority = 0;
+
+    @GuiSync(6)
+    public int hasInsertionCard = 0;
+
     public ContainerSubnetProxy(final InventoryPlayer ip, final PartSubnetProxyFront part) {
         super(ip, null, part);
         this.part = part;
@@ -102,6 +108,8 @@ public class ContainerSubnetProxy extends AEBaseContainer implements IOptionalSl
         this.filterMode = part.getFilterMode().ordinal();
         this.fuzzyMode = part.getFuzzyMode().ordinal();
         this.availableUpgrades = CellsConfig.subnetProxyUpgradeSlots;
+        this.priority = part.getPriority();
+        this.hasInsertionCard = part.hasInsertionCard() ? 1 : 0;
 
         // Filter slots are NOT container slots. They are GUI-only widgets
         // (SubnetProxyFilterWidget) synced via PacketResourceSlot, completely
@@ -268,6 +276,13 @@ public class ContainerSubnetProxy extends AEBaseContainer implements IOptionalSl
         if (Platform.isServer()) this.part.setFuzzyMode(mode);
     }
 
+    // ========================= Priority =========================
+
+    public void setPriority(int newValue) {
+        this.priority = newValue;
+        if (Platform.isServer()) this.part.setPriority(newValue);
+    }
+
     // ========================= Sync =========================
 
     @Override
@@ -288,6 +303,8 @@ public class ContainerSubnetProxy extends AEBaseContainer implements IOptionalSl
             this.filterMode = this.part.getFilterMode().ordinal();
             this.fuzzyMode = this.part.getFuzzyMode().ordinal();
             this.availableUpgrades = CellsConfig.subnetProxyUpgradeSlots;
+            this.priority = this.part.getPriority();
+            this.hasInsertionCard = this.part.hasInsertionCard() ? 1 : 0;
 
             // Validate toolbox
             if (this.hasToolbox()) {

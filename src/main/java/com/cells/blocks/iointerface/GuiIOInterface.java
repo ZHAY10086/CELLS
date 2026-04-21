@@ -78,7 +78,8 @@ public class GuiIOInterface
     private static final int ARROW_U_IMPORT = 0;
     private static final int ARROW_U_EXPORT = 32;
     private static final int ARROW_V = 0;
-    private static final int ARROW_SIZE = 16;  // Assuming 16x16 arrows centered in 32x32 halves
+    /** Each arrow occupies a 32×32 region in the texture; rendered at 16×16 on screen via 0.5× GL scale. */
+    private static final int ARROW_TEX_SIZE = 32;
 
     /** Track the last known activeDirectionTab to detect @GuiSync changes. */
     private int lastActiveDirectionTab = -1;
@@ -425,14 +426,18 @@ public class GuiIOInterface
             // The texture is 64x32, each arrow is 16x16, centered in its 32x16 half
             int arrowU = (i == IIOInterfaceHost.TAB_IMPORT) ? ARROW_U_IMPORT : ARROW_U_EXPORT;
 
-            // Draw the 16x16 arrow overlay at the same position as the icon
-            // Using drawModalRectWithCustomSizedTexture for non-256x256 textures
+            // Draw the 32×32 texture arrow downscaled to 16×16 by translating to the draw
+            // position and applying a 0.5× scale before sampling the full 32×32 region.
+            GlStateManager.pushMatrix();
+            GlStateManager.translate(iconX, iconY, 400);
+            GlStateManager.scale(0.5f, 0.5f, 1.0f);
             drawModalRectWithCustomSizedTexture(
-                iconX, iconY,
+                0, 0,
                 arrowU, ARROW_V,
-                ARROW_SIZE, ARROW_SIZE,
+                ARROW_TEX_SIZE, ARROW_TEX_SIZE,
                 64, 32
             );
+            GlStateManager.popMatrix();
         }
 
         // Restore GL state

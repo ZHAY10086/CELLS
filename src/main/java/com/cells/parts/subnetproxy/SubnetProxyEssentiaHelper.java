@@ -53,6 +53,27 @@ final class SubnetProxyEssentiaHelper {
         return new SubnetProxyInventoryHandler<>(getChannel(), priority);
     }
 
+    /** Create a new SubnetProxyInsertionHandler for essentia (front-grid &rarr; back-grid). */
+    static SubnetProxyInsertionHandler<IAEEssentiaStack> createInsertionHandler() {
+        return new SubnetProxyInsertionHandler<>(getChannel());
+    }
+
+    /** True if the given AE2 storage channel is the essentia channel. */
+    static boolean matchesChannel(IStorageChannel<?> ch) {
+        return ch == getChannel();
+    }
+
+    /** Wire the back-grid essentia monitor + read-side filter into the insertion handler. */
+    static void wireInsertionHandler(
+            SubnetProxyInsertionHandler<IAEEssentiaStack> insertion,
+            SubnetProxyInventoryHandler<IAEEssentiaStack> read,
+            IStorageGrid backStorage,
+            int priority) {
+        insertion.setMonitor(backStorage.getInventory(getChannel()));
+        insertion.setFilter(read.getFilter());
+        insertion.setPriority(priority);
+    }
+
     /**
      * Collect local cell handlers from Grid A for the essentia channel,
      * and update the handler's sources from the grid.
@@ -79,7 +100,6 @@ final class SubnetProxyEssentiaHelper {
         }
 
         handler.setLocalCells(localEssentiaCells);
-        handler.setMonitor(sg.getInventory(essentiaChannel));
     }
 
     /**
@@ -182,8 +202,41 @@ final class SubnetProxyEssentiaHelper {
         handler.setLastSnapshot(null);
     }
 
-    /** Compute delta and forward to Grid B. */
-    static void computeAndForwardDelta(SubnetProxyInventoryHandler<IAEEssentiaStack> handler,
+    /**
+     * Filter incoming essentia deltas through the handler's predicate and forward
+     * matching entries to Grid B. Also updates the snapshot incrementally.
+     */
+    @SuppressWarnings("rawtypes")
+    static void forwardFilteredDeltas(Iterable changes,
+                                      SubnetProxyInventoryHandler<IAEEssentiaStack> handler,
+                                      IStorageGrid gridB, IActionSource proxySource) {
+        Predicate<IAEEssentiaStack> filter = handler.getFilter();
+        List<IAEEssentiaStack> forwarded = new ArrayList<>();
+
+        for (Object raw : changes) {
+            IAEEssentiaStack change = (IAEEssentiaStack) raw;
+            if (filter == null || filter.test(change)) {
+                forwarded.add(change);
+            }
+        }
+
+        if (forwarded.isEmpty()) return;
+
+        gridB.postAlterationOfStoredItems(getChannel(), forwarded, proxySource);
+
+        // Update snapshot incrementally
+        IItemList<IAEEssentiaStack> snapshot = handler.getLastSnapshot();
+        if (snapshot == null) {
+            snapshot = getChannel().createList();
+            handler.setLastSnapshot(snapshot);
+        }
+        for (IAEEssentiaStack delta : forwarded) {
+            snapshot.add(delta);
+        }
+    }
+
+    /** Snapshot-based delta forwarding fallback for onListUpdate. */
+    static void snapshotDiffAndForward(SubnetProxyInventoryHandler<IAEEssentiaStack> handler,
                                        IStorageGrid gridB, IActionSource proxySource) {
         IStorageChannel<IAEEssentiaStack> channel = getChannel();
         IItemList<IAEEssentiaStack> previous = handler.getLastSnapshot();

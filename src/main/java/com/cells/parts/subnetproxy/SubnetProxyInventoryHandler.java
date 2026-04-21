@@ -1,6 +1,8 @@
 package com.cells.parts.subnetproxy;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -37,7 +39,7 @@ import appeng.api.storage.data.IItemList;
 public class SubnetProxyInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHandler<T> {
 
     private final IStorageChannel<T> channel;
-    private final int priority;
+    private int priority;
 
     /**
      * Cell handlers from Grid A's non-passthrough providers (drives, chests,
@@ -45,13 +47,6 @@ public class SubnetProxyInventoryHandler<T extends IAEStack<T>> implements IMEIn
      * subnet loop inflation. Rebuilt on grid events by the front part.
      */
     private List<IMEInventoryHandler<T>> localCells = Collections.emptyList();
-
-    /**
-     * The full network monitor from Grid A. Used for extraction only,
-     * so the grid receives proper notifications when items are removed.
-     * May be null if Grid A is unavailable.
-     */
-    private IMEMonitor<T> monitor;
 
     /**
      * Filter predicate: returns true if the given stack should pass through.
@@ -71,9 +66,39 @@ public class SubnetProxyInventoryHandler<T extends IAEStack<T>> implements IMEIn
      */
     private IMEMonitor<T> registeredMonitor;
 
+    /**
+     * Owning front part. When non-null, {@link #getAvailableItems} delegates
+     * peer-aggregation to it (so peer fronts on the back-grid can contribute
+     * their own back-grid local items into our exposed listing, subject to
+     * per-grid election in the front-grid coordinator).
+     * <p>
+     * Set via {@link #setFrontPart} after construction (helpers used by gas/
+     * essentia integrations may leave this null, in which case peer aggregation
+     * is silently skipped).
+     */
+    private PartSubnetProxyFront frontPart;
+
     public SubnetProxyInventoryHandler(IStorageChannel<T> channel, int priority) {
         this.channel = channel;
         this.priority = priority;
+    }
+
+    /**
+     * Update the priority reported to AE2. Called by the front part when the
+     * user changes priority through the priority GUI. AE2 re-sorts storage
+     * handlers on the next {@code MENetworkCellArrayUpdate}, so callers must
+     * post that event after changing priority.
+     */
+    public void setPriority(int priority) {
+        this.priority = priority;
+    }
+
+    /**
+     * Wire the owning front part. Required for peer aggregation in
+     * {@link #getAvailableItems}. Pass null to disable.
+     */
+    public void setFrontPart(PartSubnetProxyFront front) {
+        this.frontPart = front;
     }
 
     /**
@@ -84,22 +109,18 @@ public class SubnetProxyInventoryHandler<T extends IAEStack<T>> implements IMEIn
         this.localCells = cells != null ? cells : Collections.emptyList();
     }
 
-    /**
-     * Set the full network monitor from Grid A.
-     * Used for extraction (so the grid gets proper notifications).
-     */
-    public void setMonitor(IMEMonitor<T> monitor) {
-        this.monitor = monitor;
-    }
-
     /** Clear all sources (Grid A unavailable). */
     public void clearSources() {
         this.localCells = Collections.emptyList();
-        this.monitor = null;
     }
 
     public void setFilter(java.util.function.Predicate<T> filter) {
         this.filter = filter;
+    }
+
+    /** @return the current filter predicate, or null if no filter is set (allow all) */
+    public Predicate<T> getFilter() {
+        return this.filter;
     }
 
     // ========================= Snapshot / Monitor for Delta Forwarding =========================
@@ -146,19 +167,91 @@ public class SubnetProxyInventoryHandler<T extends IAEStack<T>> implements IMEIn
 
     @Override
     public T extractItems(final T request, final Actionable type, final IActionSource src) {
-        // Extraction goes through the full monitor for proper grid notifications
-        if (this.monitor == null) return null;
+        // Symmetric with listing: extract only from the same source set we
+        // publish. If an item is not in our listing (because it would be a
+        // 2+-hop passthrough item), we must not extract it either, otherwise
+        // I/O becomes inconsistent with the reported inventory.
+        if (request == null) return null;
         if (this.filter != null && !this.filter.test(request)) return null;
 
-        return this.monitor.extractItems(request, type, src);
+        long remaining = request.getStackSize();
+        if (remaining <= 0) return null;
+
+        T extracted = null;
+
+        // FIXME: need to aggregate the cells + peer fronts into a single view and extract from that, to properly
+        // account for priority across the combined inventory. Otherwise we might extract from a lower-priority cell
+        // 1) Own back-grid local cells (same set used by appendLocalAvailableItems).
+        // Sort by cell priority desc so AE2's per-cell priority is honored
+        // even within this aggregating handler. AE2 itself extracts highest
+        // priority first; we mirror that here for cells living under us.
+        for (IMEInventoryHandler<T> cell : sortedByPriorityDesc(this.localCells)) {
+            if (remaining <= 0) break;
+
+            T sub = request.copy();
+            sub.setStackSize(remaining);
+            T got = cell.extractItems(sub, type, src);
+            if (got == null || got.getStackSize() <= 0) continue;
+
+            remaining -= got.getStackSize();
+            if (extracted == null) {
+                extracted = got;
+            } else {
+                extracted.incStackSize(got.getStackSize());
+            }
+        }
+
+        // 2) Peer aggregation (1-hop): extract from peer fronts' local cells
+        // for origins where we are the elected publisher. Symmetric with
+        // appendPeerItemsForListing.
+        if (remaining > 0 && this.frontPart != null) {
+            T peerRequest = request.copy();
+            peerRequest.setStackSize(remaining);
+            T fromPeers = this.frontPart.extractFromPeerLocals(
+                peerRequest, type, src, this.channel, this.filter);
+
+            if (fromPeers != null && fromPeers.getStackSize() > 0) {
+                remaining -= fromPeers.getStackSize();
+                if (extracted == null) {
+                    extracted = fromPeers;
+                } else {
+                    extracted.incStackSize(fromPeers.getStackSize());
+                }
+            }
+        }
+
+        return extracted;
     }
 
     @Override
     public IItemList<T> getAvailableItems(final IItemList<T> out) {
+        // 1) Local back-grid items (always exposed, subject to filter).
+        appendLocalAvailableItems(out);
+
+        // 2) Peer aggregation (1-hop): for each peer front on our back-grid
+        // for which we are the elected publisher in our front-grid coordinator,
+        // append the peer's local back-grid items (filtered by the peer first,
+        // then by us). This gives chained visibility (B → A → C makes B's
+        // items visible from C) while electing dedups diamond topologies.
+        if (this.frontPart != null) {
+            this.frontPart.appendPeerItemsForListing(out, this.channel, this.filter);
+        }
+
+        return out;
+    }
+
+    /**
+     * Append items from THIS handler's local cells (back-grid only, no peers)
+     * into {@code out}, applying the filter. Public so the front part can use
+     * it for cross-front peer aggregation without recursing through the full
+     * peer-aware {@link #getAvailableItems} (which would re-fetch peers and
+     * potentially loop).
+     */
+    public IItemList<T> appendLocalAvailableItems(final IItemList<T> out) {
         // List from local cells only (not the full monitor) to prevent subnet
         // loop inflation. Items that Grid A sees through passthrough storage buses
-        // (storage bus -> ME Interface) are NOT listed here, which breaks feedback
-        // loops like A->B->proxy->A.
+        // (storage bus → ME Interface) are NOT listed here, which breaks feedback
+        // loops like A→B→proxy→A.
         if (this.filter == null) {
             // No filter: write directly into output list, zero extra allocations
             for (IMEInventoryHandler<T> cell : this.localCells) {
@@ -180,9 +273,61 @@ public class SubnetProxyInventoryHandler<T extends IAEStack<T>> implements IMEIn
         return out;
     }
 
+    /**
+     * Extract from THIS handler's local cells only (back-grid local, no peers,
+     * no full monitor). Applies this handler's own filter in addition to any
+     * caller-supplied check on {@code request}. Used by the owning front part
+     * when aggregating extraction across peers: a peer's contribution must
+     * pass BOTH the peer's filter (enforced here) and the caller's filter
+     * (enforced by the caller before invoking this method).
+     *
+     * @return non-null extracted stack with actual size, or null if nothing
+     *         was extracted.
+     */
+    public T extractFromLocalCells(final T request, final Actionable type, final IActionSource src) {
+        if (request == null) return null;
+        if (this.filter != null && !this.filter.test(request)) return null;
+
+        long remaining = request.getStackSize();
+        if (remaining <= 0) return null;
+
+        T extracted = null;
+        for (IMEInventoryHandler<T> cell : sortedByPriorityDesc(this.localCells)) {
+            if (remaining <= 0) break;
+
+            T sub = request.copy();
+            sub.setStackSize(remaining);
+            T got = cell.extractItems(sub, type, src);
+            if (got == null || got.getStackSize() <= 0) continue;
+
+            remaining -= got.getStackSize();
+            if (extracted == null) {
+                extracted = got;
+            } else {
+                extracted.incStackSize(got.getStackSize());
+            }
+        }
+
+        return extracted;
+    }
+
     @Override
     public IStorageChannel<T> getChannel() {
         return this.channel;
+    }
+
+    /**
+     * Return {@code cells} sorted by descending {@link IMEInventoryHandler#getPriority()}.
+     * Falls through unchanged when the list has 0 or 1 entries (the common
+     * case in the proxy: each provider on Grid A typically contributes a
+     * single handler), avoiding allocations on the hot extract path.
+     */
+    private static <T extends IAEStack<T>> List<IMEInventoryHandler<T>> sortedByPriorityDesc(
+            List<IMEInventoryHandler<T>> cells) {
+        if (cells.size() < 2) return cells;
+        List<IMEInventoryHandler<T>> sorted = new ArrayList<>(cells);
+        sorted.sort(Comparator.comparingInt(IMEInventoryHandler<T>::getPriority).reversed());
+        return sorted;
     }
 
     // ========================= IMEInventoryHandler =========================
@@ -227,11 +372,14 @@ public class SubnetProxyInventoryHandler<T extends IAEStack<T>> implements IMEIn
 
     /**
      * Wrap this handler in a singleton list for ICellProvider.getCellArray().
-     * Returns empty list if no sources are available (Grid A unavailable).
+     * Returns empty list ONLY if we have neither local cells nor a wired
+     * front part (peer aggregation source). With a front part wired, we still
+     * expose the handler so peer items remain visible even when our own
+     * back-grid has no local cells (e.g. pure relay node).
      */
     @SuppressWarnings("rawtypes")
     public List<IMEInventoryHandler> asCellArray() {
-        if (this.localCells.isEmpty()) return Collections.emptyList();
+        if (this.localCells.isEmpty() && this.frontPart == null) return Collections.emptyList();
         return Collections.singletonList(this);
     }
 }

@@ -2,6 +2,7 @@ package com.cells.integration.thaumicenergistics;
 
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
@@ -9,6 +10,7 @@ import thaumcraft.api.aspects.IAspectContainer;
 
 import com.cells.blocks.interfacebase.managers.InterfaceAdjacentHandler;
 import com.cells.blocks.interfacebase.managers.InterfaceInventoryManager;
+import com.cells.config.CellsConfig;
 
 import thaumicenergistics.api.EssentiaStack;
 
@@ -49,6 +51,10 @@ public class EssentiaAdjacentHandler extends InterfaceAdjacentHandler<EssentiaSt
         TileEntity te = world.getTileEntity(adjacentPos);
         if (te == null || te.isInvalid()) return;
         if (!(te instanceof IAspectContainer)) return;
+
+        // Check if this tile entity type is blacklisted in config
+        ResourceLocation teId = TileEntity.getKey(te.getClass());
+        if (teId != null && CellsConfig.isEssentiaContainerBlacklisted(teId.toString())) return;
 
         // Don't cache ourselves (should never happen, but just in case)
         BlockPos selfPos = this.callbacks.getHostPos();

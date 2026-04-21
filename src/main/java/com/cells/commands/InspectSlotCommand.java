@@ -429,6 +429,11 @@ public class InspectSlotCommand extends CommandBase {
         sender.sendMessage(new TextComponentTranslation("commands.cells.inspect_slots.type.essentia_container"));
 
         thaumcraft.api.aspects.AspectList aspects = container.getAspects();
+        if (aspects == null) {
+            sender.sendMessage(new TextComponentTranslation("commands.cells.inspect_slots.empty_inventory"));
+            return true;
+        }
+
         thaumcraft.api.aspects.Aspect[] aspectArray = aspects.getAspects();
 
         if (aspectArray == null || aspectArray.length == 0) {

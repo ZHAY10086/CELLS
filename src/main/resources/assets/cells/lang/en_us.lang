@@ -150,6 +150,8 @@ cells.config.interfaceMinPollingRate=Interface Minimum Polling Rate
 cells.config.interfaceMinPollingRate.tooltip=Minimum polling rate for interfaces in ticks. 0 allows adaptive (AE2-managed tick rates). Higher values force interfaces to poll at least this often.
 cells.config.useFixedInterfaceTextures=Use Fixed Interface Textures
 cells.config.useFixedInterfaceTextures.tooltip=Use fixed (non-animated) textures for interface blocks and parts. Requires a game restart to take effect.
+cells.config.essentiaContainerBlacklist=Essentia Container Blacklist
+cells.config.essentiaContainerBlacklist.tooltip=List of tile entity IDs (e.g. "thaumcraft:thaumatorium") to ignore as essentia containers. Blacklisted tile entities will not be detected by the Essentia Interface, preventing push and pull (the block can still interact with us, though). Use F3 or WAILA/TOP to find the ID.
 
 
 # Compacting Cells
@@ -550,6 +552,11 @@ cells.push_pull_card.quantity.title=Transfer Quantity:
 cells.push_pull_card.quantity.tooltip=How many items/mB/etc. to transfer per operation.
 cells.push_pull_card.limit.title=To keep in adjacent inventory:
 cells.push_pull_card.limit.tooltip=How many items/mB/etc. of each type to maintain in the adjacent inventory (no more, no less).
+
+# Insertion Card (Subnet Proxy upgrade)
+item.cells.insertion_card.name=Insertion Card
+tooltip.cells.insertion_card.desc=§7Enables inserting content back through the Subnet Proxy. Populate the filter to avoid inserting unwanted content.
+tooltip.cells.type.subnet_proxy=Subnet Proxy
 
 # Pull/Push Upgrade Button (interface GUI)
 cells.pull_push_button.disabled=Insert %s to interact

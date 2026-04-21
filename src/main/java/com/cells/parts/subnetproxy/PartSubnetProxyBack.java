@@ -1,6 +1,7 @@
 package com.cells.parts.subnetproxy;
 
 import java.io.IOException;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -48,6 +49,14 @@ import com.cells.parts.ItemCellsPart;
  * Has no GUI of its own; right-clicking delegates to the front part.
  * The inner proxy (from AEBasePart) is kept orphaned, only the
  * outer proxy participates in a grid.
+ * <p>
+ * The back part is a passive grid presence on its grid: it supplies
+ * power/channel state for the front's LED, and forwards Grid A's
+ * {@link MENetworkCellArrayUpdate} events to the front so it can
+ * invalidate cached passthrough sources. It does NOT expose any
+ * cells of its own, both the read-side filter handler AND the
+ * insertion handler (when an Insertion Card is installed) live on
+ * the front part, registered on the front's grid.
  */
 public class PartSubnetProxyBack extends AEBasePart implements IPowerChannelState {
 
@@ -158,8 +167,12 @@ public class PartSubnetProxyBack extends AEBasePart implements IPowerChannelStat
      * The parts face each other across the block boundary. The back faces
      * WEST (toward the front), the front faces EAST (toward the back).
      */
+    /**
+     * Public so the front part can locate its counterpart from either side
+     * (currently only used internally, but kept public for symmetry).
+     */
     @Nullable
-    private PartSubnetProxyFront findFrontPart() {
+    public PartSubnetProxyFront findFrontPart() {
         TileEntity selfTile = this.getHost() != null ? this.getHost().getTile() : null;
         if (selfTile == null || selfTile.getWorld() == null) return null;
 

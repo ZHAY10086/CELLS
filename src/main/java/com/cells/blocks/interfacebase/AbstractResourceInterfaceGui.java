@@ -416,7 +416,6 @@ public abstract class AbstractResourceInterfaceGui<H extends IInterfaceHost, C e
             this.fontRenderer,
             this.guiLeft,
             this.guiTop,
-            this.ySize,
             !this.host.isExport()
         );
     }
@@ -560,7 +559,6 @@ public abstract class AbstractResourceInterfaceGui<H extends IInterfaceHost, C e
             this.fontRenderer,
             this.guiLeft,
             this.guiTop,
-            this.ySize,
             !this.host.isExport()
         );
 

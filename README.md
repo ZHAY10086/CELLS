@@ -44,6 +44,47 @@ The counterpart to the Import Interface, allowing content to be exported from th
 The Essentia Export Interface works with Storage Bus, Thaumatorium, and Infusion out of the box. Tubes also work, but are hampered by their 1 essentia type limit.
 
 
+### Subnet Proxy
+A two-block multipart that bridges two ME networks together with a configurable, filtered window. Unlike the classic AE2 Subnet bridge (Storage Bus on Interface), the Subnet Proxy has :
+- **No looping guarantees**: the proxy network automatically detects and prevents loops, so that looping topologies like `A → B → A` will not cause ghost items or force updates.
+- **No multi-hop guarantees**: the proxy only gives the main network 1-hop visibility into the subnet's local storage, and does not chain through other proxies on the subnet. This means that, with `B → A → C → D`, C will see A and B, but D will not see B's content through A. This prevents events from inflating exponentially in complex subnet topologies, keeping the performance impact manageable.
+- **Up to 25 * 63 filter slots**: the filter is paginated and can be expanded with capacity cards (up to 24 upgrade slots with config), allowing you to share a large portion of a subnet if needed.
+- **On-way or two-way operation**: by default, the proxy is read-only (the main network can see and pull from the subnet, but cannot push back). This design is intentional to spare the network from having *every single single* checking insertions against the filter of every Subnet Proxy, even if they are only intended for exposing content one-way. However, you can add an Insertion Card to the Subnet Proxy that exposes the content to make it two-way, allowing the main network to also push items back into a subnet through the Proxy (still respecting the filter, of course).
+- **Universal resource support**: the same Subnet Proxy works for items, fluids, gases, and essentia. The filter and all operations adapt to the type of the subnet's content. Use the resource type cycling button in the filter GUI to switch between item/fluid/gas/essentia "encoding" modes for the filter slots. The encoding mode has no impact on what the proxy can expose from the subnet, it is only used when actually adding things to the filter.
+- **Filtered event forwarding**: the proxy only forwards changes that match the filter, so that the network only sees what you want it to see. This also means that if something changes in the main network but doesn't match any filter, no subnet will see it, and thus no unnecessary updates will be triggered on the subnets' side.
+
+#### What it is
+The Subnet Proxy comes as a pair of cable parts that have to be placed *facing each other across one block boundary*, like a storage bus aimed at an ME interface:
+- **Subnet Proxy (Back)**: sits on the cable of the the network whose content you want to share. This is your "source" side.
+- **Subnet Proxy (Front)**: sits on the cable of the the network that should *see* the content. This is your "destination" side and the one that owns the GUI.
+
+Once both halves are placed, the front part starts publishing a filtered view of the back's network into the main network, exactly like an extra cell on a drive would.
+
+#### What it is for
+Common use cases:
+- **Sharing storage across networks without merging them.** You can keep two networks on separate channel budgets while still letting the main network read (and optionally write) a subset of the subnet's contents.
+- **Black-boxing a machine or system.** You can put a machine behind a subnet and only expose the relevant items/fluids/gases/essentia to the main network, without letting it see the internal workings of the subnet. A looping design (e.g. `A → B → A`) can be used to let the subnet see the main network's content as well, without merging the two networks. The subnet only know of the `A → B` connection, and the main network only knows of the `B → A` connection, so they stay logically separate and independent. If the 
+
+#### How to use it
+1. Craft the Subnet Proxy item and place the **Back** part then the **Front** part facing each other across a block boundary, like a storage bus aimed at an ME interface. The order of placement does not matter, but they have to be placed facing each other. The proxy will automatically detect the connection and start working, no configuration needed for it to start sharing the subnet's content with the main network.
+2. Right-click any of the 2 parts to open the filter GUI. The filter works like a Storage Bus filter:
+   - Drag items, fluids, gases, or essentia into the filter slots to whitelist them. Inventory/JEI dragging and quick-add keybind work, as well as the '+' button in JEI, which will add the inputs of a recipe to the filter. The 
+   - Use the **Filter Mode** button (top-right) to switch between Item / Fluid / Gas / Essentia modes for what the filter slots *convert to*.
+   - Add a **Capacity Card** to unlock additional pages of filter slots; navigate with the page arrows.
+   - Add a **Fuzzy Card** to enable fuzzy matching (damage / NBT-tolerant).
+   - Add an **Inverter Card** to invert the filter (everything *except* the listed items passes through).
+3. Click the **wrench button** (top-left of the filter GUI) to open the standard AE2 priority screen. The proxy honors priority on both directions just like a drive does:
+   - Higher priority means the main network prefers extracting from this proxy first when multiple sources have the requested item.
+   - Higher priority means the main network prefers inserting into this proxy first (when an Insertion Card is installed).
+4. *(Optional)* Add an **Insertion Card** to make the bridge two-way. Without it the proxy is **read-only** (the front network can see and pull from the back network, but cannot push back). With it, items matching the same filter that land on the front network can be routed back into the back network through the proxy.
+
+#### Behavior notes & guard-rails
+- **One hop only.** The proxy gives the main network 1-hop visibility into the subnet's *local* storage (drives, ME chests, storage buses on vanilla inventories). It deliberately does **not** chain through other passthrough storage buses on the subnet, so chains like `A → B → C → D` only ever expose one hop at a time and cannot inflate events exponentially over complex topologies.
+- **No write loops.** Insertions cannot chain through more than one Subnet Proxy in the same operation. Even if you have insertion cards on both `A → B` and `B → A`, the second proxy sees that the call is already inside an insertion and refuses to forward, so you cannot accidentally build a duplication or stack-overflow loop.
+- **Listing matches extraction.** Anything visible in the main network's terminal *is* extractable, and anything not listed will not be silently extracted. Listing and extract use the exact same source set, so terminals never lie about what's actually pullable.
+- **Networks stay independent.** The two halves of the proxy do not merge their grids: channel budgets, P2P tunnels, security terminals, and crafting CPUs all stay scoped to their respective networks. Only the filtered storage view crosses the boundary.
+
+
 ### Creative Cell (Item, Fluid, Gas, Essentia)
 A cell that can only be set in creative mode, providing 4.6 quintillion of each set slot (up to 63 different items/fluids/gases/essentia per cell). It is the equivalent of a Drawer with the Vending upgrade.
 
@@ -135,6 +176,12 @@ Install in an Import Interface to pull items from adjacent inventories. This is 
 Similar to the Pull Card, but for pushing items to adjacent inventories.
 
 **Compatible with**: Export Interfaces
+
+
+#### Insertion Card
+Install in a Subnet Proxy to allow the Proxy to *receive* content from the network it exposes to, in addition to letting it be pulled from. This makes the proxy two-way, allowing you to push items from the main network into the subnet through the proxy (still respecting the filter, of course). Without it, the proxy is read-only and only allows the main network to pull from the subnet.
+
+**Compatible with**: Subnet Proxy
 
 
 #### Equal Distribution Card

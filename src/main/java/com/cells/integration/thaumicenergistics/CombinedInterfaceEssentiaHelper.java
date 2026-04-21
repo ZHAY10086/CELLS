@@ -65,6 +65,7 @@ public class CombinedInterfaceEssentiaHelper {
         EssentiaInterfaceLogic logic = (EssentiaInterfaceLogic) essentiaLogic;
 
         for (Aspect aspect : aspects.getAspects()) {
+            if (aspect == null) continue;
             if (!logic.containerContainsAny(aspect)) return false;
         }
 
@@ -105,12 +106,14 @@ public class CombinedInterfaceEssentiaHelper {
 
         // Check availability first
         for (Aspect aspect : aspects.getAspects()) {
+            if (aspect == null) continue;
             int needed = aspects.getAmount(aspect);
             if (!logic.doesContainerContainAmount(aspect, needed)) return false;
         }
 
         // Take all
         for (Aspect aspect : aspects.getAspects()) {
+            if (aspect == null) continue;
             int needed = aspects.getAmount(aspect);
             logic.takeEssentiaAmount(aspect, needed);
         }

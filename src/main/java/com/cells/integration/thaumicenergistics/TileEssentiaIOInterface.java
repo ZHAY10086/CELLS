@@ -92,9 +92,11 @@ public class TileEssentiaIOInterface extends AbstractIOInterfaceTile<EssentiaInt
         AspectList exportAspects = this.exportLogic.getAspects();
 
         for (Aspect aspect : importAspects.getAspects()) {
+            if (aspect == null) continue;
             combined.add(aspect, importAspects.getAmount(aspect));
         }
         for (Aspect aspect : exportAspects.getAspects()) {
+            if (aspect == null) continue;
             combined.add(aspect, exportAspects.getAmount(aspect));
         }
 
@@ -109,6 +111,7 @@ public class TileEssentiaIOInterface extends AbstractIOInterfaceTile<EssentiaInt
     @Override
     public boolean doesContainerContain(AspectList aspects) {
         for (Aspect aspect : aspects.getAspects()) {
+            if (aspect == null) continue;
             if (!this.importLogic.containerContainsAny(aspect)
                     && !this.exportLogic.containerContainsAny(aspect)) {
                 return false;
@@ -121,11 +124,13 @@ public class TileEssentiaIOInterface extends AbstractIOInterfaceTile<EssentiaInt
     public boolean takeFromContainer(AspectList aspects) {
         // Export side: tubes/altars pull from us
         for (Aspect aspect : aspects.getAspects()) {
+            if (aspect == null) continue;
             int needed = aspects.getAmount(aspect);
             if (!this.exportLogic.doesContainerContainAmount(aspect, needed)) return false;
         }
 
         for (Aspect aspect : aspects.getAspects()) {
+            if (aspect == null) continue;
             int needed = aspects.getAmount(aspect);
             this.exportLogic.takeEssentiaAmount(aspect, needed);
         }

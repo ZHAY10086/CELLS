@@ -90,6 +90,7 @@ public class TileEssentiaImportInterface extends AbstractInterfaceTile<EssentiaI
     @Override
     public boolean doesContainerContain(AspectList aspects) {
         for (Aspect aspect : aspects.getAspects()) {
+            if (aspect == null) continue;
             if (!this.logic.containerContainsAny(aspect)) return false;
         }
         return true;

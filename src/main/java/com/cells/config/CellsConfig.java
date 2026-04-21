@@ -2,7 +2,10 @@ package com.cells.config;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
@@ -39,6 +42,12 @@ public class CellsConfig {
     static public final List<String> hiddenCategories = Arrays.asList(
         CATEGORY_HIDDEN
     );
+
+    // Default blacklist entries for essentia containers that should be ignored by the Essentia Interface
+    // Mithminite Jar is blacklisted by default because it crashes if overfilled more than 250 (bug with the jar)
+    static private final String[] defaultEssentiaContainerBlacklist = new String[] {
+        "thaumadditions:jar_mithminite"
+    };
 
     private static Configuration config;
 
@@ -131,6 +140,25 @@ public class CellsConfig {
 
     /** Essentia Creative Cell fix */
     public static boolean enableEssentiaCreativeCellFix = true;
+
+    /**
+     * Set of tile entity registry IDs (e.g. "thaumcraft:thaumatorium") that the
+     * Essentia Interface should treat as non-interactable. Blacklisted TEs will
+     * not be detected as adjacent essentia containers, preventing both push and
+     * pull operations.
+     */
+    private static Set<String> essentiaContainerBlacklist = Collections.emptySet();
+
+    /**
+     * Check whether a tile entity registry ID is blacklisted from essentia
+     * interface interaction.
+     *
+     * @param registryId The tile entity registry ID (e.g. "thaumcraft:thaumatorium")
+     * @return true if the tile entity should be ignored by the essentia interface
+     */
+    public static boolean isEssentiaContainerBlacklisted(String registryId) {
+        return essentiaContainerBlacklist.contains(registryId);
+    }
 
     /**
      * Initializes the configuration from the given file.
@@ -384,6 +412,24 @@ public class CellsConfig {
         );
         p.setLanguageKey(Tags.MODID + ".config.useFixedInterfaceTextures");
         useFixedInterfaceTextures = p.getBoolean();
+
+        String[] blacklistEntries = config.getStringList(
+            "essentiaContainerBlacklist", CATEGORY_INTERFACES,
+            defaultEssentiaContainerBlacklist,
+            "List of tile entity registry IDs that the Essentia Interface should ignore. " +
+            "Blacklisted tile entities will not be detected as adjacent essentia containers, " +
+            "preventing both push and pull operations. " +
+            "Use F3 or a mod like WAILA/TOP to find the tile entity ID (e.g. \"thaumcraft:thaumatorium\")."
+        );
+        config.getCategory(CATEGORY_INTERFACES)
+            .get("essentiaContainerBlacklist")
+            .setLanguageKey(Tags.MODID + ".config.essentiaContainerBlacklist");
+        Set<String> parsed = new HashSet<>();
+        for (String entry : blacklistEntries) {
+            String trimmed = entry.trim();
+            if (!trimmed.isEmpty()) parsed.add(trimmed);
+        }
+        essentiaContainerBlacklist = parsed;
 
         // Subnet Proxy settings
         p = config.get(CATEGORY_GENERAL,
