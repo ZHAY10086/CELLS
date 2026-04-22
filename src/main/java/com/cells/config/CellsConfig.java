@@ -129,6 +129,9 @@ public class CellsConfig {
     /** Use fixed (non-animated) textures for interface blocks and parts. Requires restart. */
     public static boolean useFixedInterfaceTextures = true;
 
+    /** Whether the controls help panel is visible in Interface GUIs. Persisted as a hidden config. */
+    public static boolean showControlsHelp = true;
+
     /** Number of upgrade slots for the Subnet Proxy (1-24) */
     public static int subnetProxyUpgradeSlots = 5;
 
@@ -455,8 +458,25 @@ public class CellsConfig {
         p.setLanguageKey(Tags.MODID + ".config.subnetProxyMaxTickRate");
         subnetProxyMaxTickRate = p.getInt();
 
+        // Hidden category: GUI preferences (not shown in config GUI)
+        p = config.get(CATEGORY_HIDDEN, "showControlsHelp", true,
+            "Whether the controls help panel is visible in Interface GUIs.");
+        showControlsHelp = p.getBoolean();
+
         // Save if config was created or changed
         if (config.hasChanged()) config.save();
+    }
+
+    /**
+     * Persist the controls help panel visibility setting to the hidden config category.
+     * Must be called from the client side only.
+     *
+     * @param value true to show the panel, false to hide it
+     */
+    public static void setShowControlsHelp(boolean value) {
+        showControlsHelp = value;
+        config.get(CATEGORY_HIDDEN, "showControlsHelp", true).set(value);
+        config.save();
     }
 
     /**

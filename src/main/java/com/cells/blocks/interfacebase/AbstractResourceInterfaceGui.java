@@ -31,8 +31,10 @@ import mezz.jei.api.gui.IGhostIngredientHandler.Target;
 import com.cells.Tags;
 import com.cells.blocks.combinedinterface.ICombinedInterfaceHost;
 import com.cells.client.KeyBindings;
+import com.cells.config.CellsConfig;
 import com.cells.gui.DynamicTooltipTabButton;
 import com.cells.gui.GuiClearFiltersButton;
+import com.cells.gui.GuiControlsHelpToggleButton;
 import com.cells.gui.GuiPageNavigation;
 import com.cells.gui.GuiPullPushUpgradeButton;
 import com.cells.gui.ImportInterfaceControlsHelper;
@@ -95,6 +97,7 @@ public abstract class AbstractResourceInterfaceGui<H extends IInterfaceHost, C e
     private GuiClearFiltersButton clearFiltersButton;
     private GuiPageNavigation pageNavigation;
     private GuiPullPushUpgradeButton pullPushButton;
+    private GuiControlsHelpToggleButton controlsToggleButton;
 
     // JEI ghost target mapping
     protected final Map<Object, Object> mapTargetSlot = new HashMap<>();
@@ -300,6 +303,17 @@ public abstract class AbstractResourceInterfaceGui<H extends IInterfaceHost, C e
         // Create type-specific resource slots
         createResourceSlots();
 
+        // Toggle button to show/hide the controls help panel (placed before the title)
+        this.controlsToggleButton = new GuiControlsHelpToggleButton(
+            5,
+            this.guiLeft + 6,
+            this.guiTop + 6,  // title is at y=6
+            () -> CellsConfig.showControlsHelp
+                ? I18n.format("tooltip.cells.controls_help.hide")
+                : I18n.format("tooltip.cells.controls_help.show")
+        );
+        this.buttonList.add(this.controlsToggleButton);
+
         // Config button to open max slot size configuration screen
         // Unit is resolved dynamically to allow for dynamic type
         this.configButton = new DynamicTooltipTabButton(
@@ -389,9 +403,10 @@ public abstract class AbstractResourceInterfaceGui<H extends IInterfaceHost, C e
 
     @Override
     public void drawFG(int offsetX, int offsetY, int mouseX, int mouseY) {
-        // Draw title with truncation to avoid overlapping buttons
-        // Buttons start at x=132, so title max width is 132-8 = 124 pixels
-        final int maxTitleWidth = 124;
+        // Draw title with truncation to avoid overlapping buttons.
+        // The toggle arrow is at x=8 (8px wide), so the title starts at x=18 (8+8+2).
+        // Buttons start at x=132, so title max width is 132-18 = 114 pixels.
+        final int maxTitleWidth = 114;
         String title = I18n.format(this.host.getGuiTitleLangKey());
         int titleWidth = this.fontRenderer.getStringWidth(title);
 
@@ -409,15 +424,17 @@ public abstract class AbstractResourceInterfaceGui<H extends IInterfaceHost, C e
             title = title + ellipsis;
         }
 
-        this.fontRenderer.drawString(title, 8, 6, 0x404040);
+        this.fontRenderer.drawString(title, 18, 6, 0x404040);
 
-        // Draw controls help widget on the left side
-        ImportInterfaceControlsHelper.drawControlsHelpWidget(
-            this.fontRenderer,
-            this.guiLeft,
-            this.guiTop,
-            !this.host.isExport()
-        );
+        // Draw controls help widget on the left side (only when enabled)
+        if (CellsConfig.showControlsHelp) {
+            ImportInterfaceControlsHelper.drawControlsHelpWidget(
+                this.fontRenderer,
+                this.guiLeft,
+                this.guiTop,
+                !this.host.isExport()
+            );
+        }
     }
 
     @Override
@@ -484,6 +501,11 @@ public abstract class AbstractResourceInterfaceGui<H extends IInterfaceHost, C e
 
         if (btn == this.clearFiltersButton) {
             CellsNetworkHandler.INSTANCE.sendToServer(new PacketClearFilters());
+        }
+
+        if (btn == this.controlsToggleButton) {
+            CellsConfig.setShowControlsHelp(!CellsConfig.showControlsHelp);
+            return;
         }
 
         if (btn == this.pullPushButton && this.pullPushButton.enabled) {
@@ -554,15 +576,17 @@ public abstract class AbstractResourceInterfaceGui<H extends IInterfaceHost, C e
     public List<Rectangle> getJEIExclusionArea() {
         List<Rectangle> areas = new ArrayList<>(super.getJEIExclusionArea());
 
-        // Add controls help widget area on the left side
-        Rectangle controlsBounds = ImportInterfaceControlsHelper.getBounds(
-            this.fontRenderer,
-            this.guiLeft,
-            this.guiTop,
-            !this.host.isExport()
-        );
+        // Add controls help widget area on the left side (only when the panel is visible)
+        if (CellsConfig.showControlsHelp) {
+            Rectangle controlsBounds = ImportInterfaceControlsHelper.getBounds(
+                this.fontRenderer,
+                this.guiLeft,
+                this.guiTop,
+                !this.host.isExport()
+            );
 
-        if (controlsBounds.width > 0 && controlsBounds.height > 0) areas.add(controlsBounds);
+            if (controlsBounds.width > 0 && controlsBounds.height > 0) areas.add(controlsBounds);
+        }
 
         // Add toolbox extension area when present
         boolean hasToolbox = (this.container instanceof AbstractContainerInterface)

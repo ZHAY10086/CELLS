@@ -66,6 +66,10 @@ tooltip.cells.clear_filters.import=Clear all filter slots. Filters with content 
 tooltip.cells.clear_filters.export=Clear all filters and send stored content back to the network.
 tooltip.cells.clear_filters.all=Clear all filter slots
 
+# Controls help toggle button
+tooltip.cells.controls_help.show=Show Controls Help
+tooltip.cells.controls_help.hide=Hide Controls Help
+
 # Messages
 message.cells.disassemble_fail_content=Cannot disassemble cell with content! Empty the cell first.
 message.cells.memory_card.filters_saved=Settings and filters saved to memory card.
@@ -188,7 +192,7 @@ tooltip.cells.overflow_card.desc=Voids overflow items when cell is full
 
 # Ore Dictionary Card
 item.cells.oredict_card.name=Ore Dictionary Card
-tooltip.cells.oredict_card.desc=Allows ore dictionary equivalent items to be inserted (e.g., coppers from different mods)
+tooltip.cells.oredict_card.desc=Allows ore dictionary equivalent items to be inserted (e.g., coppers from different mods) and converted into the partitioned item
 
 # Trash Unselected Card
 item.cells.trash_unselected_card.name=Trash Unselected Card

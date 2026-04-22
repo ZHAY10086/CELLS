@@ -16,6 +16,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Add IO Interfaces for all types (except combined). These interfaces combine Import and Export as 2 inventories (avoiding interferences).
 - Add an Essentia Container Blacklist config to specify tile entities by registry ID, preventing the Essentia Interface's Push/Pull card from interacting with buggy containers.
 - Add protective checks for possible null aspects from outside mods in the Essentia Interface, to prevent crashes. This should never happen if the other mods do their job properly, but Thaumcraft addons are known to be all kinds of janky.
+- Add a toggle arrow button before the title in all Interface GUIs to show/hide the Controls Help panel. The visibility state is persisted across sessions.
 
 ### Fixed
 - Fix Memory Card wiping upgrades in the receiving interface when transferring data.
