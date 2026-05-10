@@ -103,6 +103,7 @@ import com.cells.items.ItemInsertionCard;
 import com.cells.network.sync.ResourceType;
 import com.cells.parts.CellsPartType;
 import com.cells.parts.ItemCellsPart;
+import com.cells.util.PowerStateHelper;
 
 
 /**
@@ -873,22 +874,31 @@ public class PartSubnetProxyFront extends AEBasePart
 
     // ========================= LED State from Outer Proxy =========================
 
+    private int computeStateFlags() {
+        int flags = 0;
+        if (PowerStateHelper.isPowered(this.getProxy())) flags |= POWERED_FLAG;
+        if (PowerStateHelper.hasChannel(this.getProxy())) flags |= CHANNEL_FLAG;
+        if (this.cachedHasBack) flags |= BOTH_PARTS_FLAG;
+
+        return flags;
+    }
+
+    /**
+     * WAILA/TOP may query power state on the logical server, so the display
+     * status must not rely solely on the client-side stream cache.
+     */
+    private int getStateFlags() {
+        TileEntity hostTile = this.getHost() != null ? this.getHost().getTile() : null;
+        World hostWorld = hostTile != null ? hostTile.getWorld() : null;
+        if (hostWorld != null && !hostWorld.isRemote) return this.computeStateFlags();
+
+        return this.clientFlags;
+    }
+
     @Override
     public void writeToStream(final ByteBuf data) throws IOException {
-        int flags = 0;
-        try {
-            if (this.getProxy().getEnergy().isNetworkPowered()) {
-                flags |= POWERED_FLAG;
-            }
-            if (this.getProxy().getNode() != null && this.getProxy().getNode().meetsChannelRequirements()) {
-                flags |= CHANNEL_FLAG;
-            }
-        } catch (final GridAccessException e) {
-            // No grid yet
-        }
-
-        // Use cached counterpart presence (updated on neighbor changes)
-        if (this.cachedHasBack) flags |= BOTH_PARTS_FLAG;
+        int flags = this.computeStateFlags();
+        this.clientFlags = flags;
 
         data.writeByte((byte) flags);
     }
@@ -902,14 +912,15 @@ public class PartSubnetProxyFront extends AEBasePart
 
     @Override
     public boolean isPowered() {
-        return (this.clientFlags & POWERED_FLAG) == POWERED_FLAG;
+        return (this.getStateFlags() & POWERED_FLAG) == POWERED_FLAG;
     }
 
     @Override
     public boolean isActive() {
-        // Active only if we have a channel AND the back counterpart is present
-        return (this.clientFlags & CHANNEL_FLAG) == CHANNEL_FLAG
-            && (this.clientFlags & BOTH_PARTS_FLAG) == BOTH_PARTS_FLAG;
+        int flags = this.getStateFlags();
+
+        return (flags & CHANNEL_FLAG) == CHANNEL_FLAG
+            && (flags & BOTH_PARTS_FLAG) == BOTH_PARTS_FLAG;
     }
 
     // ========================= ICellContainer =========================

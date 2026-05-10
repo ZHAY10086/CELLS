@@ -44,6 +44,7 @@ import com.cells.api.ISubnetProxy;
 import com.cells.Tags;
 import com.cells.parts.CellsPartType;
 import com.cells.parts.ItemCellsPart;
+import com.cells.util.PowerStateHelper;
 
 
 /**
@@ -208,23 +209,32 @@ public class PartSubnetProxyBack extends AEBasePart implements IPowerChannelStat
 
     // ========================= LED State from Outer Proxy =========================
 
-    @Override
-    public void writeToStream(final ByteBuf data) throws IOException {
-        // Derive LED state from the outer proxy, not the orphaned inner proxy
+    private int computeStateFlags() {
         int flags = 0;
-        try {
-            if (this.getProxy().getEnergy().isNetworkPowered()) {
-                flags |= POWERED_FLAG;
-            }
-            if (this.getProxy().getNode() != null && this.getProxy().getNode().meetsChannelRequirements()) {
-                flags |= CHANNEL_FLAG;
-            }
-        } catch (final GridAccessException e) {
-            // No grid yet, flags stay 0
+        if (PowerStateHelper.isPowered(this.getProxy())) flags |= POWERED_FLAG;
+        if (PowerStateHelper.hasChannel(this.getProxy())) flags |= CHANNEL_FLAG;
+        if (this.cachedHasFront) flags |= BOTH_PARTS_FLAG;
+
+        return flags;
+    }
+
+    /**
+     * WAILA/TOP may query power state on the logical server, so the display
+     * status must not rely solely on the client-side stream cache.
+     */
+    private int getStateFlags() {
+        TileEntity hostTile = this.getHost() != null ? this.getHost().getTile() : null;
+        if (hostTile != null && hostTile.getWorld() != null && !hostTile.getWorld().isRemote) {
+            return this.computeStateFlags();
         }
 
-        // Use cached counterpart presence (updated on neighbor changes)
-        if (this.cachedHasFront) flags |= BOTH_PARTS_FLAG;
+        return this.clientFlags;
+    }
+
+    @Override
+    public void writeToStream(final ByteBuf data) throws IOException {
+        int flags = this.computeStateFlags();
+        this.clientFlags = flags;
 
         data.writeByte((byte) flags);
     }
@@ -238,14 +248,15 @@ public class PartSubnetProxyBack extends AEBasePart implements IPowerChannelStat
 
     @Override
     public boolean isPowered() {
-        return (this.clientFlags & POWERED_FLAG) == POWERED_FLAG;
+        return (this.getStateFlags() & POWERED_FLAG) == POWERED_FLAG;
     }
 
     @Override
     public boolean isActive() {
-        // Active only if we have a channel AND the front counterpart is present
-        return (this.clientFlags & CHANNEL_FLAG) == CHANNEL_FLAG
-            && (this.clientFlags & BOTH_PARTS_FLAG) == BOTH_PARTS_FLAG;
+        int flags = this.getStateFlags();
+
+        return (flags & CHANNEL_FLAG) == CHANNEL_FLAG
+            && (flags & BOTH_PARTS_FLAG) == BOTH_PARTS_FLAG;
     }
 
     // ========================= Collision & Cable =========================

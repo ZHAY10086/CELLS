@@ -8,6 +8,11 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Semantic Versioning: https://semver.org/spec/v2.0.0.html
 
 
+## [0.6.1-alpha2] - 2026-05-08
+### Fixed
+- Fix WAILA/TOP status overlays showing Subnet Proxies as offline and Interface blocks with no power/channel state line.
+
+
 ## [0.6.1-alpha] - 2026-05-07
 ### Added
 - Add a public API for the Subnet Proxy and Interfaces to allow other mods to interact with them without resorting to NBT manipulation or reflection.

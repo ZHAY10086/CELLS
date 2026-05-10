@@ -19,6 +19,7 @@ import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 
+import appeng.api.implementations.IPowerChannelState;
 import appeng.api.networking.GridFlags;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.events.MENetworkChannelsChanged;
@@ -52,6 +53,7 @@ import com.cells.integration.mekanismenergistics.MekanismEnergisticsIntegration;
 import com.cells.integration.thaumicenergistics.CombinedInterfaceEssentiaHelper;
 import com.cells.integration.thaumicenergistics.ThaumicEnergisticsIntegration;
 import com.cells.network.sync.ResourceType;
+import com.cells.util.PowerStateHelper;
 
 
 /**
@@ -66,7 +68,7 @@ import com.cells.network.sync.ResourceType;
 public abstract class AbstractCombinedInterfaceTile extends AENetworkInvTile
         implements IGridTickable, ICombinedInterfaceHost,
            ItemInterfaceLogic.Host, FluidInterfaceLogic.Host,
-           IInterfaceProvider, IUpgradeable {
+       IInterfaceProvider, IUpgradeable, IPowerChannelState {
 
     protected final IActionSource actionSource;
 
@@ -150,6 +152,16 @@ public abstract class AbstractCombinedInterfaceTile extends AENetworkInvTile
 
         this.allLogics = Collections.unmodifiableList(logics);
         this.availableTabs = Collections.unmodifiableList(tabs);
+    }
+
+    @Override
+    public boolean isPowered() {
+        return PowerStateHelper.isPowered(this.getProxy());
+    }
+
+    @Override
+    public boolean isActive() {
+        return PowerStateHelper.hasChannel(this.getProxy());
     }
 
     // ============================== ICombinedInterfaceHost ==============================

@@ -14,6 +14,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.items.IItemHandler;
 
+import appeng.api.implementations.IPowerChannelState;
 import appeng.api.networking.GridFlags;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.events.MENetworkChannelsChanged;
@@ -36,6 +37,7 @@ import appeng.util.inv.InvOperation;
 import com.cells.api.IInterfaceProvider;
 import com.cells.api.IUpgradeable;
 import com.cells.helpers.InterfaceApiHelper;
+import com.cells.util.PowerStateHelper;
 
 
 /**
@@ -63,7 +65,7 @@ import com.cells.helpers.InterfaceApiHelper;
  */
 public abstract class AbstractInterfaceTile<L extends IInterfaceLogic> extends AENetworkInvTile
     implements IGridTickable, IInterfaceHost, AbstractResourceInterfaceLogic.Host,
-           IInterfaceProvider, IUpgradeable {
+           IInterfaceProvider, IUpgradeable, IPowerChannelState {
 
     protected final IActionSource actionSource;
     protected L logic;
@@ -91,6 +93,16 @@ public abstract class AbstractInterfaceTile<L extends IInterfaceLogic> extends A
      */
     protected void initLogic(L logic) {
         this.logic = logic;
+    }
+
+    @Override
+    public boolean isPowered() {
+        return PowerStateHelper.isPowered(this.getProxy());
+    }
+
+    @Override
+    public boolean isActive() {
+        return PowerStateHelper.hasChannel(this.getProxy());
     }
 
     // ============================== AbstractResourceInterfaceLogic.Host callbacks ==============================

@@ -16,6 +16,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.items.IItemHandler;
 
+import appeng.api.implementations.IPowerChannelState;
 import appeng.api.networking.GridFlags;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.events.MENetworkChannelsChanged;
@@ -39,6 +40,7 @@ import com.cells.api.IInterfaceProvider;
 import com.cells.blocks.interfacebase.AbstractResourceInterfaceLogic;
 import com.cells.blocks.interfacebase.IInterfaceLogic;
 import com.cells.helpers.InterfaceApiHelper;
+import com.cells.util.PowerStateHelper;
 
 
 /**
@@ -61,7 +63,8 @@ import com.cells.helpers.InterfaceApiHelper;
  * @param <L> The logic class type (ItemInterfaceLogic, FluidInterfaceLogic, etc.)
  */
 public abstract class AbstractIOInterfaceTile<L extends IInterfaceLogic>
-    extends AENetworkInvTile implements IGridTickable, IIOInterfaceHost, IInterfaceProvider {
+    extends AENetworkInvTile implements IGridTickable, IIOInterfaceHost, IInterfaceProvider,
+        IPowerChannelState {
 
     protected final IActionSource actionSource;
 
@@ -101,6 +104,16 @@ public abstract class AbstractIOInterfaceTile<L extends IInterfaceLogic>
         this.allLogicsList = Collections.unmodifiableList(
             Arrays.asList((IInterfaceLogic) importLogic, (IInterfaceLogic) exportLogic)
         );
+    }
+
+    @Override
+    public boolean isPowered() {
+        return PowerStateHelper.isPowered(this.getProxy());
+    }
+
+    @Override
+    public boolean isActive() {
+        return PowerStateHelper.hasChannel(this.getProxy());
     }
 
     // ============================== Direction Host Wrapper ==============================
