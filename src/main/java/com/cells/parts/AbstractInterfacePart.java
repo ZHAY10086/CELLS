@@ -48,6 +48,7 @@ import com.cells.blocks.interfacebase.AbstractResourceInterfaceLogic;
 import com.cells.blocks.interfacebase.IInterfaceHost;
 import com.cells.blocks.interfacebase.IInterfaceLogic;
 import com.cells.gui.CellsGuiHandler;
+import com.cells.helpers.InterfaceMemoryCardHelper;
 import com.cells.helpers.InterfaceApiHelper;
 
 
@@ -443,9 +444,13 @@ public abstract class AbstractInterfacePart<L extends IInterfaceLogic> extends P
                 memoryCard.notifyUser(player, MemoryCardMessages.SETTINGS_SAVED);
             }
         } else {
-            final String storedName = memoryCard.getSettingsName(memCardIS);
-            final NBTTagCompound data = memoryCard.getData(memCardIS);
-            if (name.equals(storedName)) {
+            final NBTTagCompound data = InterfaceMemoryCardHelper.prepareUploadData(
+                memoryCard.getSettingsName(memCardIS),
+                memoryCard.getData(memCardIS),
+                InterfaceMemoryCardHelper.simple(this.isExport(), this.getTypeName())
+            );
+
+            if (data != null) {
                 this.uploadSettings(SettingsFrom.MEMORY_CARD, data, player);
                 memoryCard.notifyUser(player, MemoryCardMessages.SETTINGS_LOADED);
             } else {

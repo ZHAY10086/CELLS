@@ -334,6 +334,11 @@ public class PartSubnetProxyBack extends AEBasePart implements IPowerChannelStat
         return front != null ? front.getItemStack(PartItemStack.PICK) : ItemStack.EMPTY;
     }
 
+    @Override
+    public boolean useStandardMemoryCard() {
+        return false;
+    }
+
     // ========================= Right-click handling =========================
 
     @Override
@@ -355,6 +360,21 @@ public class PartSubnetProxyBack extends AEBasePart implements IPowerChannelStat
         if (front != null) return front.onPartActivate(player, hand, pos);
 
         // No front part, show error
+        if (!player.world.isRemote) {
+            player.sendMessage(new TextComponentTranslation("chat.cells.subnet_proxy.need_front"));
+        }
+
+        return true;
+    }
+
+    @Override
+    public boolean onPartShiftActivate(final EntityPlayer player, final EnumHand hand, final Vec3d pos) {
+        TileEntity te = this.getHost() != null ? this.getHost().getTile() : null;
+        if (te != null && te.getWorld() != null && te.getWorld().getTotalWorldTime() == this.placedTick) return false;
+
+        PartSubnetProxyFront front = findFrontPart();
+        if (front != null) return front.onPartShiftActivate(player, hand, pos);
+
         if (!player.world.isRemote) {
             player.sendMessage(new TextComponentTranslation("chat.cells.subnet_proxy.need_front"));
         }

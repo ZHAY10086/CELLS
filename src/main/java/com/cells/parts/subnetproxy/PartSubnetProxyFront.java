@@ -39,6 +39,8 @@ import appeng.api.config.FuzzyMode;
 import appeng.api.config.Upgrades;
 import appeng.api.config.Actionable;
 import appeng.api.implementations.IPowerChannelState;
+import appeng.api.implementations.items.IMemoryCard;
+import appeng.api.implementations.items.MemoryCardMessages;
 import appeng.api.implementations.items.IUpgradeModule;
 import appeng.api.networking.GridFlags;
 import appeng.api.networking.IGrid;
@@ -87,6 +89,7 @@ import appeng.parts.AEBasePart;
 import appeng.parts.PartModel;
 import appeng.parts.automation.UpgradeInventory;
 import appeng.tile.inventory.AppEngInternalInventory;
+import appeng.util.SettingsFrom;
 import appeng.util.inv.IAEAppEngInventory;
 import appeng.util.inv.InvOperation;
 import appeng.util.inv.filter.IAEItemFilter;
@@ -94,6 +97,7 @@ import appeng.util.item.AEItemStack;
 
 import com.cells.api.FilterHostUtil;
 import com.cells.api.ISubnetProxy;
+import com.cells.helpers.SubnetProxyMemoryCardHelper;
 import com.cells.Tags;
 import com.cells.config.CellsConfig;
 import com.cells.gui.CellsGuiHandler;
@@ -719,10 +723,25 @@ public class PartSubnetProxyFront extends AEBasePart
     @Override
     public void onPlacement(EntityPlayer player, EnumHand hand, ItemStack held, AEPartLocation side) {
         super.onPlacement(player, hand, held, side);
+        if (held.hasTagCompound()) {
+            this.uploadSettings(SettingsFrom.DISMANTLE_ITEM, held.getTagCompound(), player);
+        }
+
         TileEntity te = this.getHost() != null ? this.getHost().getTile() : null;
         if (te != null && te.getWorld() != null) {
             this.placedTick = te.getWorld().getTotalWorldTime();
         }
+    }
+
+    @Override
+    public ItemStack getItemStack(PartItemStack type) {
+        ItemStack stack = super.getItemStack(type);
+        if (type == PartItemStack.WRENCH) {
+            NBTTagCompound tag = this.downloadSettings(SettingsFrom.DISMANTLE_ITEM, new NBTTagCompound());
+            if (!tag.isEmpty()) stack.setTagCompound(tag);
+        }
+
+        return stack;
     }
 
     @Override
@@ -812,6 +831,86 @@ public class PartSubnetProxyFront extends AEBasePart
         data.setTag("config", sparse);
     }
 
+    protected NBTTagCompound downloadSettings(final SettingsFrom from, final NBTTagCompound output) {
+        output.setInteger("priority", this.priority);
+        output.setInteger("filterMode", this.filterMode.ordinal());
+        output.setInteger("fuzzyMode", this.fuzzyMode.ordinal());
+
+        if (from != SettingsFrom.MEMORY_CARD) {
+            output.setInteger("enabledChannels", getEnabledChannelsBitmask());
+        }
+
+        // Memory cards should only capture the pages that are currently usable,
+        // not hidden overflow filters from removed capacity upgrades.
+        int filterSlots = this.getFilterSlots();
+        AppEngInternalInventory exportedConfig = new AppEngInternalInventory(null, filterSlots, 1);
+        for (int slot = 0; slot < filterSlots; slot++) {
+            ItemStack stack = this.config.getStackInSlot(slot);
+            if (stack.isEmpty()) continue;
+
+            exportedConfig.setStackInSlot(slot, stack.copy());
+        }
+
+        output.setTag("config", exportedConfig.serializeNBT());
+        return output;
+    }
+
+    @Override
+    public void uploadSettings(final SettingsFrom from, final NBTTagCompound compound, final EntityPlayer player) {
+        if (compound == null) return;
+
+        if (compound.hasKey("priority")) this.setPriority(compound.getInteger("priority"));
+
+        if (compound.hasKey("filterMode")) {
+            this.filterMode = ResourceType.fromOrdinal(compound.getInteger("filterMode"));
+        }
+
+        if (compound.hasKey("fuzzyMode")) {
+            int fuzzyOrdinal = Math.max(0, Math.min(compound.getInteger("fuzzyMode"), FuzzyMode.values().length - 1));
+            this.fuzzyMode = FuzzyMode.values()[fuzzyOrdinal];
+        }
+
+        if (from != SettingsFrom.MEMORY_CARD && compound.hasKey("enabledChannels")) {
+            int mask = compound.getInteger("enabledChannels");
+            EnumSet<ResourceType> importedChannels = EnumSet.noneOf(ResourceType.class);
+            for (ResourceType type : ResourceType.values()) {
+                if ((mask & (1 << type.ordinal())) != 0) importedChannels.add(type);
+            }
+
+            this.enabledChannels = importedChannels;
+        }
+
+        AppEngInternalInventory importedConfig = new AppEngInternalInventory(null, this.config.getSlots(), 1);
+        importedConfig.readFromNBT(compound, "config");
+
+        IAEAppEngInventory configOwner = this.config.getTileEntity();
+        this.config.setTileEntity(null);
+
+        if (from == SettingsFrom.MEMORY_CARD) {
+            // Add new filters into the empty slots without clearing the existing config
+            for (int slot = 0; slot < importedConfig.getSlots(); slot++) {
+                ItemStack stack = importedConfig.getStackInSlot(slot);
+                if (stack.isEmpty()) continue;
+
+                FilterHostUtil.addFilter(this, stack);
+            }
+        } else {
+            for (int slot = 0; slot < this.config.getSlots(); slot++) {
+                ItemStack stack = slot < importedConfig.getSlots() ? importedConfig.getStackInSlot(slot) : ItemStack.EMPTY;
+                this.config.setStackInSlot(slot, stack.isEmpty() ? ItemStack.EMPTY : stack.copy());
+            }
+        }
+
+        this.config.setTileEntity(configOwner);
+
+        this.setCurrentPage(this.currentPage);
+        this.filtersDirty = true;
+        this.notifyGridOfChange();
+        this.markHostDirty();
+
+        if (this.getHost() != null) this.getHost().markForUpdate();
+    }
+
     /**
      * Read sparse config from NBT. Clears all slots first, then fills
      * only the slots that were serialized.
@@ -893,6 +992,44 @@ public class PartSubnetProxyFront extends AEBasePart
         if (hostWorld != null && !hostWorld.isRemote) return this.computeStateFlags();
 
         return this.clientFlags;
+    }
+
+    // ========================= Memory card handling =========================
+
+    @Override
+    public boolean useStandardMemoryCard() {
+        return false;
+    }
+
+    protected boolean useMemoryCard(final EntityPlayer player) {
+        final ItemStack memCardIS = player.inventory.getCurrentItem();
+        if (memCardIS.isEmpty()) return false;
+        if (!(memCardIS.getItem() instanceof IMemoryCard)) return false;
+
+        final IMemoryCard memoryCard = (IMemoryCard) memCardIS.getItem();
+        final String name = SubnetProxyMemoryCardHelper.getMemoryCardName();
+
+        if (player.isSneaking()) {
+            final NBTTagCompound data = this.downloadSettings(SettingsFrom.MEMORY_CARD, new NBTTagCompound());
+            if (!data.isEmpty()) {
+                memoryCard.setMemoryCardContents(memCardIS, name, data);
+                memoryCard.notifyUser(player, MemoryCardMessages.SETTINGS_SAVED);
+            }
+        } else {
+            final NBTTagCompound data = SubnetProxyMemoryCardHelper.prepareUploadData(
+                memoryCard.getSettingsName(memCardIS),
+                memoryCard.getData(memCardIS)
+            );
+
+            if (data != null) {
+                this.uploadSettings(SettingsFrom.MEMORY_CARD, data, player);
+                memoryCard.notifyUser(player, MemoryCardMessages.SETTINGS_LOADED);
+            } else {
+                memoryCard.notifyUser(player, MemoryCardMessages.INVALID_MACHINE);
+            }
+        }
+
+        return true;
     }
 
     @Override
@@ -2434,6 +2571,9 @@ public class PartSubnetProxyFront extends AEBasePart
         TileEntity te = this.getHost() != null ? this.getHost().getTile() : null;
         if (te != null && te.getWorld() != null && te.getWorld().getTotalWorldTime() == this.placedTick) return false;
 
+        if (!player.isSneaking() && this.useMemoryCard(player)) return true;
+        if (player.isSneaking()) return false;
+
         if (player.world.isRemote) return true;
 
         // Check that the back part is present
@@ -2447,6 +2587,11 @@ public class PartSubnetProxyFront extends AEBasePart
         CellsGuiHandler.openPartGui(player, guiTe, this.getSide(), CellsGuiHandler.GUI_PART_SUBNET_PROXY);
 
         return true;
+    }
+
+    @Override
+    public boolean onPartShiftActivate(final EntityPlayer player, final EnumHand hand, final Vec3d pos) {
+        return this.useMemoryCard(player);
     }
 
     /**

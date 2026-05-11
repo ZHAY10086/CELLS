@@ -9,9 +9,14 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 
 ## [0.6.1-alpha2] - 2026-05-08
+### Added
+- Add support for shift-clicking, quick-adding, dragging from JEI, and pouring into interface slots for Recovery Containers (instead of being treated as the orb item).
+- Add interoperability for all the interface types between each others (e.g., you can export the filters of an Item Interface to an Universal Interface or an IO Item Interface, and vice versa). The direction and type must match (will only apply what matches if more than 1 type is supported, e.g., Universal Interface).
+- Add Memory Card support for Subnet Proxy, so they can import filters from AE2 Item/Fluid/Gas/Essentia Storage Buses and other Subnet Proxies.
+
 ### Fixed
 - Fix WAILA/TOP status overlays showing Subnet Proxies as offline and Interface blocks with no power/channel state line.
-- Add support for shift-clicking, quick-adding, dragging from JEI, and pouring into interface slots for Recovery Containers (instead of being treated as the orb item).
+- Fix the memory card "save filters" shortcut not handling I/O interfaces.
 
 
 ## [0.6.1-alpha] - 2026-05-07
