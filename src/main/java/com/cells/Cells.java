@@ -5,12 +5,14 @@ import java.io.File;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.CapabilityInject;
 import net.minecraftforge.common.capabilities.CapabilityManager;
-import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
@@ -50,17 +52,12 @@ public class Cells {
     )
     public static CommonProxy proxy;
 
+    // If non-null, this means the capability was registered by another mod, so we don't need to register it ourselves
+    @CapabilityInject(IItemRepository.class)
+    private static Capability<IItemRepository> itemRepositoryCapability;
+
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) {
-        // Register IItemRepository capability so AE2 Storage Buses can use bulk slotless
-        // access on our item interfaces, even without Storage Drawers installed.
-        // Only register if Storage Drawers is not installed, as it registers the capability itself.
-        // TODO: What if someone else has the "great idea" of doing the exact same thing?
-        //       Can we detect conflicts or multiple registrations?
-        if (!Loader.isModLoaded("storagedrawers")) {
-            CapabilityManager.INSTANCE.register(IItemRepository.class, new IItemRepository.NullStorage(), IItemRepository.NullImpl::new);
-        }
-
         // Register data fixers for tile entity ID migration (must happen before any world is loaded)
         CellsDataFixer.register();
 
@@ -94,6 +91,19 @@ public class Cells {
         OreDictValidator.preValidateAllEntries();
 
         proxy.postInit(event);
+    }
+
+    @EventHandler
+    public void loadComplete(FMLLoadCompleteEvent event) {
+        // Register IItemRepository capability so AE2 Storage Buses can use bulk slotless
+        // access on our item interfaces, even without Storage Drawers installed.
+        // We register it here to ensure that any other mods that register their own
+        // IItemRepository capability have already done so (otherwise we crash on startup).
+        // This DOES NOT protect against mods that register it AFTER this point,
+        // but that's not our problem.
+        if (itemRepositoryCapability == null) {
+            CapabilityManager.INSTANCE.register(IItemRepository.class, new IItemRepository.NullStorage(), IItemRepository.NullImpl::new);
+        }
     }
 
     @EventHandler
