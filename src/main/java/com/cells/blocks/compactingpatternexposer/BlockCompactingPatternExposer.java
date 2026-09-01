@@ -31,8 +31,6 @@ import com.cells.gui.CellsGuiHandler;
  */
 public class BlockCompactingPatternExposer extends AEBaseTileBlock {
 
-    private static final String TOOLTIP_KEY = "tooltip.cells.compacting_pattern_exposer.info";
-
     public BlockCompactingPatternExposer() {
         super(Material.IRON);
         this.setRegistryName(Tags.MODID, "compacting_pattern_exposer");
@@ -47,7 +45,7 @@ public class BlockCompactingPatternExposer extends AEBaseTileBlock {
     @SideOnly(Side.CLIENT)
     public void addInformation(ItemStack stack, @Nullable World world, List<String> tooltip, ITooltipFlag flag) {
         super.addInformation(stack, world, tooltip, flag);
-        tooltip.add("§7" + I18n.format(TOOLTIP_KEY));
+        tooltip.add(I18n.format("tooltip.cells.compacting_pattern_exposer.info"));
     }
 
     @Override

@@ -79,22 +79,20 @@ public final class NBTSizeHelper {
     }
 
     /**
-     * Format a byte size with color coding based on threshold.
+     * Get the translation key for the NBT size tooltip line based on severity.
      * - Green: Below 50% of threshold
      * - Yellow: 50-100% of threshold
      * - Red: Above threshold
      *
      * @param bytes Size in bytes
      * @param warningThreshold Threshold for warning (yellow)
-     * @return Colored formatted string
+     * @return Translation key for the colored tooltip line
      */
-    public static String formatSizeWithColor(long bytes, long warningThreshold) {
-        String sizeStr = formatSize(bytes);
+    public static String getSizeTooltipTranslationKey(long bytes, long warningThreshold) {
+        if (bytes >= warningThreshold) return "tooltip.cells.nbt_size.exceeded";
+        if (bytes >= warningThreshold / 2) return "tooltip.cells.nbt_size.near_limit";
 
-        if (bytes >= warningThreshold) return "§c" + sizeStr; // Red - above threshold
-        if (bytes >= warningThreshold / 2) return "§e" + sizeStr; // Yellow - approaching threshold
-
-        return "§a" + sizeStr; // Green - safe
+        return "tooltip.cells.nbt_size";  // Safe size, no warning
     }
 
     /**

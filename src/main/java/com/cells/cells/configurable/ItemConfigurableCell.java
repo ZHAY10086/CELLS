@@ -137,10 +137,10 @@ public class ItemConfigurableCell extends Item implements ICellWorkbenchItem, II
 
         if (info == null) {
             // No component installed - show warning
-            tooltip.add("§c" + I18n.format("tooltip.cells.configurable_cell.no_component"));
+            tooltip.add(I18n.format("tooltip.cells.configurable_cell.no_component"));
             tooltip.add("");
-            tooltip.add("§b" + I18n.format("tooltip.cells.click_to_configure"));
-            tooltip.add("§7" + I18n.format("tooltip.cells.configurable_cell.info"));
+            tooltip.add(I18n.format("tooltip.cells.click_to_configure"));
+            tooltip.add(I18n.format("tooltip.cells.configurable_cell.info"));
             return;
         }
 
@@ -181,13 +181,14 @@ public class ItemConfigurableCell extends Item implements ICellWorkbenchItem, II
         if (CellsConfig.general.enableNbtSizeTooltip && cellInv instanceof INBTSizeProvider) {
             int nbtSize = ((INBTSizeProvider) cellInv).getTotalNbtSize();
             long warningThreshold = NBTSizeHelper.kbToBytes(CellsConfig.general.nbtSizeWarningThresholdKB);
-            String sizeStr = NBTSizeHelper.formatSizeWithColor(nbtSize, warningThreshold);
 
             tooltip.add("");
-            tooltip.add(I18n.format("tooltip.cells.nbt_size", sizeStr));
+            tooltip.add(I18n.format(
+                NBTSizeHelper.getSizeTooltipTranslationKey(nbtSize, warningThreshold),
+                NBTSizeHelper.formatSize(nbtSize)));
 
             if (NBTSizeHelper.exceedsThreshold(nbtSize, warningThreshold)) {
-                tooltip.add("§c" + I18n.format("tooltip.cells.nbt_size.warning"));
+                tooltip.add(I18n.format("tooltip.cells.nbt_size.warning"));
             }
         }
 
@@ -200,7 +201,7 @@ public class ItemConfigurableCell extends Item implements ICellWorkbenchItem, II
 
         String capacityStr = ReadableNumberConverter.INSTANCE.toWideReadableForm(effectivePerType);
         String unitStr = I18n.format("cells.unit." + channelType.getLocalizationSuffix());
-        tooltip.add("§b" + I18n.format("tooltip.cells.configurable_cell.capacity_per_type", capacityStr, unitStr));
+        tooltip.add(I18n.format("tooltip.cells.configurable_cell.capacity_per_type", capacityStr, unitStr));
 
         // Show upgrade information
         CellUpgradeHelper.addUpgradeTooltips(getUpgradesInventory(stack), tooltip);
@@ -212,8 +213,8 @@ public class ItemConfigurableCell extends Item implements ICellWorkbenchItem, II
 
         // Show cell description
         tooltip.add("");
-        tooltip.add("§7" + I18n.format("tooltip.cells.configurable_cell.info"));
-        tooltip.add("§b" + I18n.format("tooltip.cells.click_to_configure"));
+        tooltip.add(I18n.format("tooltip.cells.configurable_cell.info"));
+        tooltip.add(I18n.format("tooltip.cells.click_to_configure"));
     }
 
     // =====================

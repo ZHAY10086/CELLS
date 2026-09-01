@@ -295,7 +295,7 @@ public class CellViewCategory implements IRecipeCategory<CellViewRecipe>, IRecip
             if (recipeRef.isCompacting() && recipeRef.isChainInitialized()) {
                 ItemStack partitioned = recipeRef.getPartitionedItem();
                 if (!partitioned.isEmpty() && !ItemStack.areItemsEqual(ingredient, partitioned)) {
-                    tooltip.add("§7" + I18n.format("jei.cells.cellview.tooltip.virtual_form") + "§r");
+                    tooltip.add(I18n.format("jei.cells.cellview.tooltip.virtual_form"));
                     virtualForm = true;
                 }
             }
@@ -411,12 +411,12 @@ public class CellViewCategory implements IRecipeCategory<CellViewRecipe>, IRecip
 
         // Row 2: Size information (with HD multiplier note if applicable)
         String sizeLabel = I18n.format("jei.cells.cellview.size");
-        String sizeValue;
+        String sizeValue;  // TODO: add key for the %d / %d part
         if (currentRecipe.isHyperDensity()) {
             // Show HD indicator with effective storage info
             sizeValue = ReadableNumberConverter.INSTANCE.toWideReadableForm(currentRecipe.getUsedBytes())
                 + " / " + ReadableNumberConverter.INSTANCE.toWideReadableForm(currentRecipe.getTotalBytes())
-                + " §5(HD)§r";
+                + I18n.format("jei.cells.cellview.size.hd_suffix");
         } else {
             sizeValue = ReadableNumberConverter.INSTANCE.toWideReadableForm(currentRecipe.getUsedBytes())
                 + " / " + ReadableNumberConverter.INSTANCE.toWideReadableForm(currentRecipe.getTotalBytes());
@@ -435,14 +435,15 @@ public class CellViewCategory implements IRecipeCategory<CellViewRecipe>, IRecip
                 : currentRecipe.getMaxTypes();
             typesLine = I18n.format("jei.cells.cellview.types") + " " + currentRecipe.getUsedTypes()
                 + " / " + effectiveMax
-                + " §8(" + perTypeStr + " " + I18n.format("jei.cells.cellview.per_type") + ")§r";
+                + I18n.format("jei.cells.cellview.types.per_type_suffix",
+                    perTypeStr, I18n.format("jei.cells.cellview.per_type"));
         } else {
             // Standard cells: show overhead
             String typesLabel = I18n.format("jei.cells.cellview.types");
             long overheadBytes = currentRecipe.getOverheadBytes();
             String overheadStr = ReadableNumberConverter.INSTANCE.toWideReadableForm(overheadBytes);
             typesLine = typesLabel + " " + currentRecipe.getUsedTypes() + " / " + currentRecipe.getMaxTypes()
-                + " §8(" + overheadStr + ")§r";
+                + I18n.format("jei.cells.cellview.types.overhead_suffix", overheadStr);
         }
         font.drawString(typesLine, leftMargin, y, 0x000000);
 
@@ -492,12 +493,12 @@ public class CellViewCategory implements IRecipeCategory<CellViewRecipe>, IRecip
      */
     private void drawCompactingInfo(FontRenderer font, int leftMargin, int y) {
         if (!currentRecipe.hasPartition()) {
-            font.drawString("§4" + I18n.format("jei.cells.cellview.not_partitioned") + "§r", leftMargin, y, 0x404040);
+            font.drawString(I18n.format("jei.cells.cellview.not_partitioned"), leftMargin, y, 0x404040);
             return;
         }
 
         if (!currentRecipe.isChainInitialized()) {
-            font.drawString("§4" + I18n.format("jei.cells.cellview.chain_pending") + "§r", leftMargin, y, 0x404040);
+            font.drawString(I18n.format("jei.cells.cellview.chain_pending"), leftMargin, y, 0x404040);
             return;
         }
 
@@ -505,7 +506,7 @@ public class CellViewCategory implements IRecipeCategory<CellViewRecipe>, IRecip
         int tiersUp = currentRecipe.getTiersUp();
         int tiersDown = currentRecipe.getTiersDown();
         String tiersInfo = I18n.format("jei.cells.cellview.compression_tiers", tiersUp, tiersDown);
-        if (currentRecipe.hasOreDictCard()) tiersInfo += "§r §6[OD]§r";
+        if (currentRecipe.hasOreDictCard()) tiersInfo += I18n.format("jei.cells.cellview.compression_tiers.oredict_suffix");
 
         int tierInfoWidth = font.getStringWidth(tiersInfo);
 
@@ -515,7 +516,7 @@ public class CellViewCategory implements IRecipeCategory<CellViewRecipe>, IRecip
             partitionName = font.trimStringToWidth(partitionName, 160 - tierInfoWidth - 3) + "...";
         }
 
-        font.drawString(partitionName + "§r §8" + tiersInfo, leftMargin, y, 0x404040);
+        font.drawString(partitionName + " §8" + tiersInfo, leftMargin, y, 0x404040);
     }
 
     /**
@@ -524,8 +525,9 @@ public class CellViewCategory implements IRecipeCategory<CellViewRecipe>, IRecip
     private void drawNbtInfo(FontRenderer font, Minecraft minecraft, int leftMargin, int y) {
         int nbtSize = currentRecipe.getNbtSize();
         long warningThreshold = NBTSizeHelper.kbToBytes(CellsConfig.general.nbtSizeWarningThresholdKB);
-        String nbtSizeStr = NBTSizeHelper.formatSizeWithColor(nbtSize, warningThreshold);
-        String nbtLabel = I18n.format("tooltip.cells.nbt_size", nbtSizeStr);
+        String formattedNbtSize = NBTSizeHelper.formatSize(nbtSize);
+        String nbtLabelKey = NBTSizeHelper.getSizeTooltipTranslationKey(nbtSize, warningThreshold);
+        String nbtLabel = I18n.format(nbtLabelKey, formattedNbtSize);
 
         // replace colors for dark background -> light background
         nbtLabel = nbtLabel.replace("§c", "§4").replace("§e", "§6").replace("§a", "§2");
@@ -534,7 +536,7 @@ public class CellViewCategory implements IRecipeCategory<CellViewRecipe>, IRecip
 
         // Draw warning icon if NBT size exceeds threshold
         if (NBTSizeHelper.exceedsThreshold(nbtSize, warningThreshold)) {
-            int nbtLabelWidth = font.getStringWidth(I18n.format("tooltip.cells.nbt_size", NBTSizeHelper.formatSize(nbtSize)));
+            int nbtLabelWidth = font.getStringWidth(I18n.format(nbtLabelKey, formattedNbtSize));
             GlStateManager.color(1f, 1f, 1f, 1f);
             warningIcon.draw(minecraft, leftMargin + nbtLabelWidth + 2, y);
         }
@@ -660,7 +662,7 @@ public class CellViewCategory implements IRecipeCategory<CellViewRecipe>, IRecip
             if (currentRecipe.isHyperDensity()) {
                 tooltip.add("");
                 tooltip.add(I18n.format("jei.cells.cellview.tooltip.hd_explanation"));
-                tooltip.add("§d" + I18n.format("jei.cells.cellview.tooltip.hd_multiplier",
+                tooltip.add(I18n.format("jei.cells.cellview.tooltip.hd_multiplier",
                     format.format(currentRecipe.getByteMultiplier() * 8)));
             }
 
@@ -676,14 +678,14 @@ public class CellViewCategory implements IRecipeCategory<CellViewRecipe>, IRecip
                 // Equal distribution active: explain how it works
                 if (currentRecipe.isConfigurable()) {
                     // Built-in equal distribution for configurable cells
-                    tooltip.add("§6" + I18n.format("jei.cells.cellview.tooltip.equal_distribution_builtin"));
+                    tooltip.add(I18n.format("jei.cells.cellview.tooltip.equal_distribution_builtin"));
                 } else {
                     // Equal distribution from upgrade card
-                    tooltip.add("§6" + I18n.format("jei.cells.cellview.tooltip.equal_distribution_upgrade"));
+                    tooltip.add(I18n.format("jei.cells.cellview.tooltip.equal_distribution_upgrade"));
                 }
 
                 // Explain what equal distribution does
-                tooltip.add("§b" + I18n.format("jei.cells.cellview.tooltip.equal_distribution_explain"));
+                tooltip.add(I18n.format("jei.cells.cellview.tooltip.equal_distribution_explain"));
                 tooltip.add("");
                 tooltip.add(I18n.format("jei.cells.cellview.tooltip.per_type_limit",
                     format.format(currentRecipe.getPerTypeLimit())));
@@ -724,8 +726,8 @@ public class CellViewCategory implements IRecipeCategory<CellViewRecipe>, IRecip
 
                     tooltip.add(I18n.format("jei.cells.cellview.tooltip.compression_explain"));
                     tooltip.add("");
-                    tooltip.add("§a" + I18n.format("jei.cells.cellview.tooltip.tiers_up", tiersUp, tierStringUp));
-                    tooltip.add("§b" + I18n.format("jei.cells.cellview.tooltip.tiers_down", tiersDown, tierStringDown));
+                    tooltip.add(I18n.format("jei.cells.cellview.tooltip.tiers_up", tiersUp, tierStringUp));
+                    tooltip.add(I18n.format("jei.cells.cellview.tooltip.tiers_down", tiersDown, tierStringDown));
                     if (currentRecipe.hasOreDictCard()) {
                         tooltip.add("");
                         tooltip.add(I18n.format("jei.cells.cellview.tooltip.oredict_enabled"));

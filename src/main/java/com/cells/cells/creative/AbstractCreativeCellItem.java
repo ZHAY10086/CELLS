@@ -121,22 +121,22 @@ public abstract class AbstractCreativeCellItem<T, H extends AbstractCreativeCell
         String unitNames = I18n.format("cells.unit_names." + this.typeKey);
 
         // Show what the cell does
-        tooltip.add("§7" + I18n.format("tooltip.cells.creative_cell.info", unitName, unitNames));
+        tooltip.add(I18n.format("tooltip.cells.creative_cell.info", unitName, unitNames));
 
         // Show amount exposed per type
         String amountStr = ReadableNumberConverter.INSTANCE.toWideReadableForm(AbstractCreativeCellInventory.REPORTED_AMOUNT);
         H filterHandler = this.filterFactory.apply(stack);
         int filterCount = filterHandler.getFilterCount();
-        tooltip.add("§b" + I18n.format("tooltip.cells.creative_cell.exposes", amountStr, unitNames, filterCount));
+        tooltip.add(I18n.format("tooltip.cells.creative_cell.exposes", amountStr, unitNames, filterCount));
 
         tooltip.add("");
 
         // Creative mode hint
         EntityPlayer player = Minecraft.getMinecraft().player;
         if (player != null && player.isCreative()) {
-            tooltip.add("§a" + I18n.format("tooltip.cells.creative_cell.creative_hint"));
+            tooltip.add(I18n.format("tooltip.cells.creative_cell.creative_hint"));
         } else {
-            tooltip.add("§c" + I18n.format("tooltip.cells.creative_cell.survival_hint"));
+            tooltip.add(I18n.format("tooltip.cells.creative_cell.survival_hint"));
         }
 
         // Show list when shift is held

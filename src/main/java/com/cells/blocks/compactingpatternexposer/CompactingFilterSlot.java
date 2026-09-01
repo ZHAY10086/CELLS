@@ -53,14 +53,13 @@ public class CompactingFilterSlot extends ItemFilterSlot {
 
         List<String> lines = new ArrayList<>(this.getResourceTooltipLines(resource));
         lines.add("");
-        lines.add("§7" + I18n.format(
-            "cells.compacting_pattern_exposer.multiplier.tooltip",
+        lines.add(I18n.format("cells.compacting_pattern_exposer.multiplier.tooltip",
             ReadableNumberConverter.INSTANCE.toWideReadableForm(this.multiplierSupplier.getAsLong())
         ));
         lines.add("");
-        lines.add("§b" + I18n.format("cells.filter_slot.hint.left_click_1"));
-        lines.add("§b" + I18n.format("cells.filter_slot.hint.left_click_2"));
-        lines.add("§b" + I18n.format("cells.compacting_pattern_exposer.filter.hint.right_click"));
+        lines.add(I18n.format("cells.filter_slot.hint.left_click_1"));
+        lines.add(I18n.format("cells.filter_slot.hint.left_click_2"));
+        lines.add(I18n.format("cells.compacting_pattern_exposer.filter.hint.right_click"));
 
         return String.join("\n", lines);
     }

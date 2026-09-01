@@ -77,7 +77,7 @@ public abstract class ItemCompactingCellBase extends AbstractTieredCellItem impl
             if (cellInv instanceof CompactingCellInventory) {
                 addCompactingCellInfo((CompactingCellInventory) cellInv, tooltip);
 
-                tooltip.add("§e" + I18n.format("tooltip.cells.compacting_cell.ioport_warning"));
+                tooltip.add(I18n.format("tooltip.cells.compacting_cell.ioport_warning"));
                 CellUpgradeHelper.addUpgradeTooltips(getUpgradesInventory(stack), tooltip);
                 return;
             }
@@ -85,7 +85,7 @@ public abstract class ItemCompactingCellBase extends AbstractTieredCellItem impl
 
         // Fallback for when cell inventory isn't available
         tooltip.add("");
-        tooltip.add("§8" + I18n.format("tooltip.cells.compacting_cell.stores_one_type"));
+        tooltip.add(I18n.format("tooltip.cells.compacting_cell.stores_one_type"));
     }
 
     /**
@@ -94,13 +94,13 @@ public abstract class ItemCompactingCellBase extends AbstractTieredCellItem impl
     protected void addCompactingCellInfo(CompactingCellInventory compactingInv, List<String> tooltip) {
         if (!compactingInv.hasPartition()) {
             tooltip.add("");
-            tooltip.add("§c" + I18n.format("tooltip.cells.compacting_cell.not_partitioned"));
+            tooltip.add(I18n.format("tooltip.cells.compacting_cell.not_partitioned"));
             return;
         }
 
         if (!compactingInv.isChainInitialized() && !compactingInv.hasStoredItems()) {
             tooltip.add("");
-            tooltip.add("§e" + I18n.format("tooltip.cells.compacting_cell.insert_to_set_compression"));
+            tooltip.add(I18n.format("tooltip.cells.compacting_cell.insert_to_set_compression"));
             return;
         }
 
@@ -111,14 +111,14 @@ public abstract class ItemCompactingCellBase extends AbstractTieredCellItem impl
         if (!higherTiers.isEmpty() || !lowerTiers.isEmpty()) {
             tooltip.add("");
             for (ItemStack tier : higherTiers) {
-                tooltip.add("§a" + I18n.format("tooltip.cells.compacting_cell.converts_up", tier.getDisplayName()));
+                tooltip.add(I18n.format("tooltip.cells.compacting_cell.converts_up", tier.getDisplayName()));
             }
             for (ItemStack tier : lowerTiers) {
-                tooltip.add("§b" + I18n.format("tooltip.cells.compacting_cell.converts_down", tier.getDisplayName()));
+                tooltip.add(I18n.format("tooltip.cells.compacting_cell.converts_down", tier.getDisplayName()));
             }
         } else {
             tooltip.add("");
-            tooltip.add("§e" + I18n.format("tooltip.cells.compacting_cell.no_compression"));
+            tooltip.add(I18n.format("tooltip.cells.compacting_cell.no_compression"));
         }
     }
 

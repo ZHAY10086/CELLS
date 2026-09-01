@@ -190,28 +190,27 @@ public class ItemEmcCell extends Item implements ICellWorkbenchItem, IItemGroup 
     @SideOnly(Side.CLIENT)
     public void addInformation(@Nonnull ItemStack stack, World world, @Nonnull List<String> tooltip,
                                @Nonnull ITooltipFlag flag) {
-        tooltip.add("§7" + I18n.format("tooltip.cells.emc_cell.info"));
+        tooltip.add(I18n.format("tooltip.cells.emc_cell.info"));
 
         PartitionTooltipInfo partitionInfo = getPartitionTooltipInfo(stack, world);
 
         ItemEmcCapacityCard capacityCard = ItemRegistry.EMC_CAPACITY_CARD;
         if (capacityCard != null) {
-            tooltip.add(
-                "§b" + I18n.format(
-                    "tooltip.cells.emc_cell.slots",
-                    partitionInfo.getLearnedFilterCount() + "/" + partitionInfo.unlockedSlots));
+            tooltip.add(I18n.format(
+                "tooltip.cells.emc_cell.slots",
+                partitionInfo.getLearnedFilterCount(),  partitionInfo.unlockedSlots));
         }
 
         String ownerName = getOwnerName(stack);
         if (ownerName == null) {
-            tooltip.add("§c" + I18n.format("tooltip.cells.emc_cell.unbound"));
+            tooltip.add(I18n.format("tooltip.cells.emc_cell.unbound"));
         } else {
-            tooltip.add("§a" + I18n.format("tooltip.cells.emc_cell.owner", ownerName));
+            tooltip.add(I18n.format("tooltip.cells.emc_cell.owner", ownerName));
         }
 
         long bufferedEmc = CellMathHelper.loadLong(Platform.openNbtData(stack), EmcCellInventory.NBT_STORED_EMC);
         if (bufferedEmc > 0) {
-            tooltip.add("§6" + I18n.format("tooltip.cells.emc_cell.buffered", bufferedEmc));
+            tooltip.add(I18n.format("tooltip.cells.emc_cell.buffered", bufferedEmc));
         }
 
         addUnlearnedPartitionTooltip(partitionInfo, tooltip);
@@ -226,10 +225,10 @@ public class ItemEmcCell extends Item implements ICellWorkbenchItem, IItemGroup 
         if (unlearnedFilters.isEmpty()) return;
 
         tooltip.add("");
-        tooltip.add("§c" + I18n.format("tooltip.cells.emc_cell.unlearned", unlearnedFilters.size()));
+        tooltip.add(I18n.format("tooltip.cells.emc_cell.unlearned", unlearnedFilters.size()));
 
         if (!isShiftDown()) {
-            tooltip.add("§7" + I18n.format("tooltip.cells.emc_cell.unlearned_hint"));
+            tooltip.add(I18n.format("tooltip.cells.emc_cell.unlearned_hint"));
             return;
         }
 

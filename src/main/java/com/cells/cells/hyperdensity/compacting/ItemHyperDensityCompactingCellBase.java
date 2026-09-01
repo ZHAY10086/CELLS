@@ -96,8 +96,8 @@ public abstract class ItemHyperDensityCompactingCellBase extends AbstractTieredC
 
         // Add hyper-density and compacting explanations
         tooltip.add("");
-        tooltip.add("§d" + I18n.format("tooltip.cells.hyper_density_cell.info"));
-        tooltip.add("§e" + I18n.format("tooltip.cells.compacting_cell.ioport_warning"));
+        tooltip.add(I18n.format("tooltip.cells.hyper_density_cell.info"));
+        tooltip.add(I18n.format("tooltip.cells.compacting_cell.ioport_warning"));
     }
 
     /**
@@ -106,13 +106,13 @@ public abstract class ItemHyperDensityCompactingCellBase extends AbstractTieredC
     protected void addHDCompactingCellInfo(HyperDensityCompactingCellInventory hdCompInv, List<String> tooltip) {
         if (!hdCompInv.hasPartition()) {
             tooltip.add("");
-            tooltip.add("§c" + I18n.format("tooltip.cells.compacting_cell.not_partitioned"));
+            tooltip.add(I18n.format("tooltip.cells.compacting_cell.not_partitioned"));
             return;
         }
 
         if (!hdCompInv.isChainInitialized() && !hdCompInv.hasStoredItems()) {
             tooltip.add("");
-            tooltip.add("§e" + I18n.format("tooltip.cells.compacting_cell.insert_to_set_compression"));
+            tooltip.add(I18n.format("tooltip.cells.compacting_cell.insert_to_set_compression"));
             return;
         }
 
@@ -122,14 +122,14 @@ public abstract class ItemHyperDensityCompactingCellBase extends AbstractTieredC
         if (!higherTiers.isEmpty() || !lowerTiers.isEmpty()) {
             tooltip.add("");
             for (ItemStack tier : higherTiers) {
-                tooltip.add("§a" + I18n.format("tooltip.cells.compacting_cell.converts_up", tier.getDisplayName()));
+                tooltip.add(I18n.format("tooltip.cells.compacting_cell.converts_up", tier.getDisplayName()));
             }
             for (ItemStack tier : lowerTiers) {
-                tooltip.add("§b" + I18n.format("tooltip.cells.compacting_cell.converts_down", tier.getDisplayName()));
+                tooltip.add(I18n.format("tooltip.cells.compacting_cell.converts_down", tier.getDisplayName()));
             }
         } else {
             tooltip.add("");
-            tooltip.add("§e" + I18n.format("tooltip.cells.compacting_cell.no_compression"));
+            tooltip.add(I18n.format("tooltip.cells.compacting_cell.no_compression"));
         }
     }
 

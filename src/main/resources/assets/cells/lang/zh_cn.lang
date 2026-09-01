@@ -1,22 +1,24 @@
 # Misc
 itemGroup.cells=C.E.L.L.S
-tooltip.cells.wip_do_not_use=§c⚠ 未完成——请勿使用 ⚠§r
-tooltip.cells.useatyourownrisk=§e可能无法按预期工作。使用风险自负。§r
+tooltip.cells.wip_do_not_use=§c⚠ 未完成——请勿使用 ⚠
+tooltip.cells.useatyourownrisk=§e可能无法按预期工作。使用风险自负。
 tooltip.cells.card.separator=、
-tooltip.cells.card.compatible=兼容：%s
+tooltip.cells.card.compatible=§8兼容：%s
 tooltip.cells.type.compact=ME压缩元件
 tooltip.cells.type.hyperdensity=超高密度ME存储元件
 tooltip.cells.type.hyperdensity_compact=超高密度ME压缩元件
 tooltip.cells.type.import_interface=输入接口（所有类型）
 tooltip.cells.type.export_interface=输出接口（所有类型）
 tooltip.cells.type.emc=EMC元件
-tooltip.cells.nbt_size=NBT大小：%s
-tooltip.cells.nbt_size.warning=§c⚠ NBT大小超出安全上限！可能会导致卡顿或崩溃。将一些NBT过大的物品转移至其他区块和网络中，以避免崩溃。§r
+tooltip.cells.nbt_size=NBT大小：§a%s
+tooltip.cells.nbt_size.near_limit=NBT大小：§e%s
+tooltip.cells.nbt_size.exceeded=NBT大小：§c%s
+tooltip.cells.nbt_size.warning=§c⚠ NBT大小超出安全上限！可能会导致卡顿或崩溃。将一些NBT过大的物品转移至其他区块和网络中，以避免崩溃。
 tooltip.cells.previous_page=上一页
 tooltip.cells.next_page=下一页
-tooltip.cells.jei_view_contents=§7按[§b%s§7]查看内容§r
+tooltip.cells.jei_view_contents=§7按[§b%s§7]查看内容
 tooltip.cells.amount=%d/%d %s
-tooltip.cells.click_to_configure=右键点击进行配置
+tooltip.cells.click_to_configure=§b右键点击§7进行配置
 
 # Resource types and units (used in %s placeholders throughout)
 cells.type.item=物品
@@ -50,9 +52,9 @@ cells.max_slot_size.tooltip=槽位中容纳的最大%s数量。
 cells.slot_size_override.title=最大槽位容量（槽位%d）
 cells.slot_size_override.clear_hint=清空输入框以重置覆盖设置
 cells.slot_size_override.using_global=全局
-cells.filter_slot.hint.left_click_1=拿起物品时左键点击以设置
-cells.filter_slot.hint.left_click_2=未拿起物品时左键点击以清除
-cells.filter_slot.hint.right_click=右键点击以覆盖最大槽位容量
+cells.filter_slot.hint.left_click_1=§b拿起物品时左键点击§7以设置
+cells.filter_slot.hint.left_click_2=§b未拿起物品时左键点击§7以清除
+cells.filter_slot.hint.right_click=§b右键点击§7以覆盖最大槽位容量
 cells.polling_rate.title=轮询率
 cells.polling_rate.adaptive=轮询率：自适应
 cells.clear_filters=清空过滤项
@@ -60,8 +62,8 @@ cells.clear_filters=清空过滤项
 # Polling rate - direction-specific
 tooltip.cells.polling_rate.import=输入的固定间隔（0 = 自适应，设置为非零值时以刻为单位）
 tooltip.cells.polling_rate.export=输出的固定间隔（0 = 自适应，设置为非零值时以刻为单位）
-cells.polling_rate.custom.import=轮询率：§r每§b%s§r输入一次
-cells.polling_rate.custom.export=轮询率：§r每§b%s§r输出一次
+cells.polling_rate.custom.import=轮询率：每§b%s输入一次
+cells.polling_rate.custom.export=轮询率：每§b%s输出一次
 tooltip.cells.probe.type_prefix=%s：%s
 
 # WAILA/TOP probe tooltips
@@ -125,7 +127,7 @@ tooltip.cells.controls_help.hide=隐藏控制帮助
 tooltip.cells.recipe_transfer.title=JEI配方转移
 tooltip.cells.recipe_transfer.mapping1=输入接口 -> %s
 tooltip.cells.recipe_transfer.mapping2=输出接口 -> %s
-tooltip.cells.recipe_transfer.current= §a（你在这里）§r
+tooltip.cells.recipe_transfer.current= §a（你在这里）
 tooltip.cells.recipe_transfer.click_to_swap=决定在JEI中点击“+”按钮时，配方的哪一部分进入过滤项，具体取决于接口类型。点击切换接口路由。
 tooltip.cells.recipe_transfer.creative_selection=在JEI中点击“+”按钮将%s§7添加到该过滤项中。
 tooltip.cells.recipe_transfer.creative_click_to_swap=点击在添加配方输入和配方输出之间切换。
@@ -265,16 +267,16 @@ item.cells.compacting_component.2g.name=2G-ME压缩组件
 
 # Overflow Card
 item.cells.overflow_card.name=溢出销毁卡
-tooltip.cells.overflow_card.desc=在元件已满时销毁溢出的物品
+tooltip.cells.overflow_card.desc=§7在元件已满时销毁溢出的物品
 
 # Ore Dictionary Card
 item.cells.oredict_card.name=矿物词典卡
-tooltip.cells.oredict_card.desc=允许输入矿物词典等效的物品（例如：不同模组的铜），并将其转换为分区设定的物品
+tooltip.cells.oredict_card.desc=§7允许输入矿物词典等效的物品（例如：不同模组的铜），并将其转换为分区设定的物品
 
 # Trash Unselected Card
 item.cells.trash_unselected_card.name=过滤销毁卡
-tooltip.cells.trash_unselected_card.desc=销毁不匹配过滤设置的物品
-tooltip.cells.trash_unselected_card.warning=警告：该卡没有任何保护措施！请谨慎使用。
+tooltip.cells.trash_unselected_card.desc=§7销毁不匹配过滤设置的物品
+tooltip.cells.trash_unselected_card.warning=§e警告：该卡没有任何保护措施！请谨慎使用。
 
 # Equal Distribution Card
 item.cells.equal_distribution_card.1x.name=均分卡（1x）
@@ -285,8 +287,8 @@ item.cells.equal_distribution_card.16x.name=均分卡（16x）
 item.cells.equal_distribution_card.32x.name=均分卡（32x）
 item.cells.equal_distribution_card.63x.name=均分卡（63x）
 item.cells.equal_distribution_card.infinite.name=均分卡（无限制）
-tooltip.cells.equal_distribution_card.desc=将元件可容纳类型限制为%d种，并均分容量（每种类型上限为元件总容量的%d）。会预先预留类型开销（即元件的一半容量），而不是在添加每种类型时才预留。
-tooltip.cells.equal_distribution_card.desc.infinite=将容量均分给所有类型。仅在配置中增加了“最大类型数”时，才应使用该升级卡。
+tooltip.cells.equal_distribution_card.desc=§7将元件可容纳类型限制为%d种，并均分容量（每种类型上限为元件总容量的%d）。会预先预留类型开销（即元件的一半容量），而不是在添加每种类型时才预留。
+tooltip.cells.equal_distribution_card.desc.infinite=§7将容量均分给所有类型。仅在配置中增加了“最大类型数”时，才应使用该升级卡。
 
 # Compression Tier Card
 item.cells.compression_tier_card.3x.name=压缩等级卡（3x）
@@ -294,7 +296,7 @@ item.cells.compression_tier_card.6x.name=压缩等级卡（6x）
 item.cells.compression_tier_card.9x.name=压缩等级卡（9x）
 item.cells.compression_tier_card.12x.name=压缩等级卡（12x）
 item.cells.compression_tier_card.15x.name=压缩等级卡（15x）
-tooltip.cells.compression_tier_card.desc=支持最多%d级压缩。出于性能考量，尽可能使用较低的压缩等级。
+tooltip.cells.compression_tier_card.desc=§7支持最多%d级压缩。出于性能考量，尽可能使用较低的压缩等级。
 
 # Decompression Tier Card
 item.cells.decompression_tier_card.3x.name=解压等级卡（3x）
@@ -302,24 +304,24 @@ item.cells.decompression_tier_card.6x.name=解压等级卡（6x）
 item.cells.decompression_tier_card.9x.name=解压等级卡（9x）
 item.cells.decompression_tier_card.12x.name=解压等级卡（12x）
 item.cells.decompression_tier_card.15x.name=解压等级卡（15x）
-tooltip.cells.decompression_tier_card.desc=支持最多%d级解压。出于性能考量，尽可能使用较低的解压等级。
+tooltip.cells.decompression_tier_card.desc=§7支持最多%d级解压。出于性能考量，尽可能使用较低的解压等级。
 
 # EMC Cell
 item.cells.emc_cell.name=EMC ME存储元件
 item.cells.emc_capacity_card.tier1.name=精致EMC升级卡
 item.cells.emc_capacity_card.tier2.name=压缩EMC升级卡
-tooltip.cells.emc_cell.info=已绑定的EMC存储元件。以固定数量公开已学习的分区物品，并将支持的输入物品转换为EMC。
-tooltip.cells.emc_cell.slots=分区槽位：%s
-tooltip.cells.emc_cell.owner=绑定至：%s
-tooltip.cells.emc_cell.unbound=未绑定：重新放入以绑定至玩家
-tooltip.cells.emc_cell.buffered=缓存的EMC：%s
-tooltip.cells.emc_cell.unlearned=未学习的分区过滤项：%s
-tooltip.cells.emc_cell.unlearned_hint=按住Shift列出被阻止的过滤项
-message.cells.emc_cell.link_copy=从EMC接口复制了%s个新的分区过滤项
-message.cells.emc_cell.link_copy_full=从EMC接口复制了%s个新的分区过滤项；另有%s个唯一过滤项无法容纳
-message.cells.emc_cell.link_copy_full_none=EMC元件分区已满；另有%s个唯一过滤项无法容纳
+tooltip.cells.emc_cell.info=§7已绑定的EMC存储元件。以固定数量公开已学习的分区物品，并将支持的输入物品转换为EMC。
+tooltip.cells.emc_cell.slots=§b分区槽位：%d/%d
+tooltip.cells.emc_cell.owner=§a绑定至：%s
+tooltip.cells.emc_cell.unbound=§c未绑定：重新放入以绑定至玩家
+tooltip.cells.emc_cell.buffered=§6缓存的EMC：%,d
+tooltip.cells.emc_cell.unlearned=§c未学习的分区过滤项：%d
+tooltip.cells.emc_cell.unlearned_hint=§7按住§bShift§7列出被阻止的过滤项
+message.cells.emc_cell.link_copy=从EMC接口复制了%d个新的分区过滤项
+message.cells.emc_cell.link_copy_full=从EMC接口复制了%d个新的分区过滤项；另有%d个唯一过滤项无法容纳
+message.cells.emc_cell.link_copy_full_none=EMC元件分区已满；另有%d个唯一过滤项无法容纳
 message.cells.emc_cell.link_copy_none=未从EMC接口复制任何新的分区过滤项
-tooltip.cells.emc_capacity_card.desc=允许元件提供%s种不同的分区物品
+tooltip.cells.emc_capacity_card.desc=§7允许元件提供%d种不同的分区物品
 
 
 # Hyper-Density Cells (1k-1G max, each displayed byte represents ~2.1B actual storage)
@@ -401,36 +403,36 @@ item.cells.hyper_density_fluid_component.256m.name=256M超高密度ME流体存�
 item.cells.hyper_density_fluid_component.1g.name=1G超高密度ME流体存储组件
 
 # Compacting Cell Tooltips
-tooltip.cells.compacting_cell.not_partitioned=需进行分区才能使用
-tooltip.cells.compacting_cell.stores_one_type=以压缩形式存储1种物品类型
-tooltip.cells.compacting_cell.insert_to_set_compression=放入分区设定的物品以设置压缩链
-tooltip.cells.compacting_cell.converts_up=压缩为：%s
-tooltip.cells.compacting_cell.converts_down=解压为：%s
-tooltip.cells.compacting_cell.no_compression=该物品无可用的压缩形式。确保分区的物品存在有效的2x2或3x3可逆合成配方。
-tooltip.cells.compacting_cell.ioport_warning=如果在IO端口中使用它们，可能会导致所在的AE2网络中出现“幽灵物品”。重启服务器即可解决该问题。
+tooltip.cells.compacting_cell.not_partitioned=§c需进行分区才能使用
+tooltip.cells.compacting_cell.stores_one_type=§8以压缩形式存储1种物品类型
+tooltip.cells.compacting_cell.insert_to_set_compression=§e放入分区设定的物品以设置压缩链
+tooltip.cells.compacting_cell.converts_up=§a压缩为：%s
+tooltip.cells.compacting_cell.converts_down=§b解压为：%s
+tooltip.cells.compacting_cell.no_compression=§e该物品无可用的压缩形式。确保分区的物品存在有效的2x2或3x3可逆合成配方。
+tooltip.cells.compacting_cell.ioport_warning=§e如果在IO端口中使用它们，可能会导致所在的AE2网络中出现“幽灵物品”。重启服务器即可解决该问题。
 
 # Hyper-Density Tooltips
-tooltip.cells.hyper_density_cell.info=超高密度：每字节约17.2B物品
-tooltip.cells.hyper_density_component.info=超高密度ME存储组件
-tooltip.cells.hyper_density_fluid_cell.info=超高密度流体：每字节约17.2M桶
-tooltip.cells.hyper_density_fluid_component.info=超高密度ME流体存储组件
+tooltip.cells.hyper_density_cell.info=§d超高密度：每字节约17.2B物品
+tooltip.cells.hyper_density_component.info=§d超高密度ME存储组件
+tooltip.cells.hyper_density_fluid_cell.info=§d超高密度流体：每字节约17.2M桶
+tooltip.cells.hyper_density_fluid_component.info=§d超高密度ME流体存储组件
 
 # Upgrade Tooltips
-tooltip.cells.upgrade.overflow_active=溢出销毁
-tooltip.cells.upgrade.equal_distribution_active=分割为%d种类型
-tooltip.cells.upgrade.equal_distribution_active.infinite=启用均分
-tooltip.cells.upgrade.per_type=每种类型容量：%,d（%s）
-tooltip.cells.upgrade.compression_tier_active=压缩等级：%d
-tooltip.cells.upgrade.decompression_tier_active=解压等级：%d
-tooltip.cells.upgrade.oredict_active=矿物词典转换已激活
+tooltip.cells.upgrade.overflow_active=§c溢出销毁
+tooltip.cells.upgrade.equal_distribution_active=§b分割为%d种类型
+tooltip.cells.upgrade.equal_distribution_active.infinite=§b启用均分
+tooltip.cells.upgrade.per_type=§b每种类型容量：%,d（%s）
+tooltip.cells.upgrade.compression_tier_active=§a压缩等级：%d
+tooltip.cells.upgrade.decompression_tier_active=§e解压等级：%d
+tooltip.cells.upgrade.oredict_active=§d矿物词典转换已激活
 
 # Configurable Storage Cell
 item.cells.configurable_cell.name=可配置ME存储元件
 item.cells.configurable_cell.name_configured=可配置ME存储元件（%s）
-tooltip.cells.configurable_cell.no_component=未安装组件！放入ME存储组件来定义容量。
-tooltip.cells.configurable_cell.info=可接受任意ME存储组件以定义容量和类型。自带内置的均分卡。
-tooltip.cells.component.configurable_compatible=§b兼容可配置元件§r
-tooltip.cells.configurable_cell.capacity_per_type=每种类型上限：%s %s
+tooltip.cells.configurable_cell.no_component=§c未安装组件！放入ME存储组件来定义容量。
+tooltip.cells.configurable_cell.info=§7可接受任意ME存储组件以定义容量和类型。自带内置的均分卡。
+tooltip.cells.component.configurable_compatible=§b兼容可配置元件
+tooltip.cells.configurable_cell.capacity_per_type=§b每种类型上限：%s %s
 
 # Configurable Cell GUI
 gui.cells.configurable_cell.capacity_title.none=每种类型容量：
@@ -448,10 +450,10 @@ cells.creative_cell.fluid.title=创造流体元件过滤项
 cells.creative_cell.gas.title=创造气体元件过滤项
 cells.creative_cell.essentia.title=创造源质元件过滤项
 
-tooltip.cells.creative_cell.info=无限%s来源。提供海量的设定%s。
-tooltip.cells.creative_cell.exposes=提供每种过滤项各%s%s（共%d种过滤项）
-tooltip.cells.creative_cell.creative_hint=Shift + 右键点击以配置过滤项
-tooltip.cells.creative_cell.survival_hint=需要创造模式才能配置
+tooltip.cells.creative_cell.info=§7无限%s来源。提供海量的设定%s。
+tooltip.cells.creative_cell.exposes=§b提供每种过滤项各%s%s（共%d种过滤项）
+tooltip.cells.creative_cell.creative_hint=§bShift + 右键点击§7以配置过滤项
+tooltip.cells.creative_cell.survival_hint=§c需要创造模式才能配置
 
 # Compressed Calculation Prints
 item.cells.compressed_calculation_print.compressed.name=压缩运算电路板
@@ -534,29 +536,29 @@ cells.compacting_pattern_exposer.title=压缩样板公开器
 cells.compacting_pattern_exposer.multiplier.title=样板乘数（槽位%d）
 cells.compacting_pattern_exposer.multiplier.applies=同时倍增两个样板
 cells.compacting_pattern_exposer.multiplier.max=最大值：%s
-cells.compacting_pattern_exposer.multiplier.tooltip=样板乘数：§2%s
-cells.compacting_pattern_exposer.filter.hint.right_click=右键点击以编辑样板乘数
+cells.compacting_pattern_exposer.multiplier.tooltip=§7样板乘数：§2%s
+cells.compacting_pattern_exposer.filter.hint.right_click=§b右键点击§7以编辑样板乘数
 
 # Info tooltips for block items
 ## Item interfaces (hardcoded in BlockImportInterface/BlockExportInterface)
-tooltip.cells.import_interface.info=通过过滤槽位将物品输入至ME网络。不支持补货或合成。可通过拉取卡实现自动输入。
-tooltip.cells.export_interface.info=通过过滤槽位从ME网络公开物品。可通过推送卡实现自动输出。
+tooltip.cells.import_interface.info=§7通过过滤槽位将物品输入至ME网络。不支持补货或合成。可通过拉取卡实现自动输入。
+tooltip.cells.export_interface.info=§7通过过滤槽位从ME网络公开物品。可通过推送卡实现自动输出。
 
 ## Fluid/Gas/Essentia interfaces (from AbstractResourceInterfaceBlock using translationKey.info pattern)
-tooltip.cells.import_interface.fluid.info=通过过滤槽位将流体输入至ME网络。可通过拉取卡实现自动输入。
-tooltip.cells.export_interface.fluid.info=通过过滤槽位从ME网络公开流体。可通过推送卡实现自动输出。
-tooltip.cells.import_interface.gas.info=通过过滤槽位将气体输入至ME网络。可通过拉取卡实现自动输入。
-tooltip.cells.export_interface.gas.info=通过过滤槽位从ME网络公开气体。可通过推送卡实现自动输出。
-tooltip.cells.import_interface.essentia.info=通过过滤槽位将源质输入至ME网络。任何输入操作均应通过拉取卡完成（不兼容管道）。
-tooltip.cells.export_interface.essentia.info=通过过滤槽位从ME网络公开源质。兼容管道、注魔、神秘炼金塔、源质仓等。
-tooltip.cells.export_interface.essentia.part.info=通过过滤槽位从ME网络公开源质。
-tooltip.cells.import_interface.combined.info=通过单个方块将物品、流体、气体与源质输入至ME网络。使用标签页切换资源类型。
-tooltip.cells.export_interface.combined.info=通过单个方块从ME网络输出物品、流体、气体与源质。使用标签页切换资源类型。
-tooltip.cells.io_interface.info=通过单个方块向ME网络输入/输出物品。不支持合成。通过拉取/推送卡实现自动输入/输出。
-tooltip.cells.io_interface.fluid.info=通过单个方块向ME网络输入/输出流体。通过拉取/推送卡实现自动输入/输出。
-tooltip.cells.io_interface.gas.info=通过单个方块向ME网络输入/输出气体。通过拉取/推送卡实现自动输入/输出。
-tooltip.cells.io_interface.essentia.info=通过单个方块向ME网络输入/输出源质。通过拉取/推送卡实现自动输入/输出。
-tooltip.cells.compacting_pattern_exposer.info=借助幽灵物品过滤项，将压缩与解压的转化以即时AE2处理样板的形式公开。
+tooltip.cells.import_interface.fluid.info=§7通过过滤槽位将流体输入至ME网络。可通过拉取卡实现自动输入。
+tooltip.cells.export_interface.fluid.info=§7通过过滤槽位从ME网络公开流体。可通过推送卡实现自动输出。
+tooltip.cells.import_interface.gas.info=§7通过过滤槽位将气体输入至ME网络。可通过拉取卡实现自动输入。
+tooltip.cells.export_interface.gas.info=§7通过过滤槽位从ME网络公开气体。可通过推送卡实现自动输出。
+tooltip.cells.import_interface.essentia.info=§7通过过滤槽位将源质输入至ME网络。任何输入操作均应通过拉取卡完成（不兼容管道）。
+tooltip.cells.export_interface.essentia.info=§7通过过滤槽位从ME网络公开源质。兼容管道、注魔、神秘炼金塔、源质仓等。
+tooltip.cells.export_interface.essentia.part.info=§7通过过滤槽位从ME网络公开源质。
+tooltip.cells.import_interface.combined.info=§7通过单个方块将物品、流体、气体与源质输入至ME网络。使用标签页切换资源类型。
+tooltip.cells.export_interface.combined.info=§7通过单个方块从ME网络输出物品、流体、气体与源质。使用标签页切换资源类型。
+tooltip.cells.io_interface.info=§7通过单个方块向ME网络输入/输出物品。不支持合成。通过拉取/推送卡实现自动输入/输出。
+tooltip.cells.io_interface.fluid.info=§7通过单个方块向ME网络输入/输出流体。通过拉取/推送卡实现自动输入/输出。
+tooltip.cells.io_interface.gas.info=§7通过单个方块向ME网络输入/输出气体。通过拉取/推送卡实现自动输入/输出。
+tooltip.cells.io_interface.essentia.info=§7通过单个方块向ME网络输入/输出源质。通过拉取/推送卡实现自动输入/输出。
+tooltip.cells.compacting_pattern_exposer.info=§7借助幽灵物品过滤项，将压缩与解压的转化以即时AE2处理样板的形式公开。
 
 cells.compacting_pattern_exposer.result.up=将§b%s§r个输入物品压缩为§a%s§r个输出物品。
 cells.compacting_pattern_exposer.result.down=将§b%s§r个输入物品解压为§a%s§r个输出物品。
@@ -599,31 +601,35 @@ jei.cells.cellview.size=大小：
 jei.cells.cellview.types=类型：
 jei.cells.cellview.per_type=每种类型
 jei.cells.cellview.no_data=无可用元件数据
-jei.cells.cellview.not_partitioned=未分区
-jei.cells.cellview.chain_pending=等待首次放入
+jei.cells.cellview.not_partitioned=§4未分区
+jei.cells.cellview.chain_pending=§4等待首次放入
 jei.cells.cellview.compression_tiers=（压缩%s级，解压%s级）
+jei.cells.cellview.compression_tiers.oredict_suffix= §6[OD]§r
+jei.cells.cellview.size.hd_suffix= §5(HD)§r
+jei.cells.cellview.types.per_type_suffix= §8(%s %s)§r
+jei.cells.cellview.types.overhead_suffix= §8(%s)§r
 jei.cells.cellview.tier=等级
 jei.cells.cellview.tiers=等级
 
 # JEI Cell View - Item Tooltips
 jei.cells.cellview.tooltip.stored_units=已存储：%s %s
 jei.cells.cellview.tooltip.bytes_used=字节：%s
-jei.cells.cellview.tooltip.virtual_form=压缩/解压自（虚拟）
+jei.cells.cellview.tooltip.virtual_form=§7压缩/解压自（虚拟）
 jei.cells.cellview.tooltip.overhead=  - 开销：%s
 jei.cells.cellview.tooltip.storage=  - 存储：%s
 
 # JEI Cell View - Size Row Tooltips
 jei.cells.cellview.tooltip.size_full=大小：%s / %s 字节
 jei.cells.cellview.tooltip.hd_explanation=超高密度元件内部具有存储倍率
-jei.cells.cellview.tooltip.hd_multiplier=每字节存储约%s物品/桶流体
+jei.cells.cellview.tooltip.hd_multiplier=§d每字节存储约%s物品/桶流体
 
 # JEI Cell View - Types Row Tooltips
 jei.cells.cellview.tooltip.types_info=每种存储的类型都会预留开销字节
 jei.cells.cellview.tooltip.overhead_info=每种类型字节：%s
 jei.cells.cellview.tooltip.overhead_total=类型总开销：%s 字节
-jei.cells.cellview.tooltip.equal_distribution_builtin=内置均分（可配置元件）
-jei.cells.cellview.tooltip.equal_distribution_upgrade=均分已启用（来自升级卡）
-jei.cells.cellview.tooltip.equal_distribution_explain=总容量在所有类型槽位间均分
+jei.cells.cellview.tooltip.equal_distribution_builtin=§6内置均分（可配置元件）
+jei.cells.cellview.tooltip.equal_distribution_upgrade=§6均分已启用（来自升级卡）
+jei.cells.cellview.tooltip.equal_distribution_explain=§b总容量在所有类型槽位间均分
 jei.cells.cellview.tooltip.configurable_types=均分：容量按类型分割
 jei.cells.cellview.tooltip.per_type_limit=每种类型最大数量：%s
 jei.cells.cellview.tooltip.max_types_limit=最大类型数量：%s
@@ -632,8 +638,8 @@ jei.cells.cellview.tooltip.max_types_limit=最大类型数量：%s
 jei.cells.cellview.tooltip.partition_required=元件使用前需进行分区
 jei.cells.cellview.tooltip.chain_pending_explain=物品压缩链将在首次放入时设定
 jei.cells.cellview.tooltip.compression_explain=物品会以单一池形式存储，可呈现多种形态
-jei.cells.cellview.tooltip.tiers_up=%s层更高%s（压缩）
-jei.cells.cellview.tooltip.tiers_down=%s层更低%s（解压）
+jei.cells.cellview.tooltip.tiers_up=§a%s层更高%s（压缩）
+jei.cells.cellview.tooltip.tiers_down=§b%s层更低%s（解压）
 jei.cells.cellview.tooltip.oredict_enabled=矿物词典：接受等效物品
 
 # JEI Cell View - NBT Tooltip
@@ -642,9 +648,9 @@ jei.cells.cellview.tooltip.nbt_info=NBT数据过大会致使崩溃或存档损�
 # Recovery container (fluid/gas/essentia recovery item)
 item.cells.recovery_container.name=%s 容球（%s）
 item.cells.recovery_container.name.empty=空容球
-tooltip.cells.recovery_container.type=类型：%s
-tooltip.cells.recovery_container.amount=数量：%d %s
-tooltip.cells.recovery_container.usage=右键点击容器以进行转移
+tooltip.cells.recovery_container.type=§7类型：%s
+tooltip.cells.recovery_container.amount=§7数量：%s %s
+tooltip.cells.recovery_container.usage=§b右键点击§8容器以进行转移
 cells.recovery_container.transferred=已转移%d %s
 cells.recovery_container.no_transfer=目标无法接收%s
 
@@ -654,8 +660,8 @@ item.cells.push_card.name=自动推送卡
 tooltip.cells.pull_card.desc=§7允许输入接口每隔§2%2$s§7从相邻容器拉取§b%1$s§7个物品/mB流体等。
 tooltip.cells.push_card.desc=§7允许输出接口每隔§2%2$s§7向相邻容器推送§b%1$s§7个物品/mB流体等。
 tooltip.cells.push_pull_card.limit.desc=§7将相邻容器内每种物品/流体等的数量维持在§b%s§7（不多不少）。
-tooltip.cells.push_pull_card.interval_warning=时间间隔低于1秒可能会导致性能问题。
-tooltip.cells.push_pull_card.polling_rate_warning=将接口的轮询率设为时间间隔的整数倍以获得最佳效果。时序不匹配可能会导致双方出现延迟。
+tooltip.cells.push_pull_card.interval_warning=§e时间间隔低于1秒可能会导致性能问题。
+tooltip.cells.push_pull_card.polling_rate_warning=§e将接口的轮询率设为时间间隔的整数倍以获得最佳效果。时序不匹配可能会导致双方出现延迟。
 tooltip.cells.push_pull_card.only_filtered_slots=§e该升级卡§o仅§r§e对过滤项生效！
 cells.push_pull_card.interval.title=时间间隔
 cells.push_pull_card.interval.tooltip=升级卡执行传输操作的频率。
@@ -672,7 +678,7 @@ tooltip.cells.type.subnet_proxy=子网络代理
 # Pull/Push Upgrade Button (interface GUI)
 cells.pull_push_button.disabled=放入%s进行交互
 cells.pull_push_button.enabled.title=配置拉取/推送卡
-cells.pull_push_button.enabled.desc=点击打开升级卡的配置GUI.
+cells.pull_push_button.enabled.desc=§b点击§7打开升级卡的配置GUI.
 
 # /inspectSlot Command
 commands.cells.inspect_slots.usage=/inspectSlots [resource1] [resource2] ...
@@ -721,8 +727,8 @@ item.cells.part.subnet_proxy_back.name=ME子网络代理（后端）
 item.cells.part.subnet_proxy_front.name=ME子网络代理（前端）
 item.cells.part.subnet_proxy_back.tooltip=将前端部件放置在后端部件上以创建子网络，可将多个ME网络连接在一起。
 item.cells.part.subnet_proxy_front.tooltip=将后端部件放置在前端部件上以创建子网络，可将多个ME网络连接在一起。
-item.cells.part.subnet_proxy_direction.tooltip=内容从后端部件流向前端部件。请确保放置方向正确。
-item.cells.part.subnet_proxy_filters.tooltip=可以通过快速添加按键、JEI拖拽，或JEI配方填充（“+”号按钮），来添加过滤项。
+item.cells.part.subnet_proxy_direction.tooltip=§7内容从后端部件流向前端部件。请确保放置方向正确。
+item.cells.part.subnet_proxy_filters.tooltip=§7可以通过快速添加按键、JEI拖拽，或JEI配方填充（“+”号按钮），来添加过滤项。
 gui.cells.subnet_proxy.title=子网络代理
 gui.cells.subnet_proxy.filter_mode=过滤模式：%s
 gui.cells.subnet_proxy.filter_mode.description=添加过滤项时，会转换为此类型。

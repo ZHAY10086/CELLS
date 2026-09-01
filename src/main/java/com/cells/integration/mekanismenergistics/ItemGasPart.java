@@ -103,7 +103,7 @@ public class ItemGasPart extends Item implements IPartItem<IPart> {
 
         // Generate tooltip key based on part type
         String tooltipKey = getTooltipKeyForPartType(type);
-        if (tooltipKey != null) tooltip.add("§7" + I18n.format(tooltipKey));
+        if (tooltipKey != null) tooltip.add(I18n.format(tooltipKey));
     }
 
     /**

@@ -76,7 +76,7 @@ public class ItemHyperDensityComponent extends Item {
     @SideOnly(Side.CLIENT)
     public void addInformation(@Nonnull ItemStack stack, World world, List<String> tooltip,
                                @Nonnull ITooltipFlag flag) {
-        tooltip.add("§d" + I18n.format("tooltip.cells.hyper_density_component.info"));
+        tooltip.add(I18n.format("tooltip.cells.hyper_density_component.info"));
     }
 
     /**

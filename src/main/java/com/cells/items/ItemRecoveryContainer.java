@@ -433,15 +433,15 @@ public class ItemRecoveryContainer extends Item {
         String typeName = I18n.format(resourceType.getTranslationKey());
         String unitName = I18n.format(resourceType.getUnitTranslationKey());
 
-        tooltip.add("§7" + I18n.format("tooltip.cells.recovery_container.type", typeName));
+        tooltip.add(I18n.format("tooltip.cells.recovery_container.type", typeName));
 
         // Exact amount with type-appropriate unit (formatted as readable number)
         String formattedAmount = ReadableNumberConverter.INSTANCE.toWideReadableForm(amount);
-        tooltip.add("§7" + I18n.format("tooltip.cells.recovery_container.amount", formattedAmount, unitName));
+        tooltip.add(I18n.format("tooltip.cells.recovery_container.amount", formattedAmount, unitName));
 
         // Usage hint
         tooltip.add("");
-        tooltip.add("§8" + I18n.format("tooltip.cells.recovery_container.usage"));
+        tooltip.add(I18n.format("tooltip.cells.recovery_container.usage"));
     }
 
     /**

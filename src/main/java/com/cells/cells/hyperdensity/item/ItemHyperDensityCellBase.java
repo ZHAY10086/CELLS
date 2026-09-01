@@ -91,20 +91,21 @@ public abstract class ItemHyperDensityCellBase extends AbstractTieredCellItem im
             if (CellUpgradeHelper.hasEqualDistributionUpgrade(getUpgradesInventory(stack))) {
                 long perType = this.getBytesPerType(stack);
                 String perTypeShort = ReadableNumberConverter.INSTANCE.toWideReadableForm(perType);
-                tooltip.add("§b" + I18n.format("tooltip.cells.upgrade.per_type", perType, perTypeShort));
+                tooltip.add(I18n.format("tooltip.cells.upgrade.per_type", perType, perTypeShort));
             }
 
             // Add NBT size information (if enabled in config)
             if (CellsConfig.general.enableNbtSizeTooltip && cellInv instanceof INBTSizeProvider) {
                 int nbtSize = ((INBTSizeProvider) cellInv).getTotalNbtSize();
                 long warningThreshold = NBTSizeHelper.kbToBytes(CellsConfig.general.nbtSizeWarningThresholdKB);
-                String sizeStr = NBTSizeHelper.formatSizeWithColor(nbtSize, warningThreshold);
 
                 tooltip.add("");
-                tooltip.add(I18n.format("tooltip.cells.nbt_size", sizeStr));
+                tooltip.add(I18n.format(
+                    NBTSizeHelper.getSizeTooltipTranslationKey(nbtSize, warningThreshold),
+                    NBTSizeHelper.formatSize(nbtSize)));
 
                 if (NBTSizeHelper.exceedsThreshold(nbtSize, warningThreshold)) {
-                    tooltip.add("§c" + I18n.format("tooltip.cells.nbt_size.warning"));
+                    tooltip.add(I18n.format("tooltip.cells.nbt_size.warning"));
                 }
             }
         }
@@ -115,7 +116,7 @@ public abstract class ItemHyperDensityCellBase extends AbstractTieredCellItem im
         }
 
         tooltip.add("");
-        tooltip.add("§d" + I18n.format("tooltip.cells.hyper_density_cell.info"));
+        tooltip.add(I18n.format("tooltip.cells.hyper_density_cell.info"));
     }
 
     @Override

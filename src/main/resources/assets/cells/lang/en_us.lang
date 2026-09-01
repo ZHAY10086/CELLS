@@ -1,22 +1,24 @@
 # Misc
 itemGroup.cells=C.E.L.L.S
-tooltip.cells.wip_do_not_use=§c⚠ Work in Progress - Do Not Use ⚠§r
-tooltip.cells.useatyourownrisk=§eMay not behave as expected. Use at your own risk.§r
+tooltip.cells.wip_do_not_use=§c⚠ Work in Progress - Do Not Use ⚠
+tooltip.cells.useatyourownrisk=§eMay not behave as expected. Use at your own risk.
 tooltip.cells.card.separator=, 
-tooltip.cells.card.compatible=Compatible with: %s
+tooltip.cells.card.compatible=§8Compatible with: %s
 tooltip.cells.type.compact=ME Compacting Cell
 tooltip.cells.type.hyperdensity=Hyper-Density ME Storage Cell
 tooltip.cells.type.hyperdensity_compact=Hyper-Density ME Compacting Cell
 tooltip.cells.type.import_interface=Import Interface (all types)
 tooltip.cells.type.export_interface=Export Interface (all types)
 tooltip.cells.type.emc=EMC Cell
-tooltip.cells.nbt_size=NBT Size: %s
-tooltip.cells.nbt_size.warning=§c⚠ NBT size exceeds safe limit! This may cause lag or crashes. Move some NBT-heavy content to another chunk and network to avoid corruption.§r
+tooltip.cells.nbt_size=NBT Size: §a%s
+tooltip.cells.nbt_size.near_limit=NBT Size: §e%s
+tooltip.cells.nbt_size.exceeded=NBT Size: §c%s
+tooltip.cells.nbt_size.warning=§c⚠ NBT size exceeds safe limit! This may cause lag or crashes. Move some NBT-heavy content to another chunk and network to avoid corruption.
 tooltip.cells.previous_page=Previous page
 tooltip.cells.next_page=Next page
-tooltip.cells.jei_view_contents=§7Press [§b%s§7] to view contents§r
+tooltip.cells.jei_view_contents=§7Press [§b%s§7] to view contents
 tooltip.cells.amount=%d/%d %s
-tooltip.cells.click_to_configure=Right-click to configure
+tooltip.cells.click_to_configure=§bRight-click§7 to configure
 
 # Resource types and units (used in %s placeholders throughout)
 cells.type.item=Item
@@ -50,9 +52,9 @@ cells.max_slot_size.tooltip=Maximum %s to keep in the slots.
 cells.slot_size_override.title=Max Slot Size (slot %d)
 cells.slot_size_override.clear_hint=Clear the field to reset override
 cells.slot_size_override.using_global=global
-cells.filter_slot.hint.left_click_1=Left-click with an item to set
-cells.filter_slot.hint.left_click_2=Left-click with empty hand to clear
-cells.filter_slot.hint.right_click=Right-click to override max slot size
+cells.filter_slot.hint.left_click_1=§bLeft-click with an item§7 to set
+cells.filter_slot.hint.left_click_2=§bLeft-click with empty hand§7 to clear
+cells.filter_slot.hint.right_click=§bRight-click§7 to override max slot size
 cells.polling_rate.title=Polling Rate
 cells.polling_rate.adaptive=Polling Rate: Adaptive
 cells.clear_filters=Clear Filters
@@ -63,8 +65,8 @@ tooltip.cells.trigger_poll.cards=Includes Pull/Push Card transfers.
 # Polling rate - direction-specific
 tooltip.cells.polling_rate.import=Fixed interval for importing (0 = adaptive, nonzero = ticks)
 tooltip.cells.polling_rate.export=Interval for exporting (0 = adaptive, nonzero = ticks)
-cells.polling_rate.custom.import=Polling Rate: §rimport every §b%s§r
-cells.polling_rate.custom.export=Polling Rate: §rexport every §b%s§r
+cells.polling_rate.custom.import=Polling Rate: import every §b%s
+cells.polling_rate.custom.export=Polling Rate: export every §b%s
 tooltip.cells.probe.type_prefix=%s: %s
 
 # WAILA/TOP probe tooltips
@@ -125,7 +127,7 @@ tooltip.cells.controls_help.hide=Hide Controls Help
 tooltip.cells.recipe_transfer.title=JEI Recipe Transfer
 tooltip.cells.recipe_transfer.mapping1=Import Interface -> %s
 tooltip.cells.recipe_transfer.mapping2=Export Interface -> %s
-tooltip.cells.recipe_transfer.current= §a(You are here)§r
+tooltip.cells.recipe_transfer.current= §a(You are here)
 tooltip.cells.recipe_transfer.click_to_swap=Decides which part of a recipe goes into the filters when clicking '+' in JEI, depending on the interface type. Click to swap interface routing.
 tooltip.cells.recipe_transfer.creative_selection=Clicking '+' in JEI adds %s§7 to this filter.
 tooltip.cells.recipe_transfer.creative_click_to_swap=Click to swap between adding recipe inputs and recipe outputs.
@@ -265,16 +267,16 @@ item.cells.compacting_component.2g.name=2G ME Compacting Component
 
 # Overflow Card
 item.cells.overflow_card.name=Overflow Voiding Card
-tooltip.cells.overflow_card.desc=Voids overflow items when cell is full
+tooltip.cells.overflow_card.desc=§7Voids overflow items when cell is full
 
 # Ore Dictionary Card
 item.cells.oredict_card.name=Ore Dictionary Card
-tooltip.cells.oredict_card.desc=Allows ore dictionary equivalent items to be inserted (e.g., coppers from different mods) and converted into the partitioned item
+tooltip.cells.oredict_card.desc=§7Allows ore dictionary equivalent items to be inserted (e.g., coppers from different mods) and converted into the partitioned item
 
 # Trash Unselected Card
 item.cells.trash_unselected_card.name=Trash Unselected Card
-tooltip.cells.trash_unselected_card.desc=Voids items that do not match the filter
-tooltip.cells.trash_unselected_card.warning=Warning: This card does not come with any protection! Use with caution.
+tooltip.cells.trash_unselected_card.desc=§7Voids items that do not match the filter
+tooltip.cells.trash_unselected_card.warning=§eWarning: This card does not come with any protection! Use with caution.
 
 # Equal Distribution Card
 item.cells.equal_distribution_card.1x.name=Equal Distribution Card (1x)
@@ -285,8 +287,8 @@ item.cells.equal_distribution_card.16x.name=Equal Distribution Card (16x)
 item.cells.equal_distribution_card.32x.name=Equal Distribution Card (32x)
 item.cells.equal_distribution_card.63x.name=Equal Distribution Card (63x)
 item.cells.equal_distribution_card.infinite.name=Equal Distribution Card (unbounded)
-tooltip.cells.equal_distribution_card.desc=Limits cell to %d types, dividing capacity equally (each type is limited to %d of the cell). Reserves the type overhead (half of the cell) beforehead, instead of when each type is added.
-tooltip.cells.equal_distribution_card.desc.infinite=Divides capacity equally among all types. Use it ONLY if you increased the 'max types' in config.
+tooltip.cells.equal_distribution_card.desc=§7Limits cell to %d types, dividing capacity equally (each type is limited to %d of the cell). Reserves the type overhead (half of the cell) beforehead, instead of when each type is added.
+tooltip.cells.equal_distribution_card.desc.infinite=§7Divides capacity equally among all types. Use it ONLY if you increased the 'max types' in config.
 
 # Compression Tier Card
 item.cells.compression_tier_card.3x.name=Compression Tier Card (3x)
@@ -294,7 +296,7 @@ item.cells.compression_tier_card.6x.name=Compression Tier Card (6x)
 item.cells.compression_tier_card.9x.name=Compression Tier Card (9x)
 item.cells.compression_tier_card.12x.name=Compression Tier Card (12x)
 item.cells.compression_tier_card.15x.name=Compression Tier Card (15x)
-tooltip.cells.compression_tier_card.desc=Enables up to %d compression tiers. For best performance, use the lowest tier you can.
+tooltip.cells.compression_tier_card.desc=§7Enables up to %d compression tiers. For best performance, use the lowest tier you can.
 
 # Decompression Tier Card
 item.cells.decompression_tier_card.3x.name=Decompression Tier Card (3x)
@@ -302,24 +304,24 @@ item.cells.decompression_tier_card.6x.name=Decompression Tier Card (6x)
 item.cells.decompression_tier_card.9x.name=Decompression Tier Card (9x)
 item.cells.decompression_tier_card.12x.name=Decompression Tier Card (12x)
 item.cells.decompression_tier_card.15x.name=Decompression Tier Card (15x)
-tooltip.cells.decompression_tier_card.desc=Enables up to %d decompression tiers. For best performance, use the lowest tier you can.
+tooltip.cells.decompression_tier_card.desc=§7Enables up to %d decompression tiers. For best performance, use the lowest tier you can.
 
 # EMC Cell
 item.cells.emc_cell.name=EMC ME Storage Cell
 item.cells.emc_capacity_card.tier1.name=Refined EMC Upgrade Card
 item.cells.emc_capacity_card.tier2.name=Compressed EMC Upgrade Card
-tooltip.cells.emc_cell.info=Bound EMC storage cell. Exposes learned partition items at a fixed count and converts accepted inserts into EMC.
-tooltip.cells.emc_cell.slots=Partition slots: %s
-tooltip.cells.emc_cell.owner=Bound to: %s
-tooltip.cells.emc_cell.unbound=Unbound: re-insert it to bind it to a player
-tooltip.cells.emc_cell.buffered=Buffered EMC: %s
-tooltip.cells.emc_cell.unlearned=Unlearned partition filters: %s
-tooltip.cells.emc_cell.unlearned_hint=Hold Shift to list blocked filters
-message.cells.emc_cell.link_copy=Copied %s new partition filters from EMC Link
-message.cells.emc_cell.link_copy_full=Copied %s new partition filters from EMC Link; %s more unique filters did not fit
-message.cells.emc_cell.link_copy_full_none=EMC cell partition is full; %s unique filters did not fit
+tooltip.cells.emc_cell.info=§7Bound EMC storage cell. Exposes learned partition items at a fixed count and converts accepted inserts into EMC.
+tooltip.cells.emc_cell.slots=§bPartition slots: %d/%d
+tooltip.cells.emc_cell.owner=§aBound to: %s
+tooltip.cells.emc_cell.unbound=§cUnbound: re-insert it to bind it to a player
+tooltip.cells.emc_cell.buffered=§6Buffered EMC: %,d
+tooltip.cells.emc_cell.unlearned=§cUnlearned partition filters: %d
+tooltip.cells.emc_cell.unlearned_hint=§7Hold §bShift§7 to list blocked filters
+message.cells.emc_cell.link_copy=Copied %d new partition filters from EMC Link
+message.cells.emc_cell.link_copy_full=Copied %d new partition filters from EMC Link; %d more unique filters did not fit
+message.cells.emc_cell.link_copy_full_none=EMC cell partition is full; %d unique filters did not fit
 message.cells.emc_cell.link_copy_none=No new partition filters copied from EMC Link
-tooltip.cells.emc_capacity_card.desc=Allows the Cell to provide %s different partitioned items
+tooltip.cells.emc_capacity_card.desc=§7Allows the Cell to provide %d different partitioned items
 
 
 # Hyper-Density Cells (1k-1G max, each displayed byte represents ~2.1B actual storage)
@@ -401,36 +403,36 @@ item.cells.hyper_density_fluid_component.256m.name=256M Hyper-Density ME Fluid S
 item.cells.hyper_density_fluid_component.1g.name=1G Hyper-Density ME Fluid Storage Component
 
 # Compacting Cell Tooltips
-tooltip.cells.compacting_cell.not_partitioned=Partition required to use
-tooltip.cells.compacting_cell.stores_one_type=Stores 1 item type with compression
-tooltip.cells.compacting_cell.insert_to_set_compression=Insert the partitioned item to set compression chain
-tooltip.cells.compacting_cell.converts_up=Compresses to: %s
-tooltip.cells.compacting_cell.converts_down=Decompresses to: %s
-tooltip.cells.compacting_cell.no_compression=No compression available for this item. Make sure the partitioned item has a valid 2x2 or 3x3 crafting recipe in both directions.
-tooltip.cells.compacting_cell.ioport_warning=Using them in a IO Port might cause "ghost item" on the AE2 network it is in. A server restart resolves the issue.
+tooltip.cells.compacting_cell.not_partitioned=§cPartition required to use
+tooltip.cells.compacting_cell.stores_one_type=§8Stores 1 item type with compression
+tooltip.cells.compacting_cell.insert_to_set_compression=§eInsert the partitioned item to set compression chain
+tooltip.cells.compacting_cell.converts_up=§aCompresses to: %s
+tooltip.cells.compacting_cell.converts_down=§bDecompresses to: %s
+tooltip.cells.compacting_cell.no_compression=§eNo compression available for this item. Make sure the partitioned item has a valid 2x2 or 3x3 crafting recipe in both directions.
+tooltip.cells.compacting_cell.ioport_warning=§eUsing them in a IO Port might cause "ghost item" on the AE2 network it is in. A server restart resolves the issue.
 
 # Hyper-Density Tooltips
-tooltip.cells.hyper_density_cell.info=Hyper-Density: ~17.2B items per Byte
-tooltip.cells.hyper_density_component.info=Hyper-Density storage component
-tooltip.cells.hyper_density_fluid_cell.info=Hyper-Density Fluid: ~17.2M buckets per Byte
-tooltip.cells.hyper_density_fluid_component.info=Hyper-Density fluid storage component
+tooltip.cells.hyper_density_cell.info=§dHyper-Density: ~17.2B items per Byte
+tooltip.cells.hyper_density_component.info=§dHyper-Density storage component
+tooltip.cells.hyper_density_fluid_cell.info=§dHyper-Density Fluid: ~17.2M buckets per Byte
+tooltip.cells.hyper_density_fluid_component.info=§dHyper-Density fluid storage component
 
 # Upgrade Tooltips
-tooltip.cells.upgrade.overflow_active=Voids overflow
-tooltip.cells.upgrade.equal_distribution_active=Split in %d types
-tooltip.cells.upgrade.equal_distribution_active.infinite=Equal distribution active
-tooltip.cells.upgrade.per_type=Per-type capacity: %,d (%s)
-tooltip.cells.upgrade.compression_tier_active=Compression tiers: %d
-tooltip.cells.upgrade.decompression_tier_active=Decompression tiers: %d
-tooltip.cells.upgrade.oredict_active=Oredict conversion active
+tooltip.cells.upgrade.overflow_active=§cVoids overflow
+tooltip.cells.upgrade.equal_distribution_active=§bSplit in %d types
+tooltip.cells.upgrade.equal_distribution_active.infinite=§bEqual distribution active
+tooltip.cells.upgrade.per_type=§bPer-type capacity: %,d (%s)
+tooltip.cells.upgrade.compression_tier_active=§aCompression tiers: %d
+tooltip.cells.upgrade.decompression_tier_active=§eDecompression tiers: %d
+tooltip.cells.upgrade.oredict_active=§dOredict conversion active
 
 # Configurable Storage Cell
 item.cells.configurable_cell.name=Configurable ME Storage Cell
 item.cells.configurable_cell.name_configured=Configurable ME Storage Cell (%s)
-tooltip.cells.configurable_cell.no_component=No component installed! Insert a ME Storage Component to define capacity.
-tooltip.cells.configurable_cell.info=Accepts any ME Storage Component to define capacity and type. Comes with a built-in Equal Distribution card.
-tooltip.cells.component.configurable_compatible=§bCompatible with Configurable Cell§r
-tooltip.cells.configurable_cell.capacity_per_type=Per-type limit: %s %s
+tooltip.cells.configurable_cell.no_component=§cNo component installed! Insert a ME Storage Component to define capacity.
+tooltip.cells.configurable_cell.info=§7Accepts any ME Storage Component to define capacity and type. Comes with a built-in Equal Distribution card.
+tooltip.cells.component.configurable_compatible=§bCompatible with Configurable Cell
+tooltip.cells.configurable_cell.capacity_per_type=§bPer-type limit: %s %s
 
 # Configurable Cell GUI
 cells.configurable_cell.capacity_title=Per-type capacity:
@@ -448,10 +450,10 @@ cells.creative_cell.fluid.title=Creative Fluid Cell Filters
 cells.creative_cell.gas.title=Creative Gas Cell Filters
 cells.creative_cell.essentia.title=Creative Essentia Cell Filters
 
-tooltip.cells.creative_cell.info=Infinite %s source. Exposes set %s in massive quantities.
-tooltip.cells.creative_cell.exposes=Exposes %s %s of each filter (%d filters)
-tooltip.cells.creative_cell.creative_hint=Shift + Right-click to configure filters
-tooltip.cells.creative_cell.survival_hint=Creative mode required to configure
+tooltip.cells.creative_cell.info=§7Infinite %s source. Exposes set %s in massive quantities.
+tooltip.cells.creative_cell.exposes=§bExposes %s %s of each filter (%d filters)
+tooltip.cells.creative_cell.creative_hint=§bShift + Right-click§7 to configure filters
+tooltip.cells.creative_cell.survival_hint=§cCreative mode required to configure
 
 # Compressed Calculation Prints
 item.cells.compressed_calculation_print.compressed.name=Compressed Calculation Processor Print
@@ -534,29 +536,29 @@ cells.compacting_pattern_exposer.title=Compacting Pattern Exposer
 cells.compacting_pattern_exposer.multiplier.title=Pattern Multiplier (slot %d)
 cells.compacting_pattern_exposer.multiplier.applies=Multplies both patterns
 cells.compacting_pattern_exposer.multiplier.max=Max: %s
-cells.compacting_pattern_exposer.multiplier.tooltip=Pattern multiplier: §2%s
-cells.compacting_pattern_exposer.filter.hint.right_click=Right-click to edit pattern multiplier
+cells.compacting_pattern_exposer.multiplier.tooltip=§7Pattern multiplier: §2%s
+cells.compacting_pattern_exposer.filter.hint.right_click=§bRight-click§7 to edit pattern multiplier
 
 # Info tooltips for block items
 ## Item interfaces (hardcoded in BlockImportInterface/BlockExportInterface)
-tooltip.cells.import_interface.info=Import items into the ME network through filtered slots. Does not support stocking or crafting. Automatic extraction is available through Pull Card.
-tooltip.cells.export_interface.info=Exposes items from the ME network through filtered slots. Automatic insertion is available through Push Card.
+tooltip.cells.import_interface.info=§7Import items into the ME network through filtered slots. Does not support stocking or crafting. Automatic extraction is available through Pull Card.
+tooltip.cells.export_interface.info=§7Export items from the ME network through filtered slots. Automatic insertion is available through Push Card.
 
 ## Fluid/Gas/Essentia interfaces (from AbstractResourceInterfaceBlock using translationKey.info pattern)
-tooltip.cells.import_interface.fluid.info=Import fluids into the ME network through filtered slots. Automatic extraction is available through Pull Card.
-tooltip.cells.export_interface.fluid.info=Exposes fluids from the ME network through filtered slots. Automatic insertion is available through Push Card.
-tooltip.cells.import_interface.gas.info=Import gas into the ME network through filtered slots. Automatic extraction is available through Pull Card.
-tooltip.cells.export_interface.gas.info=Exposes gas from the ME network through filtered slots. Automatic insertion is available through Push Card.
-tooltip.cells.import_interface.essentia.info=Import essentia into the ME network through filtered slots. Any extraction should be done via Pull Card (incompatible with tubes).
-tooltip.cells.export_interface.essentia.info=Exposes essentia from the ME network through filtered slots. Compatible with tubes, Infusion, Thaumatorium, Essentia Hatch, etc.
-tooltip.cells.export_interface.essentia.part.info=Exposes essentia from the ME network through filtered slots.
-tooltip.cells.import_interface.combined.info=Imports items, fluids, gas, and essentia into the ME network through a single block. Use tabs to switch between resource types.
-tooltip.cells.export_interface.combined.info=Exposes items, fluids, gas, and essentia from the ME network through a single block. Use tabs to switch between resource types.
-tooltip.cells.io_interface.info=Imports/Exposes items to/from the ME network through a single block. Does not support crafting. Automatic I/O is done though Push/Pull Cards.
-tooltip.cells.io_interface.fluid.info=Imports/Exposes fluids to/from the ME network through a single block. Automatic I/O is done though Push/Pull Cards.
-tooltip.cells.io_interface.gas.info=Imports/Exposes gas to/from the ME network through a single block. Automatic I/O is done though Push/Pull Cards.
-tooltip.cells.io_interface.essentia.info=Imports/Exposes essentia to/from the ME network through a single block. Automatic I/O is done though Push/Pull Cards.
-tooltip.cells.compacting_pattern_exposer.info=Expose compacting and decompacting conversions as instant AE2 processing patterns using ghost item filters.
+tooltip.cells.import_interface.fluid.info=§7Imports fluids into the ME network through filtered slots. Automatic extraction is available through Pull Card.
+tooltip.cells.export_interface.fluid.info=§7Exports fluids from the ME network through filtered slots. Automatic insertion is available through Push Card.
+tooltip.cells.import_interface.gas.info=§7Imports gas into the ME network through filtered slots. Automatic extraction is available through Pull Card.
+tooltip.cells.export_interface.gas.info=§7Exports gas from the ME network through filtered slots. Automatic insertion is available through Push Card.
+tooltip.cells.import_interface.essentia.info=§7Imports essentia into the ME network through filtered slots. Any extraction should be done via Pull Card (incompatible with tubes).
+tooltip.cells.export_interface.essentia.info=§7Exports essentia from the ME network through filtered slots. Compatible with tubes, Infusion, Thaumatorium, Essentia Hatch, etc.
+tooltip.cells.export_interface.essentia.part.info=§7Exports essentia from the ME network through filtered slots.
+tooltip.cells.import_interface.combined.info=§7Imports items, fluids, gas, and essentia into the ME network through the interface. Use tabs to switch between resource types.
+tooltip.cells.export_interface.combined.info=§7Exports items, fluids, gas, and essentia from the ME network through the interface. Use tabs to switch between resource types.
+tooltip.cells.io_interface.info=§7Imports/Exports items to/from the ME network through the interface. Does not support crafting. Automatic I/O is done through Push/Pull Cards.
+tooltip.cells.io_interface.fluid.info=§7Imports/Exports fluids to/from the ME network through the interface. Automatic I/O is done through Push/Pull Cards.
+tooltip.cells.io_interface.gas.info=§7Imports/Exports gas to/from the ME network through the interface. Automatic I/O is done through Push/Pull Cards.
+tooltip.cells.io_interface.essentia.info=§7Imports/Exports essentia to/from the ME network through the interface. Automatic I/O is done through Push/Pull Cards.
+tooltip.cells.compacting_pattern_exposer.info=§7Exposes compacting and decompacting conversions as instant AE2 processing patterns using ghost item filters.
 
 cells.compacting_pattern_exposer.result.up=Compresses §b%s§r input item(s) into §a%s§r output item(s).
 cells.compacting_pattern_exposer.result.down=Decompresses §b%s§r input item(s) into §a%s§r output item(s).
@@ -599,31 +601,35 @@ jei.cells.cellview.size=Size:
 jei.cells.cellview.types=Types:
 jei.cells.cellview.per_type=per type
 jei.cells.cellview.no_data=No cell data available
-jei.cells.cellview.not_partitioned=Not Partitioned
-jei.cells.cellview.chain_pending=Awaiting First Insert
+jei.cells.cellview.not_partitioned=§4Not Partitioned
+jei.cells.cellview.chain_pending=§4Awaiting First Insert
 jei.cells.cellview.compression_tiers=(%s up, %s down)
+jei.cells.cellview.compression_tiers.oredict_suffix= §6[OD]§r
+jei.cells.cellview.size.hd_suffix= §5(HD)§r
+jei.cells.cellview.types.per_type_suffix= §8(%s %s)§r
+jei.cells.cellview.types.overhead_suffix= §8(%s)§r
 jei.cells.cellview.tier=tier
 jei.cells.cellview.tiers=tiers
 
 # JEI Cell View - Item Tooltips
 jei.cells.cellview.tooltip.stored_units=Stored: %s %s
 jei.cells.cellview.tooltip.bytes_used=Bytes: %s
-jei.cells.cellview.tooltip.virtual_form=Compressed/Decompressed form (virtual)
+jei.cells.cellview.tooltip.virtual_form=§7Compressed/Decompressed form (virtual)
 jei.cells.cellview.tooltip.overhead=  - Overhead: %s
 jei.cells.cellview.tooltip.storage=  - Storage: %s
 
 # JEI Cell View - Size Row Tooltips
 jei.cells.cellview.tooltip.size_full=Size: %s / %s bytes
 jei.cells.cellview.tooltip.hd_explanation=Hyper-Density cell with internal storage multiplier
-jei.cells.cellview.tooltip.hd_multiplier=Each byte stores ~%s items/buckets
+jei.cells.cellview.tooltip.hd_multiplier=§dEach byte stores ~%s items/buckets
 
 # JEI Cell View - Types Row Tooltips
 jei.cells.cellview.tooltip.types_info=Each stored type reserves overhead bytes
 jei.cells.cellview.tooltip.overhead_info=Bytes per type: %s
 jei.cells.cellview.tooltip.overhead_total=Total type overhead: %s bytes
-jei.cells.cellview.tooltip.equal_distribution_builtin=Built-in equal distribution (Configurable Cell)
-jei.cells.cellview.tooltip.equal_distribution_upgrade=Equal distribution active (from upgrade card)
-jei.cells.cellview.tooltip.equal_distribution_explain=Total capacity is divided equally among all type slots
+jei.cells.cellview.tooltip.equal_distribution_builtin=§6Built-in equal distribution (Configurable Cell)
+jei.cells.cellview.tooltip.equal_distribution_upgrade=§6Equal distribution active (from upgrade card)
+jei.cells.cellview.tooltip.equal_distribution_explain=§bTotal capacity is divided equally among all type slots
 jei.cells.cellview.tooltip.configurable_types=Equal distribution: capacity split among types
 jei.cells.cellview.tooltip.per_type_limit=Max per type: %s
 jei.cells.cellview.tooltip.max_types_limit=Max types: %s
@@ -632,8 +638,8 @@ jei.cells.cellview.tooltip.max_types_limit=Max types: %s
 jei.cells.cellview.tooltip.partition_required=Cell requires partition before use
 jei.cells.cellview.tooltip.chain_pending_explain=Item compression chain will be set on first insert
 jei.cells.cellview.tooltip.compression_explain=Items stored as single pool, accessible in multiple forms
-jei.cells.cellview.tooltip.tiers_up=%s higher %s (compressed)
-jei.cells.cellview.tooltip.tiers_down=%s lower %s (decompressed)
+jei.cells.cellview.tooltip.tiers_up=§a%s higher %s (compressed)
+jei.cells.cellview.tooltip.tiers_down=§b%s lower %s (decompressed)
 jei.cells.cellview.tooltip.oredict_enabled=Ore Dictionary: accepts equivalent items
 
 # JEI Cell View - NBT Tooltip
@@ -642,9 +648,9 @@ jei.cells.cellview.tooltip.nbt_info=High NBT size can cause crashes or corruptio
 # Recovery container (fluid/gas/essentia recovery item)
 item.cells.recovery_container.name=%s Orb (%s)
 item.cells.recovery_container.name.empty=Empty Orb
-tooltip.cells.recovery_container.type=Type: %s
-tooltip.cells.recovery_container.amount=Amount: %d %s
-tooltip.cells.recovery_container.usage=Right-click on a container to transfer
+tooltip.cells.recovery_container.type=§7Type: %s
+tooltip.cells.recovery_container.amount=§7Amount: %s %s
+tooltip.cells.recovery_container.usage=§bRight-click§8 on a container to transfer
 cells.recovery_container.transferred=Transferred %d %s
 cells.recovery_container.no_transfer=Target cannot accept %s
 
@@ -654,8 +660,8 @@ item.cells.push_card.name=Auto-Push Card
 tooltip.cells.pull_card.desc=§7Allows Import Interfaces to pull §b%s§7 items/mB/etc. from adjacent inventories every §2%s§r.
 tooltip.cells.push_card.desc=§7Allows Export Interfaces to push §b%s§7 items/mB/etc. to adjacent inventories every §2%s§r.
 tooltip.cells.push_pull_card.limit.desc=§7Keeps §b%s§7 items/mB/etc. of each type in the adjacent inventory (no more, no less).
-tooltip.cells.push_pull_card.interval_warning=Interval lower than 1s may cause performance issues.
-tooltip.cells.push_pull_card.polling_rate_warning=Set the interface's polling rate as a multiple of interval for best results. Unaligned timings may cause delays in either.
+tooltip.cells.push_pull_card.interval_warning=§eInterval lower than 1s may cause performance issues.
+tooltip.cells.push_pull_card.polling_rate_warning=§eSet the interface's polling rate as a multiple of interval for best results. Unaligned timings may cause delays in either.
 tooltip.cells.push_pull_card.only_filtered_slots=§eThis card §oonly§r§e works with filtered slots!
 cells.push_pull_card.interval.title=Time Interval:
 cells.push_pull_card.interval.tooltip=How often the card performs a transfer operation.
@@ -672,11 +678,10 @@ tooltip.cells.type.subnet_proxy=Subnet Proxy
 # Pull/Push Upgrade Button (interface GUI)
 cells.pull_push_button.disabled=Insert %s to interact
 cells.pull_push_button.enabled.title=Configure Pull/Push Card
-cells.pull_push_button.enabled.desc=Click to open the card's configuration GUI.
-cells.pull_push_button.warning.title=Warning: slot buffer too small
-cells.pull_push_button.warning.buffer=This card can move up to %s %s between interface I/O passes (%s per %s, interface I/O every %s).
-cells.pull_push_button.warning.slot=Page %d slot %d is capped at %s %s.
-cells.pull_push_button.warning.hint=It is recommended to increase that slot size.
+cells.pull_push_button.enabled.desc=§bClick§7 to open the card's configuration GUI.
+cells.pull_push_button.warning.title=§eWarning: slot buffer too small
+cells.pull_push_button.warning.buffer=§7This card can move up to §b%s§7 %s between interface I/O passes (§b%s§7 per §a%s§7, interface I/O every §a%s§7).
+cells.pull_push_button.warning.slot=§7Page %d slot %d is capped at §b%s§7 %s. It is recommended to increase that slot size.
 
 # /inspectSlot Command
 commands.cells.inspect_slots.usage=/inspectSlots [resource1] [resource2] ...
@@ -725,8 +730,8 @@ item.cells.part.subnet_proxy_back.name=ME Subnet Proxy (Back)
 item.cells.part.subnet_proxy_front.name=ME Subnet Proxy (Front)
 item.cells.part.subnet_proxy_back.tooltip=Place the front part on the back part to create a Subnet, which allows connecting multiple ME networks together.
 item.cells.part.subnet_proxy_front.tooltip=Place the back part on the front part to create a Subnet, which allows connecting multiple ME networks together.
-item.cells.part.subnet_proxy_direction.tooltip=Content flows from the back part to the front part. Make sure to place them in the correct orientation.
-item.cells.part.subnet_proxy_filters.tooltip=You can add filters to the proxy via the Quick Add keybind, JEI dragging, or JEI recipe fill-in ('+' button).
+item.cells.part.subnet_proxy_direction.tooltip=§7Content flows from the back part to the front part. Make sure to place them in the correct orientation.
+item.cells.part.subnet_proxy_filters.tooltip=§7You can add filters to the proxy via the Quick Add keybind, JEI dragging, or JEI recipe fill-in ('+' button).
 gui.cells.subnet_proxy.title=Subnet Proxy
 gui.cells.subnet_proxy.filter_mode=Filter Mode: %s
 gui.cells.subnet_proxy.filter_mode.description=When adding a filter, it will be converted to this type.

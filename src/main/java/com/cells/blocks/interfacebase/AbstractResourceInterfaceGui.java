@@ -720,7 +720,7 @@ public abstract class AbstractResourceInterfaceGui<H extends IInterfaceHost, C e
         }
 
         String title = I18n.format("cells.pull_push_button.enabled.title");
-        String desc = "§7" + I18n.format("cells.pull_push_button.enabled.desc");
+        String desc = I18n.format("cells.pull_push_button.enabled.desc");
         PullPushButtonWarning warning = this.pullPushButtonWarning;
         if (warning == null) return title + "\n\n" + desc;
 
@@ -738,11 +738,10 @@ public abstract class AbstractResourceInterfaceGui<H extends IInterfaceHost, C e
         //       to the recommended buffered amount + some margin.
         //       The solution is easy, but the UI/UX is the trickier part.
         return title + "\n\n" + desc + "\n\n"
-            + "§e" + I18n.format("cells.pull_push_button.warning.title") + "\n"
+            + I18n.format("cells.pull_push_button.warning.title") + "\n"
             + I18n.format("cells.pull_push_button.warning.buffer",
                 bufferedAmount, unit, cardQuantity, cardIntervalStr, networkIoIntervalStr) + "\n"
-            + I18n.format("cells.pull_push_button.warning.slot", page, slot, slotCapacity, unit) + "\n"
-            + I18n.format("cells.pull_push_button.warning.hint");
+            + I18n.format("cells.pull_push_button.warning.slot", page, slot, slotCapacity, unit);
     }
 
     @Nullable

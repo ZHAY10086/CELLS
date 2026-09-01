@@ -54,7 +54,7 @@ public class ItemEqualDistributionCard extends AbstractCustomUpgrade {
                                @Nonnull ITooltipFlag flag) {
         int tier = getTierValue(stack);
         if (tier == Integer.MAX_VALUE) {
-            tooltip.add("§7" + I18n.format("tooltip.cells.equal_distribution_card.desc.infinite"));
+            tooltip.add(I18n.format("tooltip.cells.equal_distribution_card.desc.infinite"));
         } else {
             String divider = String.format("%,.1f", (float) 100 / tier);
             if (divider.endsWith(".0")) {
@@ -63,7 +63,7 @@ public class ItemEqualDistributionCard extends AbstractCustomUpgrade {
                 divider = String.format("1/%d", tier);
             }
 
-            tooltip.add("§7" + I18n.format("tooltip.cells.equal_distribution_card.desc", tier, divider));
+            tooltip.add(I18n.format("tooltip.cells.equal_distribution_card.desc", tier, divider));
         }
         addCompatibilityTooltip(tooltip, "hyperdensity");
     }

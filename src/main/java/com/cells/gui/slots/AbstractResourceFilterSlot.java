@@ -200,11 +200,11 @@ public abstract class AbstractResourceFilterSlot<R> extends GuiCustomSlot implem
         List<String> lines = new ArrayList<>(getResourceTooltipLines(resource));
 
         lines.add("");
-        lines.add("§7" + I18n.format("cells.filter_slot.hint.left_click_1"));
-        lines.add("§7" + I18n.format("cells.filter_slot.hint.left_click_2"));
+        lines.add(I18n.format("cells.filter_slot.hint.left_click_1"));
+        lines.add(I18n.format("cells.filter_slot.hint.left_click_2"));
 
         if (this.rightClickHandler != null) {
-            lines.add("§7" + I18n.format("cells.filter_slot.hint.right_click"));
+            lines.add(I18n.format("cells.filter_slot.hint.right_click"));
         }
 
         return String.join("\n", lines);

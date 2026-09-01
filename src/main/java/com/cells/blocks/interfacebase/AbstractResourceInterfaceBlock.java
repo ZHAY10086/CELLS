@@ -97,7 +97,7 @@ public abstract class AbstractResourceInterfaceBlock<T extends AEBaseTile> exten
     @SideOnly(Side.CLIENT)
     public void addInformation(ItemStack stack, @Nullable World world, List<String> tooltip, ITooltipFlag flag) {
         super.addInformation(stack, world, tooltip, flag);
-        tooltip.add("§7" + I18n.format(this.tooltipKey));
+        tooltip.add(I18n.format(this.tooltipKey));
     }
 
     @Override

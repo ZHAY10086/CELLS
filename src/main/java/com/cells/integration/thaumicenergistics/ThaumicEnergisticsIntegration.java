@@ -149,13 +149,14 @@ public final class ThaumicEnergisticsIntegration {
                     if (cellInv instanceof INBTSizeProvider) {
                         int nbtSize = ((INBTSizeProvider) cellInv).getTotalNbtSize();
                         long warningThreshold = NBTSizeHelper.kbToBytes(CellsConfig.general.nbtSizeWarningThresholdKB);
-                        String sizeStr = NBTSizeHelper.formatSizeWithColor(nbtSize, warningThreshold);
 
                         tooltip.add("");
-                        tooltip.add(I18n.format("tooltip.cells.nbt_size", sizeStr));
+                        tooltip.add(I18n.format(
+                            NBTSizeHelper.getSizeTooltipTranslationKey(nbtSize, warningThreshold),
+                            NBTSizeHelper.formatSize(nbtSize)));
 
                         if (NBTSizeHelper.exceedsThreshold(nbtSize, warningThreshold)) {
-                            tooltip.add("§c" + I18n.format("tooltip.cells.nbt_size.warning"));
+                            tooltip.add(I18n.format("tooltip.cells.nbt_size.warning"));
                         }
                     }
                 }

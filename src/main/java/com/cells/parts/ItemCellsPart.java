@@ -102,12 +102,12 @@ public class ItemCellsPart extends Item implements IPartItem<IPart> {
 
         // Generate tooltip key based on part type
         String tooltipKey = getTooltipKeyForPartType(type);
-        if (tooltipKey != null) tooltip.add("§7" + I18n.format(tooltipKey));
+        if (tooltipKey != null) tooltip.add(I18n.format(tooltipKey));
 
         // Subnet proxy parts get the shared direction tooltip
         if (type == CellsPartType.SUBNET_PROXY_BACK || type == CellsPartType.SUBNET_PROXY_FRONT) {
-            tooltip.add("§7" + I18n.format("item.cells.part.subnet_proxy_direction.tooltip"));
-            tooltip.add("§7" + I18n.format("item.cells.part.subnet_proxy_filters.tooltip"));
+            tooltip.add(I18n.format("item.cells.part.subnet_proxy_direction.tooltip"));
+            tooltip.add(I18n.format("item.cells.part.subnet_proxy_filters.tooltip"));
         }
     }
 

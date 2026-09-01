@@ -176,31 +176,31 @@ public final class CellUpgradeHelper {
             if (stack.isEmpty()) continue;
 
             if (stack.getItem() == ItemRegistry.OVERFLOW_CARD) {
-                tooltip.add("§c" + I18n.format("tooltip.cells.upgrade.overflow_active"));
+                tooltip.add(I18n.format("tooltip.cells.upgrade.overflow_active"));
             }
 
             if (stack.getItem() == ItemRegistry.EQUAL_DISTRIBUTION_CARD) {
                 int limit = ItemRegistry.EQUAL_DISTRIBUTION_CARD.getTierValue(stack);
 
                 if (limit == Integer.MAX_VALUE) {
-                    tooltip.add("§b" + I18n.format("tooltip.cells.upgrade.equal_distribution_active.infinite"));
+                    tooltip.add(I18n.format("tooltip.cells.upgrade.equal_distribution_active.infinite"));
                 } else {
-                    tooltip.add("§b" + I18n.format("tooltip.cells.upgrade.equal_distribution_active", limit));
+                    tooltip.add(I18n.format("tooltip.cells.upgrade.equal_distribution_active", limit));
                 }
             }
 
             if (stack.getItem() == ItemRegistry.COMPRESSION_TIER_CARD) {
                 int tiers = ItemRegistry.COMPRESSION_TIER_CARD.getTierValue(stack);
-                tooltip.add("§a" + I18n.format("tooltip.cells.upgrade.compression_tier_active", tiers));
+                tooltip.add(I18n.format("tooltip.cells.upgrade.compression_tier_active", tiers));
             }
 
             if (stack.getItem() == ItemRegistry.DECOMPRESSION_TIER_CARD) {
                 int tiers = ItemRegistry.DECOMPRESSION_TIER_CARD.getTierValue(stack);
-                tooltip.add("§e" + I18n.format("tooltip.cells.upgrade.decompression_tier_active", tiers));
+                tooltip.add(I18n.format("tooltip.cells.upgrade.decompression_tier_active", tiers));
             }
 
             if (stack.getItem() == ItemRegistry.OREDICT_CARD) {
-                tooltip.add("§d" + I18n.format("tooltip.cells.upgrade.oredict_active"));
+                tooltip.add(I18n.format("tooltip.cells.upgrade.oredict_active"));
             }
         }
     }

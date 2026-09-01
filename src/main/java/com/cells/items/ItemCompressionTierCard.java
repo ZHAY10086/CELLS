@@ -56,7 +56,7 @@ public class ItemCompressionTierCard extends AbstractCustomUpgrade {
     public void addInformation(@Nonnull ItemStack stack, World world, @Nonnull List<String> tooltip,
                                @Nonnull ITooltipFlag flag) {
         int tier = getTierValue(stack);
-        tooltip.add("§7" + I18n.format("tooltip.cells.compression_tier_card.desc", tier));
+        tooltip.add(I18n.format("tooltip.cells.compression_tier_card.desc", tier));
         addCompatibilityTooltip(tooltip, "compact", "hyperdensity_compact");
     }
 }

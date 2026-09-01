@@ -99,7 +99,7 @@ public class AbstractCustomUpgrade extends Item implements IUpgradeModule {
             I18n.format("tooltip.cells.card.separator"), compatibleTypes);
 
         tooltip.add("");
-        tooltip.add("§8" + I18n.format("tooltip.cells.card.compatible", compatibleTypesStr));
+        tooltip.add(I18n.format("tooltip.cells.card.compatible", compatibleTypesStr));
     }
 
     @Override

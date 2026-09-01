@@ -41,7 +41,7 @@ public class ItemOreDictCard extends AbstractCustomUpgrade {
     @SideOnly(Side.CLIENT)
     public void addInformation(@Nonnull ItemStack stack, World world, @Nonnull List<String> tooltip,
                                @Nonnull ITooltipFlag flag) {
-        tooltip.add("§7" + I18n.format("tooltip.cells.oredict_card.desc"));
+        tooltip.add(I18n.format("tooltip.cells.oredict_card.desc"));
         addCompatibilityTooltip(tooltip, "compact", "hyperdensity_compact");
     }
 }
