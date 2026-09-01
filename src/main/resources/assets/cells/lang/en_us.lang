@@ -312,6 +312,7 @@ item.cells.emc_capacity_card.tier1.name=Refined EMC Upgrade Card
 item.cells.emc_capacity_card.tier2.name=Compressed EMC Upgrade Card
 tooltip.cells.emc_cell.info=§7Bound EMC storage cell. Exposes learned partition items at a fixed count and converts accepted inserts into EMC.
 tooltip.cells.emc_cell.slots=§bPartition slots: %d/%d
+tooltip.cells.emc_cell.use_on_link=§bRight-click§7 the cell on an EMC Link to copy its configuration
 tooltip.cells.emc_cell.owner=§aBound to: %s
 tooltip.cells.emc_cell.unbound=§cUnbound: re-insert it to bind it to a player
 tooltip.cells.emc_cell.buffered=§6Buffered EMC: %,d

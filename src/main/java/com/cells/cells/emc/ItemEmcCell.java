@@ -201,6 +201,10 @@ public class ItemEmcCell extends Item implements ICellWorkbenchItem, IItemGroup 
                 partitionInfo.getLearnedFilterCount(),  partitionInfo.unlockedSlots));
         }
 
+        if (partitionInfo.unlockedSlots - partitionInfo.configuredFilters > 0) {
+            tooltip.add(I18n.format("tooltip.cells.emc_cell.use_on_link"));
+        }
+
         String ownerName = getOwnerName(stack);
         if (ownerName == null) {
             tooltip.add(I18n.format("tooltip.cells.emc_cell.unbound"));
