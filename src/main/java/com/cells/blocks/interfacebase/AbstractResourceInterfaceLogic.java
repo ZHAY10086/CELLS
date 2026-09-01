@@ -868,6 +868,16 @@ public abstract class AbstractResourceInterfaceLogic<R, AE extends IAEStack<AE>,
     }
 
     @Override
+    public int getAutoPullPushInterval() {
+        return this.upgradeManager.getAutoPullPushInterval();
+    }
+
+    @Override
+    public int getAutoPushPullQuantity() {
+        return this.upgradeManager.getAutoPushPullQuantity();
+    }
+
+    @Override
     public int getTotalPages() {
         return 1 + this.upgradeManager.getInstalledCapacityUpgrades();
     }

@@ -673,6 +673,10 @@ tooltip.cells.type.subnet_proxy=Subnet Proxy
 cells.pull_push_button.disabled=Insert %s to interact
 cells.pull_push_button.enabled.title=Configure Pull/Push Card
 cells.pull_push_button.enabled.desc=Click to open the card's configuration GUI.
+cells.pull_push_button.warning.title=Warning: slot buffer too small
+cells.pull_push_button.warning.buffer=This card can move up to %s %s between interface I/O passes (%s per %s, interface I/O every %s).
+cells.pull_push_button.warning.slot=Page %d slot %d is capped at %s %s.
+cells.pull_push_button.warning.hint=It is recommended to increase that slot size.
 
 # /inspectSlot Command
 commands.cells.inspect_slots.usage=/inspectSlots [resource1] [resource2] ...

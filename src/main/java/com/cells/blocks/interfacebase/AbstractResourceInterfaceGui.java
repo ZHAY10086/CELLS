@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.renderer.GlStateManager;
@@ -19,17 +20,16 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 
 import net.minecraftforge.fml.common.Optional;
-import net.minecraftforge.items.IItemHandler;
 
 import appeng.client.gui.widgets.GuiCustomSlot;
 import appeng.container.AEBaseContainer;
 import appeng.container.interfaces.IJEIGhostIngredients;
-import appeng.tile.inventory.AppEngInternalInventory;
 
 import mezz.jei.api.gui.IGhostIngredientHandler.Target;
 
+import com.cells.ItemRegistry;
 import com.cells.Tags;
-import com.cells.blocks.combinedinterface.ICombinedInterfaceHost;
+import com.cells.blocks.combinedinterface.ContainerCombinedInterface;
 import com.cells.blocks.iointerface.ContainerIOInterface;
 import com.cells.blocks.iointerface.IIOInterfaceHost;
 import com.cells.client.KeyBindings;
@@ -46,8 +46,6 @@ import com.cells.gui.ImportInterfaceControlsHelper;
 import com.cells.gui.IToolboxContainer;
 import com.cells.gui.slots.AbstractResourceFilterSlot;
 import com.cells.gui.slots.AbstractResourceTankSlot;
-import com.cells.items.ItemAutoPullCard;
-import com.cells.items.ItemAutoPushCard;
 import com.cells.network.CellsNetworkHandler;
 import com.cells.network.packets.PacketChangePage;
 import com.cells.network.packets.PacketClearFilters;
@@ -108,11 +106,18 @@ public abstract class AbstractResourceInterfaceGui<H extends IInterfaceHost, C e
     private GuiControlsHelpToggleButton controlsToggleButton;
     private GuiRecipeTransferDirectionButton recipeTransferDirectionButton;
     private GuiImmediatePollingButton pollingActionButton;
+    private ItemStack cachedPullPushCard = ItemStack.EMPTY;
+    private int cachedPullPushCardInterval = Integer.MIN_VALUE;
+    private int cachedPullPushCardQuantity = 0;
+    private boolean cachedPullPushCardExport;
+    @Nullable
+    private PullPushButtonWarning pullPushButtonWarning;
 
     public static final int POLLING_ACTION_BUTTON_X_NO_TOOLBOX = 186;
     public static final int POLLING_ACTION_BUTTON_Y_NO_TOOLBOX = 157;
     public static final int POLLING_ACTION_BUTTON_X_WITH_TOOLBOX = 214;
     public static final int POLLING_ACTION_BUTTON_Y_WITH_TOOLBOX = 106;
+    private static final int MIN_CARD_NETWORK_IO_INTERVAL = 20;
 
     // JEI ghost target mapping
     protected final Map<Object, Object> mapTargetSlot = new HashMap<>();
@@ -301,12 +306,7 @@ public abstract class AbstractResourceInterfaceGui<H extends IInterfaceHost, C e
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        // Update pull/push button state (enabled/disabled, card icon)
-        if (this.pullPushButton != null) {
-            ItemStack card = findPullPushCard();
-            this.pullPushButton.setCardStack(card);
-            this.pullPushButton.enabled = !card.isEmpty();
-        }
+        this.updatePullPushButtonState();
 
         super.drawScreen(mouseX, mouseY, partialTicks);
 
@@ -444,22 +444,11 @@ public abstract class AbstractResourceInterfaceGui<H extends IInterfaceHost, C e
             4,
             this.guiLeft + 184,
             this.guiTop + 104,
-            () -> {
-                ItemStack card = this.findPullPushCard();
-                if (card.isEmpty()) {
-                    String cardName = this.isActiveTabExport()
-                        ? I18n.format("item.cells.push_card.name")
-                        : I18n.format("item.cells.pull_card.name");
-                    return I18n.format("cells.pull_push_button.disabled", cardName);
-                }
-
-                String title = I18n.format("cells.pull_push_button.enabled.title");
-                String desc = "§7" + I18n.format("cells.pull_push_button.enabled.desc");
-                return title + "\n\n" + desc;
-            },
+            this::getPullPushButtonTooltip,
             this.itemRender
         );
         this.buttonList.add(this.pullPushButton);
+        this.updatePullPushButtonState();
     }
 
     @Override
@@ -701,65 +690,147 @@ public abstract class AbstractResourceInterfaceGui<H extends IInterfaceHost, C e
 
     // ============================== Pull/Push card helpers ==============================
 
-    /**
-     * Find an installed Pull/Push card in the upgrade slots, if any.
-     * <p>
-     * Handles three host shapes:
-     * <ul>
-     *   <li>{@link IFilterableInterfaceHost}: single-direction host with a single
-     *       upgrade inventory.</li>
-     *   <li>{@link ICombinedInterfaceHost}: shares one upgrade inventory across
-     *       all logics, accessible via any logic.</li>
-     *   <li>{@link IIOInterfaceHost}: has TWO upgrade inventories (one per
-     *       direction). For these, we read from the container's switchable
-     *       upgrade inventory view rather than going through {@code host.getActiveLogic()}:
-     *       the host's active tab can be out of sync between client and server
-     *       (especially in singleplayer where the host instance is shared), but
-     *       the container's view always reflects the visible slot contents.</li>
-     * </ul>
-     *
-     * @return The card ItemStack, or {@link ItemStack#EMPTY} if none is installed.
-     */
-    @SuppressWarnings("rawtypes")
-    private ItemStack findPullPushCard() {
-        // IO interfaces: read from the container's switchable upgrade inventory
-        // (which mirrors what the user sees in the upgrade slots, regardless of
-        // any client/server desync of host.getActiveLogic()).
-        if (this.host instanceof IIOInterfaceHost
-            && this.container instanceof ContainerIOInterface) {
-            IItemHandler upgradeView =
-                ((ContainerIOInterface) this.container).getUpgradeInventoryView();
-            return findCardIn(upgradeView);
+    private void updatePullPushButtonState() {
+        if (this.pullPushButton == null) return;
+
+        IPullPushCardStateContainer cardState = this.getPullPushCardStateContainer();
+        int cardInterval = cardState == null ? -1 : cardState.getAutoPullPushCardInterval();
+        int cardQuantity = cardState == null ? 0 : cardState.getAutoPushPullQuantity();
+        boolean cardExport = this.isActiveTabExport();
+
+        if (this.cachedPullPushCardInterval != cardInterval || this.cachedPullPushCardExport != cardExport) {
+            this.cachedPullPushCardInterval = cardInterval;
+            this.cachedPullPushCardExport = cardExport;
+            this.cachedPullPushCard = this.getPullPushCardStack(cardInterval, cardExport);
+            this.pullPushButton.setCardStack(this.cachedPullPushCard);
+            this.pullPushButton.enabled = !this.cachedPullPushCard.isEmpty();
         }
 
-        AppEngInternalInventory upgradeInv = null;
+        this.cachedPullPushCardQuantity = cardQuantity;
+        this.pullPushButtonWarning = this.getPullPushButtonWarning();
+        this.pullPushButton.setShowWarning(this.pullPushButtonWarning != null);
+    }
 
-        if (this.host instanceof IFilterableInterfaceHost) {
-            upgradeInv = ((IFilterableInterfaceHost) this.host).getUpgradeInventory();
-        } else if (this.host instanceof ICombinedInterfaceHost) {
-            // Combined hosts share one upgrade inventory across all logics, accessible via any logic
-            upgradeInv = ((ICombinedInterfaceHost) this.host).getItemLogic().getUpgradeInventory();
+    private String getPullPushButtonTooltip() {
+        if (this.cachedPullPushCard.isEmpty()) {
+            String cardName = this.isActiveTabExport()
+                ? I18n.format("item.cells.push_card.name")
+                : I18n.format("item.cells.pull_card.name");
+            return I18n.format("cells.pull_push_button.disabled", cardName);
         }
 
-        if (upgradeInv == null) return ItemStack.EMPTY;
+        String title = I18n.format("cells.pull_push_button.enabled.title");
+        String desc = "§7" + I18n.format("cells.pull_push_button.enabled.desc");
+        PullPushButtonWarning warning = this.pullPushButtonWarning;
+        if (warning == null) return title + "\n\n" + desc;
 
-        return findCardIn(upgradeInv);
+        String unit = I18n.format("cells.unit." + this.getUnitTypeName());
+        String bufferedAmount = String.format("%,d", warning.requiredBufferedAmount);
+        String cardQuantity = String.format("%,d", warning.quantity);
+        String slotCapacity = String.format("%,d", warning.slotCapacity);
+        int page = warning.absoluteSlot / SLOTS_PER_PAGE + 1;
+        int slot = warning.absoluteSlot % SLOTS_PER_PAGE + 1;
+
+        String cardIntervalStr = PollingRateUtils.format(warning.cardInterval);
+        String networkIoIntervalStr = PollingRateUtils.format(warning.networkIoInterval);
+
+        // TODO: Add a button to upgrade the default slot size / individual slot size (if set)
+        //       to the recommended buffered amount + some margin.
+        //       The solution is easy, but the UI/UX is the trickier part.
+        return title + "\n\n" + desc + "\n\n"
+            + "§e" + I18n.format("cells.pull_push_button.warning.title") + "\n"
+            + I18n.format("cells.pull_push_button.warning.buffer",
+                bufferedAmount, unit, cardQuantity, cardIntervalStr, networkIoIntervalStr) + "\n"
+            + I18n.format("cells.pull_push_button.warning.slot", page, slot, slotCapacity, unit) + "\n"
+            + I18n.format("cells.pull_push_button.warning.hint");
+    }
+
+    @Nullable
+    private PullPushButtonWarning getPullPushButtonWarning() {
+        int cardInterval = this.cachedPullPushCardInterval;
+        int quantity = this.cachedPullPushCardQuantity;
+
+        if (cardInterval <= 0 || quantity <= 0) return null;
+
+        int networkIoInterval = getPullPushNetworkIoInterval();
+        long requiredBufferedAmount = getRequiredBufferedAmount(quantity, cardInterval, networkIoInterval);
+        int effectiveSlots = this.getTotalPages() * SLOTS_PER_PAGE;
+
+        for (int absoluteSlot = 0; absoluteSlot < effectiveSlots; absoluteSlot++) {
+            if (this.getClientFilter(absoluteSlot) == null) continue;
+
+            long slotCapacity = this.getEffectiveMaxSlotSizeForAbsoluteSlot(absoluteSlot);
+            if (slotCapacity >= requiredBufferedAmount) continue;
+
+            return new PullPushButtonWarning(
+                absoluteSlot,
+                slotCapacity,
+                requiredBufferedAmount,
+                quantity,
+                cardInterval,
+                networkIoInterval
+            );
+        }
+
+        return null;
+    }
+
+    private int getPullPushNetworkIoInterval() {
+        long pollingRate = this.getPollingRate();
+        if (pollingRate > 0) return (int) Math.min(Integer.MAX_VALUE, pollingRate);
+
+        return MIN_CARD_NETWORK_IO_INTERVAL;
+    }
+
+    private long getRequiredBufferedAmount(int quantity, int cardInterval, int networkIoInterval) {
+        // Network I/O and card timers are independent, so misaligned intervals can fit
+        // one extra card operation inside some network-I/O windows.
+        long networkInterval = networkIoInterval + (long) cardInterval - 1L;
+        long operationsPerWindow = Math.max(1L, networkInterval / (long) cardInterval);
+        return quantity * operationsPerWindow;
+    }
+
+    @Nullable
+    private Object getClientFilter(int absoluteSlot) {
+        if (this.container instanceof AbstractContainerInterface) {
+            return ((AbstractContainerInterface<?, ?, ?>) this.container).getClientFilter(absoluteSlot);
+        }
+
+        if (this.container instanceof ContainerIOInterface) {
+            return ((ContainerIOInterface) this.container).getClientFilter(absoluteSlot);
+        }
+
+        if (this.container instanceof ContainerCombinedInterface) {
+            return ((ContainerCombinedInterface) this.container).getClientFilter(absoluteSlot);
+        }
+
+        return null;
+    }
+
+    private long getEffectiveMaxSlotSizeForAbsoluteSlot(int absoluteSlot) {
+        if (this.container instanceof ISizeOverrideContainer) {
+            return ((ISizeOverrideContainer) this.container).getEffectiveMaxSlotSize(absoluteSlot);
+        }
+
+        return this.getMaxSlotSize();
     }
 
     /**
-     * Scans an item handler for an Auto-Pull or Auto-Push card.
+     * Create the Pull/Push Card icon for the active interface direction.
      */
-    private static ItemStack findCardIn(IItemHandler inv) {
-        for (int i = 0; i < inv.getSlots(); i++) {
-            ItemStack stack = inv.getStackInSlot(i);
+    private ItemStack getPullPushCardStack(int cardInterval, boolean cardExport) {
+        if (cardInterval < 0) return ItemStack.EMPTY;
 
-            if (stack.getItem() instanceof ItemAutoPullCard
-                || stack.getItem() instanceof ItemAutoPushCard) {
-                return stack;
-            }
+        return new ItemStack(cardExport ? ItemRegistry.PUSH_CARD : ItemRegistry.PULL_CARD);
+    }
+
+    @Nullable
+    private IPullPushCardStateContainer getPullPushCardStateContainer() {
+        if (this.container instanceof IPullPushCardStateContainer) {
+            return (IPullPushCardStateContainer) this.container;
         }
 
-        return ItemStack.EMPTY;
+        return null;
     }
 
     /**
@@ -794,5 +865,29 @@ public abstract class AbstractResourceInterfaceGui<H extends IInterfaceHost, C e
         if (this.hasToolbox()) return this.guiTop + POLLING_ACTION_BUTTON_Y_WITH_TOOLBOX;
 
         return this.guiTop + POLLING_ACTION_BUTTON_Y_NO_TOOLBOX;
+    }
+
+    private static final class PullPushButtonWarning {
+
+        private final int absoluteSlot;
+        private final long slotCapacity;
+        private final long requiredBufferedAmount;
+        private final int quantity;
+        private final int cardInterval;
+        private final int networkIoInterval;
+
+        private PullPushButtonWarning(int absoluteSlot,
+                                      long slotCapacity,
+                                      long requiredBufferedAmount,
+                                      int quantity,
+                                      int cardInterval,
+                                      int networkIoInterval) {
+            this.absoluteSlot = absoluteSlot;
+            this.slotCapacity = slotCapacity;
+            this.requiredBufferedAmount = requiredBufferedAmount;
+            this.quantity = quantity;
+            this.cardInterval = cardInterval;
+            this.networkIoInterval = networkIoInterval;
+        }
     }
 }

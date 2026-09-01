@@ -131,6 +131,16 @@ public interface IInterfaceLogic {
     void refreshUpgrades();
 
     /**
+     * @return The installed Pull/Push Card interval, or -1 when no card is installed.
+     */
+    int getAutoPullPushInterval();
+
+    /**
+     * @return The quantity configured on the installed Pull/Push Card.
+     */
+    int getAutoPushPullQuantity();
+
+    /**
      * Handle upgrade inventory changes - refreshes upgrades and marks dirty.
      */
     void onChangeInventory(IItemHandler inv, int slot, ItemStack removed, ItemStack added);

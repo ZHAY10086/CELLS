@@ -34,6 +34,7 @@ import appeng.util.Platform;
 
 import com.cells.blocks.interfacebase.AbstractResourceInterfaceLogic;
 import com.cells.blocks.interfacebase.IInterfaceLogic;
+import com.cells.blocks.interfacebase.IPullPushCardStateContainer;
 import com.cells.blocks.interfacebase.IResourceInterfaceLogic;
 import com.cells.blocks.interfacebase.ISizeOverrideContainer;
 import com.cells.gui.IToolboxContainer;
@@ -62,7 +63,7 @@ import com.cells.network.sync.ResourceType;
  */
 public class ContainerCombinedInterface extends AEBaseContainer
     implements IResourceSyncContainer, IQuickAddFilterContainer, IStorageSyncContainer, ISizeOverrideContainer,
-    IToolboxContainer {
+    IToolboxContainer, IPullPushCardStateContainer {
 
     private final ICombinedInterfaceHost host;
 
@@ -107,6 +108,12 @@ public class ContainerCombinedInterface extends AEBaseContainer
     @GuiSync(4)
     public int totalPages = 1;
 
+    @GuiSync(5)
+    public int autoPullPushInterval = -1;
+
+    @GuiSync(6)
+    public int autoPushPullQuantity = 0;
+
     // ================================= Constructors =================================
 
     /**
@@ -145,6 +152,8 @@ public class ContainerCombinedInterface extends AEBaseContainer
         this.pollingRate = activeLogic.getPollingRate();
         this.currentPage = activeLogic.getCurrentPage();
         this.totalPages = activeLogic.getTotalPages();
+        this.autoPullPushInterval = activeLogic.getAutoPullPushInterval();
+        this.autoPushPullQuantity = activeLogic.getAutoPushPullQuantity();
 
         // Set up toolbox (network tool)
         this.setupToolbox(anchor);
@@ -256,6 +265,8 @@ public class ContainerCombinedInterface extends AEBaseContainer
         this.pollingRate = logic.getPollingRate();
         this.currentPage = logic.getCurrentPage();
         this.totalPages = logic.getTotalPages();
+        this.autoPullPushInterval = logic.getAutoPullPushInterval();
+        this.autoPushPullQuantity = logic.getAutoPushPullQuantity();
 
         // Clear caches to force full re-sync for the new tab
         this.serverFilterCache.clear();
@@ -266,6 +277,15 @@ public class ContainerCombinedInterface extends AEBaseContainer
 
     public ICombinedInterfaceHost getHost() {
         return this.host;
+    }
+
+    @Nullable
+    @SuppressWarnings("rawtypes")
+    public Object getClientFilter(int slot) {
+        IInterfaceLogic logic = getActiveLogic();
+        if (!(logic instanceof IResourceInterfaceLogic)) return null;
+
+        return ((IResourceInterfaceLogic) logic).getFilter(slot);
     }
 
     public void setMaxSlotSize(long size) {
@@ -330,6 +350,16 @@ public class ContainerCombinedInterface extends AEBaseContainer
         if (this.currentPage > 0) setCurrentPage(this.currentPage - 1);
     }
 
+    @Override
+    public int getAutoPullPushCardInterval() {
+        return this.autoPullPushInterval;
+    }
+
+    @Override
+    public int getAutoPushPullQuantity() {
+        return this.autoPushPullQuantity;
+    }
+
     // ================================= Sync =================================
 
     @Override
@@ -346,6 +376,15 @@ public class ContainerCombinedInterface extends AEBaseContainer
         if (this.pollingRate != activeLogic.getPollingRate()) this.pollingRate = activeLogic.getPollingRate();
         if (this.currentPage != activeLogic.getCurrentPage()) this.currentPage = activeLogic.getCurrentPage();
         if (this.totalPages != activeLogic.getTotalPages()) this.totalPages = activeLogic.getTotalPages();
+
+        if (Platform.isServer()) {
+            if (this.autoPullPushInterval != activeLogic.getAutoPullPushInterval()) {
+                this.autoPullPushInterval = activeLogic.getAutoPullPushInterval();
+            }
+            if (this.autoPushPullQuantity != activeLogic.getAutoPushPullQuantity()) {
+                this.autoPushPullQuantity = activeLogic.getAutoPushPullQuantity();
+            }
+        }
 
         super.detectAndSendChanges();
 

@@ -57,7 +57,7 @@ import com.cells.network.sync.ResourceType;
 public abstract class AbstractContainerInterface<T, K, H extends IFilterableInterfaceHost<T, K>>
     extends AEBaseContainer
     implements IResourceSyncContainer, IQuickAddFilterContainer, IStorageSyncContainer, ISizeOverrideContainer,
-        IToolboxContainer {
+        IToolboxContainer, IPullPushCardStateContainer {
 
     protected final H host;
 
@@ -95,6 +95,12 @@ public abstract class AbstractContainerInterface<T, K, H extends IFilterableInte
     @GuiSync(3)
     public int totalPages = 1;
 
+    @GuiSync(4)
+    public int autoPullPushInterval = -1;
+
+    @GuiSync(5)
+    public int autoPushPullQuantity = 0;
+
     /**
      * Common constructor for both tile and part hosts.
      */
@@ -119,6 +125,8 @@ public abstract class AbstractContainerInterface<T, K, H extends IFilterableInte
         // packet carries the correct page when returning from sub-GUIs.
         this.currentPage = host.getCurrentPage();
         this.totalPages = host.getTotalPages();
+        this.autoPullPushInterval = host.getInterfaceLogic().getAutoPullPushInterval();
+        this.autoPushPullQuantity = host.getInterfaceLogic().getAutoPushPullQuantity();
 
         this.setupToolbox(anchor);
 
@@ -177,6 +185,16 @@ public abstract class AbstractContainerInterface<T, K, H extends IFilterableInte
      */
     public boolean hasToolbox() {
         return this.toolboxInventory != null;
+    }
+
+    @Override
+    public int getAutoPullPushCardInterval() {
+        return this.autoPullPushInterval;
+    }
+
+    @Override
+    public int getAutoPushPullQuantity() {
+        return this.autoPushPullQuantity;
     }
 
     /**
@@ -345,6 +363,16 @@ public abstract class AbstractContainerInterface<T, K, H extends IFilterableInte
         if (this.pollingRate != this.host.getPollingRate()) this.pollingRate = this.host.getPollingRate();
         if (this.currentPage != this.host.getCurrentPage()) this.currentPage = this.host.getCurrentPage();
         if (this.totalPages != this.host.getTotalPages()) this.totalPages = this.host.getTotalPages();
+
+        if (Platform.isServer()) {
+            IInterfaceLogic logic = this.host.getInterfaceLogic();
+            if (this.autoPullPushInterval != logic.getAutoPullPushInterval()) {
+                this.autoPullPushInterval = logic.getAutoPullPushInterval();
+            }
+            if (this.autoPushPullQuantity != logic.getAutoPushPullQuantity()) {
+                this.autoPushPullQuantity = logic.getAutoPushPullQuantity();
+            }
+        }
 
         super.detectAndSendChanges();
 

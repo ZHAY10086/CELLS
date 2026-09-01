@@ -50,6 +50,8 @@ public class GuiPullPushUpgradeButton extends GuiButton implements ITooltip {
     /** The card ItemStack to render as the icon. Empty means no card present. */
     private ItemStack cardStack = ItemStack.EMPTY;
 
+    private boolean showWarning;
+
     /**
      * Create a Pull/Push upgrade button.
      *
@@ -79,6 +81,10 @@ public class GuiPullPushUpgradeButton extends GuiButton implements ITooltip {
 
     public ItemStack getCardStack() {
         return this.cardStack;
+    }
+
+    public void setShowWarning(boolean showWarning) {
+        this.showWarning = showWarning;
     }
 
     @Override
@@ -117,6 +123,12 @@ public class GuiPullPushUpgradeButton extends GuiButton implements ITooltip {
 
             this.itemRenderer.zLevel = 0.0F;
             this.zLevel = 0.0F;
+        }
+
+        if (this.showWarning) {
+            int centerX = this.x - 2;
+            int centerY = this.y + (this.height - mc.fontRenderer.FONT_HEIGHT) / 2 + 1;
+            mc.fontRenderer.drawStringWithShadow("!", centerX, centerY, 0xFFD04020);
         }
     }
 
