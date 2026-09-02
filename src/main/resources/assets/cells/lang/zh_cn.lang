@@ -312,6 +312,7 @@ item.cells.emc_capacity_card.tier1.name=精致EMC升级卡
 item.cells.emc_capacity_card.tier2.name=压缩EMC升级卡
 tooltip.cells.emc_cell.info=§7已绑定的EMC存储元件。以固定数量公开已学习的分区物品，并将支持的输入物品转换为EMC。
 tooltip.cells.emc_cell.slots=§b分区槽位：%d/%d
+tooltip.cells.emc_cell.use_on_link=使用该元件§b右键点击§7EMC接口来复制其配置
 tooltip.cells.emc_cell.owner=§a绑定至：%s
 tooltip.cells.emc_cell.unbound=§c未绑定：重新放入以绑定至玩家
 tooltip.cells.emc_cell.buffered=§6缓存的EMC：%,d
@@ -678,7 +679,10 @@ tooltip.cells.type.subnet_proxy=子网络代理
 # Pull/Push Upgrade Button (interface GUI)
 cells.pull_push_button.disabled=放入%s进行交互
 cells.pull_push_button.enabled.title=配置拉取/推送卡
-cells.pull_push_button.enabled.desc=§b点击§7打开升级卡的配置GUI.
+cells.pull_push_button.enabled.desc=§b点击§7打开升级卡的配置GUI。
+cells.pull_push_button.warning.title=§e警告：槽位缓存过小
+cells.pull_push_button.warning.buffer=§7该升级卡在接口的I/O轮次之间最多可移动§b%1$s§7 %2$s（每§b%4$s§7 §a%3$s§7，接口每§a%5$s§7I/O一次）。
+cells.pull_push_button.warning.slot=§7第%d页第%d个槽位上限为§b%s§7 §b%s§7。建议增大该槽位大小。
 
 # /inspectSlot Command
 commands.cells.inspect_slots.usage=/inspectSlots [resource1] [resource2] ...
